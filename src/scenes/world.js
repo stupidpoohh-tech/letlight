@@ -1,18 +1,25 @@
-/* 세계 — 질문이 피어나고, 알아낸 것이 나타나는 자리.
+/* 세계 — 질문이 피어나고, 알아낸 것이 실제로 나타나는 자리.
    화면을 처음 봤을 때 버튼보다 세계가 먼저 보여야 한다. */
 
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildLandscape, VB } from '../art/landscape.js';
-import { buildCloud, formCloud, driftCloud } from '../art/cloud.js';
-import { QUESTIONS } from '../data/knowledge.js';
-import { openQuiz, openPreview } from './quiz.js';
+import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
+import { buildRainLayer, addDrops, buildWetGround } from '../art/rain.js';
+import { NODES } from '../data/nodes.js';
+import { state, markSolved } from '../core/state.js';
+import { openQuiz } from './quiz.js';
+import { openArticle } from './article.js';
 
-const NODE_REST = 0.30;   // 평소의 희미함
-let busy = false;
+const NODE_REST = 0.32;          // 평소의 희미함
+const CLOUD_AT  = { x: 288, y: 402, scale: 1.22 };
 
 const el = {};
+const cloud = { group: null, parts: null };
+let busy = false;
+let onChange = null;
 
-export function mountWorld() {
+export function mountWorld({ onStateChange } = {}) {
+  onChange = onStateChange;
   el.art   = document.getElementById('world-art');
   el.fx    = document.getElementById('sky-fx');
   el.nodes = document.getElementById('nodes');
@@ -30,19 +37,17 @@ export function mountWorld() {
 }
 
 /* ------------------------------------------------------------------
-   질문 노드
+   질문 노드 — 카드가 아니라, 세계 위에 떠오른 생각
    ------------------------------------------------------------------ */
 
-function addNode(q) {
+function addNode(node) {
   const n = document.createElement('div');
-  n.className = 'qnode';
-  n.dataset.q = q.id;
-  n.style.left = `${q.at.x * 100}%`;
-  n.style.top  = `${q.at.y * 100}%`;
+  n.className = 'qnode' + (node.disabled ? ' is-disabled' : '');
+  n.dataset.node = node.id;
+  n.style.left = `${node.at.x * 100}%`;
+  n.style.top  = `${node.at.y * 100}%`;
 
-  /* 놓인 자리에 따라 기대는 방향이 달라진다.
-     가운데는 가운데로, 가장자리는 화면 안쪽으로. */
-  const x = q.at.x;
+  const x = node.at.x;
   if (x <= 0.4) {
     n.style.setProperty('--anchor', '0');
     n.style.textAlign = 'left';
@@ -54,54 +59,50 @@ function addNode(q) {
   } else {
     n.style.maxWidth = '84vw';
   }
-  n.setAttribute('role', 'button');
-  n.setAttribute('tabindex', '0');
+
+  if (!node.disabled) {
+    n.setAttribute('role', 'button');
+    n.setAttribute('tabindex', '0');
+  }
+
   const span = document.createElement('span');
-  span.textContent = q.text;
-  span.style.setProperty('--drift-dur', `${(11 + Math.random() * 7).toFixed(1)}s`);
+  span.innerHTML = node.label.split('\n').join('<br>');
+  span.style.setProperty('--drift-dur', `${(12 + Math.random() * 7).toFixed(1)}s`);
   span.style.setProperty('--drift-delay', `${(-Math.random() * 9).toFixed(1)}s`);
   n.appendChild(span);
   el.nodes.appendChild(n);
   return n;
 }
 
-/** 세계 위에 생각이 떠오르듯 — 한꺼번에가 아니라 하나씩 */
-export async function bloomQuestions(ids, { gap = 1500, first = 0 } = {}) {
-  await wait(first);
-  for (const id of ids) {
-    const q = QUESTIONS[id];
-    if (!q || el.nodes.querySelector(`[data-q="${id}"]`)) continue;
-    const n = addNode(q);
-    await nextFrame();
-    n.style.opacity = String(NODE_REST);
-    await wait(gap);
-  }
+/** 아주 천천히 선명해진다 */
+export async function showNode(id, { delay = 0 } = {}) {
+  const node = NODES[id];
+  if (!node || el.nodes.querySelector(`[data-node="${id}"]`)) return;
+  await wait(delay);
+  const n = addNode(node);
+  await nextFrame();
+  n.style.opacity = String(node.disabled ? 0.13 : NODE_REST);
+  await wait(1400);
 }
+
+const eachNode = (fn) => el.nodes.querySelectorAll('.qnode').forEach(fn);
 
 function dimOthers(chosen) {
-  el.nodes.querySelectorAll('.qnode').forEach((n) => {
-    if (n === chosen) n.classList.add('is-chosen');
-    else n.classList.add('is-dimmed');
-  });
+  eachNode((n) => n.classList.add(n === chosen ? 'is-chosen' : 'is-dimmed'));
 }
-
 function restoreNodes() {
-  el.nodes.querySelectorAll('.qnode').forEach((n) => {
-    n.classList.remove('is-dimmed', 'is-chosen');
-  });
+  eachNode((n) => n.classList.remove('is-dimmed', 'is-chosen'));
 }
 
 /* ------------------------------------------------------------------
-   구름이 나타난다
+   세계의 변화 1 — 구름
    ------------------------------------------------------------------ */
 
-const CLOUD_AT = { x: 288, y: 402, scale: 1.22 };
-
 async function revealCloud() {
-  /* 1. 하늘 한 부분이 아주 희미해진다 */
+  /* 하늘의 한 부분이 아주 옅어진다 */
   const hush = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-  hush.setAttribute('cx', String(CLOUD_AT.x + 210));
-  hush.setAttribute('cy', String(CLOUD_AT.y + 86));
+  hush.setAttribute('cx', String(CLOUD_AT.x + 208));
+  hush.setAttribute('cy', String(CLOUD_AT.y + 84));
   hush.setAttribute('rx', '330');
   hush.setAttribute('ry', '190');
   hush.setAttribute('fill', '#fdf8ec');
@@ -109,80 +110,113 @@ async function revealCloud() {
   el.fxSvg.appendChild(hush);
 
   await tween({
-    from: 0, to: 0.4, duration: 2000, easing: ease.inOut,
+    from: 0, to: 0.4, duration: 1900, easing: ease.inOut,
     onUpdate: (v) => hush.setAttribute('opacity', v.toFixed(3)),
   });
   tween({
     from: 0.4, to: 0, duration: 5200, easing: ease.inOut,
     onUpdate: (v) => hush.setAttribute('opacity', v.toFixed(3)),
   });
+  await wait(450);
 
-  await wait(500);
+  /* 안개 같은 작은 형태들이 모여 하나의 구름이 된다 */
+  const built = buildCloud({ ...CLOUD_AT, scattered: true, seed: 5150 });
+  el.fxSvg.insertAdjacentHTML('beforeend', built.markup);
+  cloud.group = el.fxSvg.querySelector(`[data-cloud="${built.id}"]`);
+  cloud.parts = built.parts;
 
-  /* 2~3. 작은 흰 형태들이 모여 구름의 형태가 된다 */
-  const cloud = buildCloud({ ...CLOUD_AT, scattered: true, seed: 5150 });
-  el.fxSvg.insertAdjacentHTML('beforeend', cloud.markup);
-  const g = el.fxSvg.querySelector(`[data-cloud="${cloud.id}"]`);
-
-  await formCloud(g, cloud.parts, { duration: 5400 });
-
-  /* 4. 완성된 구름이 아주 천천히 움직이기 시작한다 */
-  await wait(1000);
-  driftCloud(g, { ...CLOUD_AT, speed: 0.45 });
-
-  return g;
+  await formCloud(cloud.group, cloud.parts, { duration: 4600 });
+  await wait(900);
+  driftCloud(cloud.group, { ...CLOUD_AT, speed: 0.45 });
+  state.cloudVisible = true;
 }
 
 /* ------------------------------------------------------------------
-   질문 하나의 전체 흐름
+   세계의 변화 2 — 비
    ------------------------------------------------------------------ */
 
-async function choose(node, q, ctx) {
-  if (busy) return;
+async function revealRain() {
+  if (!cloud.group) return;
+
+  /* 1. 구름 자체가 먼저 조금 변한다 */
+  await thickenCloud(cloud.group, { to: 0.26, duration: 2400 });
+
+  /* 2. 내부에 미세한 움직임 */
+  stirCloud(cloud.group, cloud.parts, { duration: 7000 });
+  await wait(1100);
+
+  const rain = buildRainLayer();
+  cloud.group.appendChild(rain);
+
+  /* 3. 첫 물방울 하나 */
+  addDrops(rain, 1, { once: true, delays: [0], opacity: 0.4 });
+  await wait(2200);
+
+  /* 4. 아주 드문 간격으로 몇 방울 */
+  addDrops(rain, 4, { once: true, delays: [0, 0.7, 1.6, 2.4], opacity: 0.36 });
+  await wait(3000);
+
+  /* 5. 점차 일정한 비가 된다 */
+  addDrops(rain, 46);
+  rain.style.opacity = '0';
+  tween({
+    duration: 4200, easing: ease.inOut,
+    onUpdate: (v) => { rain.style.opacity = v.toFixed(3); },
+  });
+
+  /* 6. 땅이 젖는다 */
+  el.fxSvg.insertAdjacentHTML('afterbegin', buildWetGround());
+  const wet = el.fxSvg.querySelector('.wet');
+  await tween({
+    duration: 6500, delay: 900, easing: ease.inOut,
+    onUpdate: (v) => wet.setAttribute('opacity', v.toFixed(3)),
+  });
+  state.rainVisible = true;
+}
+
+const EFFECTS = { cloud: revealCloud, rain: revealRain };
+
+/* ------------------------------------------------------------------
+   노드 하나의 전체 흐름
+   ------------------------------------------------------------------ */
+
+async function choose(nodeEl, node) {
+  if (busy || node.disabled) return;
   busy = true;
 
-  dimOthers(node);
-  await wait(950);
+  dimOthers(nodeEl);
+  await wait(880);
 
-  if (q.kind === 'preview') {
-    await openPreview(q);
-    restoreNodes();
-    busy = false;
-    return;
-  }
+  await openQuiz(node);        // 맞힐 때까지 돌아오지 않는다
+  markSolved(node.id);
+  onChange && onChange();
 
-  await openQuiz(q);
+  await openArticle(node);     // 읽고 나면 세계로 돌아온다
 
-  /* 답을 얻은 질문은 세계에서 물러나고, 알아낸 것이 그 자리에 남는다 */
+  /* 답을 얻은 질문은 물러나고, 알아낸 것이 세계에 남는다 */
   restoreNodes();
-  node.style.opacity = '0';
-  await wait(1400);
-  node.remove();
-
-  ctx.state.solved.add(q.id);
+  nodeEl.style.opacity = '0';
+  await wait(1300);
+  nodeEl.remove();
 
   await wait(700);
-  await revealCloud();
+  const effect = EFFECTS[node.effect];
+  if (effect) await effect();
 
-  ctx.state.discovered.add(q.rewards);
-  ctx.state.justFound = q.rewards;
-  ctx.onDiscovery && ctx.onDiscovery(q.rewards);
-
-  /* 7. 알아낸 것 주변에 새로운 질문들이 피어난다 */
-  await bloomQuestions(['cloudFall', 'darkCloud', 'cloudWeight'],
-                       { first: 2200, gap: 1700 });
+  await wait(2000);
+  await showNode(node.next || 'plantWater');
 
   busy = false;
 }
 
-export function wireQuestions(ctx) {
+export function wireNodes() {
   const act = (e) => {
     const n = e.target.closest('.qnode');
-    if (!n) return;
+    if (!n || n.classList.contains('is-disabled')) return;
     if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
     if (e.type === 'keydown') e.preventDefault();
-    const q = QUESTIONS[n.dataset.q];
-    if (q) choose(n, q, ctx);
+    const node = NODES[n.dataset.node];
+    if (node) choose(n, node);
   };
   el.nodes.addEventListener('click', act);
   el.nodes.addEventListener('keydown', act);

@@ -55,7 +55,7 @@ function grassOn(r, rng, { count, spread, opacity, width = 1.6, color = '#3a3a2a
     out += `<path d="M ${f(x)} ${f(y)} q ${f(lean * 0.35)} ${f(-len * 0.62)} ${f(lean)} ${f(-len)}"/>`;
   }
   return `<g fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round"
-             opacity="${opacity}" filter="url(#hand-fine)">${out}</g>`;
+             opacity="${opacity}">${out}</g>`;
 }
 
 /** 드문드문한 덤불. 나무는 아직 두지 않는다. */
@@ -68,7 +68,7 @@ function tufts(r, rng, { count, scale, opacity }) {
     out += `<path transform="translate(${f(x)} ${f(y)}) scale(${f(s)})"
                   d="M -17 0 C -17 -11, -8 -17, 0 -17 C 9 -17, 17 -11, 17 0 Z"/>`;
   }
-  return `<g fill="#6c7a4b" opacity="${opacity}" filter="url(#hand-fine)">${out}</g>`;
+  return `<g fill="#6c7a4b" opacity="${opacity}">${out}</g>`;
 }
 
 /** 능선이 낮아지는 자리에 드리우는 골 그림자 */
@@ -116,7 +116,7 @@ function river(rng) {
     ripples += `<path d="M ${f(cx - w)} ${f(cy)} q ${f(w)} ${f(between(rng, -2.6, 2.6))} ${f(w * 2)} 0"/>`;
   }
 
-  return `<g filter="url(#hand-water)">
+  return `<g>
       <path d="${d}" fill="url(#waterGrad)"/>
       <path d="${d}" fill="none" stroke="#5c6a58" stroke-width="1.4" opacity="0.22"/>
       <g fill="none" stroke="#fdf6e4" stroke-width="1.8" stroke-linecap="round"
@@ -142,7 +142,7 @@ function trail(rng) {
     pebbles += `<ellipse cx="${f(cx)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * 0.66)}"/>`;
   }
 
-  return `<g filter="url(#hand-fine)">
+  return `<g>
       <path d="${d}" fill="url(#trailGrad)"/>
       <path d="${d}" fill="url(#hatch-fine)" opacity="0.06"/>
       <path d="${d}" fill="none" stroke="#9c8358" stroke-width="1.8" opacity="0.45"/>
@@ -161,7 +161,7 @@ function stones() {
   const body = `M -66 16 C -71 -13, -46 -35, -16 -38 C 15 -41, 53 -31, 64 -9
                 C 73 6, 68 19, 57 21 L -56 23 Z`;
   return list.map(({ x, y, s, flip }) => `
-      <g transform="translate(${x} ${y}) scale(${flip * s} ${s})" filter="url(#hand-fine)">
+      <g transform="translate(${x} ${y}) scale(${flip * s} ${s})">
         <path d="${body}" fill="url(#stoneGrad)"/>
         <path d="${body}" fill="url(#hatch)" opacity="0.17"/>
         <path d="${body}" fill="none" stroke="#3a3a2a" stroke-width="1.8" opacity="0.4"/>
@@ -262,7 +262,7 @@ export function buildLandscape(seed = 20260915) {
 
   const layer = (b, i) => {
     const r = ridge({ noise, ...b });
-    let out = `<g filter="url(#hand)">
+    let out = `<g>
         <path d="${r.area}" fill="url(#band${i})"/>
         <path d="${r.area}" fill="url(#hatch)" opacity="${b.hatch}"/>
         <path d="${r.line}" fill="none" stroke="#3a3a2a"
@@ -292,16 +292,20 @@ export function buildLandscape(seed = 20260915) {
     ${skyLines(rng)}
     ${sun()}
 
-    ${far}
-    ${river(rng)}
+    <!-- 지형 전체를 한 번에 흔든다.
+         겹마다 필터를 걸면 같은 난류를 스물몇 번 계산하게 된다. -->
+    <g filter="url(#hand)">
+      ${far}
+      ${river(rng)}
 
-    <!-- 지평선의 대기 -->
-    <ellipse cx="508" cy="${VB.horizon + 6}" rx="620" ry="200" fill="url(#haze)"/>
-    <rect x="-100" y="1010" width="1200" height="190" fill="url(#horizonHaze)"/>
+      <!-- 지평선의 대기 -->
+      <ellipse cx="508" cy="${VB.horizon + 6}" rx="620" ry="200" fill="url(#haze)"/>
+      <rect x="-100" y="1010" width="1200" height="190" fill="url(#horizonHaze)"/>
 
-    ${near}
-    ${trail(rng)}
-    ${stones()}
+      ${near}
+      ${trail(rng)}
+      ${stones()}
+    </g>
 
     <rect x="-100" y="1780" width="1200" height="240" fill="url(#foreShade)"/>
   </svg>`;

@@ -5,38 +5,30 @@
 
 import { installDefs } from './art/defs.js';
 import { wait } from './core/anim.js';
+import { state, solvedIds } from './core/state.js';
 import { runOpening } from './scenes/opening.js';
-import { mountWorld, bloomQuestions, wireQuestions, hideNodes } from './scenes/world.js';
+import { mountWorld, showNode, wireNodes, hideNodes } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
-
-const state = {
-  discovered: new Set(['light']),   // 빛은 오프닝에서 이미 관측되었다
-  solved: new Set(),
-  justFound: null,
-  view: 'world',
-};
 
 const nav = document.getElementById('nav');
 const navItems = [...nav.querySelectorAll('.nav-item')];
+const codexBtn = navItems.find((b) => b.dataset.view === 'codex');
 
-function setNavView(view) {
-  navItems.forEach((b) => b.classList.toggle('is-active', b.dataset.view === view));
-}
-
+let view = 'world';
 let switching = false;
 
-async function goto(view) {
-  if (switching || view === state.view) return;
+async function goto(next) {
+  if (switching || next === view) return;
   switching = true;
-  setNavView(view);
+  navItems.forEach((b) => b.classList.toggle('is-active', b.dataset.view === next));
 
-  if (view === 'codex') {
-    state.view = 'codex';
+  if (next === 'codex') {
+    view = 'codex';
     hideNodes(true);
-    await openCodex(state, { onClose: () => hideNodes(false) });
-    navItems.find((b) => b.dataset.view === 'codex').classList.remove('is-fresh');
+    await openCodex({ onClose: () => hideNodes(false) });
+    codexBtn.classList.remove('is-fresh');
   } else {
-    state.view = 'world';
+    view = 'world';
     await closeCodex();
   }
   switching = false;
@@ -49,7 +41,11 @@ nav.addEventListener('click', (e) => {
 
 async function start() {
   installDefs();
-  mountWorld();
+
+  /* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */
+  mountWorld({ onStateChange: () => {
+    if (solvedIds().length) codexBtn.classList.add('is-fresh');
+  }});
 
   const skip = location.hash.includes('skip');
 
@@ -60,22 +56,17 @@ async function start() {
   } else {
     await runOpening();
   }
+  state.openingComplete = true;
 
   /* UI 는 세계가 자리를 잡은 뒤에야 조용히 올라온다 */
   await wait(skip ? 200 : 1200);
   nav.classList.add('is-on');
   nav.setAttribute('aria-hidden', 'false');
 
-  wireQuestions({
-    state,
-    onDiscovery: () => {
-      navItems.find((b) => b.dataset.view === 'codex').classList.add('is-fresh');
-    },
-  });
+  wireNodes();
 
-  /* 월드가 완전히 등장한 후 잠시 아무 일도 일어나지 않는다 */
-  await bloomQuestions(['skyBlue', 'cloudWhite', 'shadow'],
-                       { first: skip ? 600 : 2600, gap: 1800 });
+  /* 세계가 완전히 드러난 뒤 잠시 아무 일도 일어나지 않는다 */
+  await showNode('cloudWhite', { delay: skip ? 600 : 2600 });
 }
 
 start();

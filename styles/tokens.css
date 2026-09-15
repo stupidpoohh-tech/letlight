@@ -1,10 +1,23 @@
 /* ------------------------------------------------------------------
+   본문 서체 — 쓰는 글자만 남긴 웹폰트 (tools/subset-font.py)
+   원본은 Gowun Batang (SIL Open Font License, fonts/OFL.txt).
+   콘텐츠를 고치면 스크립트를 다시 돌려야 한다.
+   ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Gowun Batang";
+  src: url("../fonts/gowun-batang-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Gowun Batang";
+  src: url("../fonts/gowun-batang-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* ------------------------------------------------------------------
    보이ㄷㅏ — 디자인 토큰
    빈티지 자연 백과사전 / 판화 / 낮은 채도
    ------------------------------------------------------------------ */
-
-/* Freesentation 이 기기에 설치되어 있으면 UI 서체로 먼저 쓰인다.
-   없으면 Gowun Dodum 으로 자연스럽게 내려간다. */
 
 :root {
   /* 종이와 잉크 */
@@ -42,10 +55,12 @@
   --void:         #000a14;
 
   /* 서체 */
-  --font-ui:    "Freesentation", "Gowun Dodum", "Apple SD Gothic Neo",
-                system-ui, -apple-system, "Malgun Gothic", sans-serif;
-  --font-book:  "Gowun Batang", "Nanum Myeongjo", "Apple SD Gothic Neo",
-                Georgia, serif;
+  /* UI 는 기기에 이미 있는 서체를 쓴다. 내려받을 것이 없다.
+     Freesentation 이 설치되어 있으면 그것이 먼저 잡힌다. */
+  --font-ui:    "Freesentation", "Apple SD Gothic Neo", "Pretendard",
+                system-ui, -apple-system, "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-book:  "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo",
+                "Apple SD Gothic Neo", Georgia, serif;
 
   /* 리듬 */
   --ease-quiet: cubic-bezier(.32, .06, .22, 1);
@@ -55,21 +70,3 @@
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-/* ------------------------------------------------------------------
-   Freesentation (회사 서체)
-   기기에 설치되어 있으면 --font-ui 가 먼저 집어 쓴다.
-   웹폰트로 묶으려면 fonts/ 에 파일을 두고 아래 주석을 해제한다.
-   ------------------------------------------------------------------ */
-/*
-@font-face {
-  font-family: "Freesentation";
-  src: url("../fonts/Freesentation-4Regular.woff2") format("woff2");
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Freesentation";
-  src: url("../fonts/Freesentation-7Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
-}
-*/

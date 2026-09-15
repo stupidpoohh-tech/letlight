@@ -9,9 +9,9 @@ const DEFS = `
   <!-- 손으로 그린 듯한 흔들림 (지형) -->
   <filter id="hand" x="-8%" y="-8%" width="116%" height="116%"
           filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-    <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.011"
-                  numOctaves="3" seed="12" result="t"/>
-    <feDisplacementMap in="SourceGraphic" in2="t" scale="17"
+    <feTurbulence type="fractalNoise" baseFrequency="0.0055 0.013"
+                  numOctaves="2" seed="12" result="t"/>
+    <feDisplacementMap in="SourceGraphic" in2="t" scale="15"
                        xChannelSelector="R" yChannelSelector="G"/>
   </filter>
 
@@ -104,6 +104,13 @@ const DEFS = `
     <stop offset="0%"   stop-color="#e7e0c4"/>
     <stop offset="22%"  stop-color="#cfdcd9"/>
     <stop offset="100%" stop-color="#aec6cd"/>
+  </linearGradient>
+
+  <!-- 젖은 땅 -->
+  <linearGradient id="wetGrad" gradientUnits="userSpaceOnUse" x1="0" y1="1140" x2="0" y2="2050">
+    <stop offset="0%"   stop-color="#6d7f74" stop-opacity="0"/>
+    <stop offset="38%"  stop-color="#63776c" stop-opacity="0.26"/>
+    <stop offset="100%" stop-color="#4f6559" stop-opacity="0.48"/>
   </linearGradient>
 
   <!-- 판화 해칭 -->

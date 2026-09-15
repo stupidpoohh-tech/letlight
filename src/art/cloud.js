@@ -63,6 +63,8 @@ export function buildCloud({ x = 0, y = 0, scale = 1, scattered = false, seed = 
       <use href="#${id}" style="fill:url(#${id}-fill)" filter="url(#cloud-body)"/>
       <use href="#${id}" transform="translate(2 11)" fill="url(#hatch-fine)"
            filter="url(#cloud-body)" opacity="0.13"/>
+      <use href="#${id}" class="cloud-dense" transform="translate(3 24)"
+           style="fill:#c6c0aa" filter="url(#cloud-body)" opacity="0"/>
       <use href="#${id}" filter="url(#cloud-ink)"/>
     </g>`;
 
@@ -118,4 +120,41 @@ export function driftCloud(groupEl, { x, y, scale, speed = 1.15, bob = 5 }) {
 export function buildSkyHush({ cx, cy, rx = 300, ry = 170 }) {
   return `<ellipse class="sky-hush" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
             fill="#fbf6e9" opacity="0" style="mix-blend-mode:screen"/>`;
+}
+
+/** 구름의 밀도가 아주 약간 높아진다. 비가 오기 직전. */
+export function thickenCloud(groupEl, { to = 0.5, duration = 2400 } = {}) {
+  const dense = groupEl.querySelector('.cloud-dense');
+  if (!dense) return Promise.resolve();
+  return tween({
+    from: 0, to, duration, easing: ease.inOut,
+    onUpdate: (v) => dense.setAttribute('opacity', v.toFixed(3)),
+  });
+}
+
+/** 구름 안에서 무언가 움직이고 있다는 정도의 암시 */
+export function stirCloud(groupEl, parts, { duration = 7000, amp = 2.6 } = {}) {
+  const nodes = [...groupEl.querySelectorAll('defs > g > *')];
+  const byIndex = new Map(nodes.map((n) => [Number(n.dataset.i), n]));
+  return tween({
+    duration, easing: ease.linear,
+    onUpdate: (t) => {
+      const fade = Math.sin(Math.PI * Math.min(1, t)); // 조용히 시작해 조용히 멎는다
+      parts.forEach((b, i) => {
+        const el = byIndex.get(b.i);
+        if (!el || b.t === 'e') return;
+        const w = Math.sin(t * Math.PI * 2 * (2.1 + i * 0.37) + i) * amp * fade;
+        el.setAttribute('r', (b.r + w).toFixed(2));
+        el.setAttribute('cy', (b.y + w * 0.4).toFixed(2));
+      });
+    },
+    onDone: () => {
+      parts.forEach((b) => {
+        const el = byIndex.get(b.i);
+        if (!el || b.t === 'e') return;
+        el.setAttribute('r', String(b.r));
+        el.setAttribute('cy', String(b.y));
+      });
+    },
+  });
 }
