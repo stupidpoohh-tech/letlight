@@ -146,3 +146,32 @@ src/
   월드 확장(두 번째 지형)의 출발점으로 쓸 수 있다.
 - 지식 그래프를 외부에서 관리하게 되면 `knowledge.js` 를
   같은 모양의 JSON 으로 바꾸는 것만으로 붙는다.
+
+---
+
+## 배포 (Cloudflare Pages)
+
+빌드가 없으므로 저장소를 그대로 올리면 된다.
+
+1. Cloudflare 대시보드 → **Workers & Pages** → **Create** → **Pages** →
+   **Connect to Git** → `stupidpoohh-tech/letlight` 선택
+2. 빌드 설정
+
+   | 항목 | 값 |
+   |---|---|
+   | Framework preset | `None` |
+   | Build command | *(비워 둔다)* |
+   | Build output directory | `/` |
+   | Production branch | `claude/boidda-first-playable-sf7fuw` |
+
+3. **Save and Deploy**
+
+`https://<프로젝트명>.pages.dev` 가 나온다.
+이후 이 브랜치에 푸시할 때마다 자동으로 다시 배포된다.
+다른 브랜치에 푸시하면 미리보기 URL 이 따로 생긴다.
+
+`_headers` 는 캐시를 매번 재검증하게 해 둔 것이다.
+파일명에 해시가 없어서, 이게 없으면 고친 내용이 바로 보이지 않을 수 있다.
+
+> 서체는 Google Fonts 에서 받아 온다. 사내망에서 막혀 있다면
+> 폰트 파일을 `fonts/` 에 두고 `styles/tokens.css` 의 `@font-face` 를 쓰는 편이 낫다.

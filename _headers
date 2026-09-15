@@ -1,0 +1,7 @@
+# Cloudflare Pages
+# 파일명에 해시가 없으므로 항상 재검증하게 둔다.
+# 프로토타입을 고칠 때마다 곧바로 반영되는 쪽이 낫다.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
