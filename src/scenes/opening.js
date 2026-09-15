@@ -34,22 +34,44 @@ export function runOpening() {
     glow:    document.getElementById('glow'),
     layer:   document.getElementById('world-layer'),
     art:     document.getElementById('world-art'),
+    grain:   document.getElementById('paper-fx'),
   };
 
+  /* 화면을 다 덮고 나면 마스크는 더 이상 할 일이 없다.
+     매 프레임 전체 화면 그라디언트를 다시 만들지 않도록 떼어낸다. */
+  const reach = Math.hypot(innerWidth, innerHeight) * 1.08;
+  let masked = true;
+  let lastFilter = '';
+
   const setReveal = (r) => {
-    const maxDim = Math.max(innerWidth, innerHeight);
-    const radius = Math.pow(r, 1.42) * maxDim * 2.05;
-    el.layer.style.setProperty('--mr', `${radius.toFixed(0)}px`);
+    const radius = Math.pow(r, 1.42) * Math.max(innerWidth, innerHeight) * 2.05;
+    if (masked) {
+      if (radius > reach) {
+        masked = false;
+        el.layer.style.webkitMaskImage = 'none';
+        el.layer.style.maskImage = 'none';
+      } else {
+        el.layer.style.setProperty('--mr', `${radius.toFixed(0)}px`);
+      }
+    }
+
     el.veil.style.opacity = veilAt(r).toFixed(3);
 
     const bright = 0.42 + 0.58 * slice(r, 0.18, 0.88);
     const sat    = slice(r, 0.52, 0.97);
     const cont   = 1.3 - 0.3 * slice(r, 0.28, 0.92);
-    el.art.style.filter =
-      `saturate(${sat.toFixed(3)}) brightness(${bright.toFixed(3)}) contrast(${cont.toFixed(3)})`;
+    const fx = `saturate(${sat.toFixed(2)}) brightness(${bright.toFixed(2)}) contrast(${cont.toFixed(2)})`;
+    if (fx !== lastFilter) { el.art.style.filter = fx; lastFilter = fx; }
+
+    /* 질감은 늦게 온다 — 연출 순서이기도 하고, 그 전까지 합성 비용을 아낀다 */
+    if (el.grain) el.grain.style.opacity = (0.34 * slice(r, 0.5, 0.9)).toFixed(3);
   };
 
+  /* 어두운 서곡 동안 세계를 미리 그려 둔다.
+     검은 장막이 덮고 있으므로 보이지는 않는다. */
+  el.layer.style.setProperty('--mr', '400vmax');
   setReveal(0);
+  el.grain.style.opacity = '0';
 
   return new Promise((resolve) => {
     let armed = false;
@@ -88,6 +110,7 @@ export function runOpening() {
       el.glow.style.top  = `${py}px`;
       el.layer.style.setProperty('--mx', `${px}px`);
       el.layer.style.setProperty('--my', `${py}px`);
+      el.layer.style.setProperty('--mr', '0px');
 
       /* A. 거의 점에 가까운 빛 하나 */
       el.glow.style.width = '340px';
@@ -150,7 +173,9 @@ export function runOpening() {
       await reveal;
       el.art.style.filter = '';
       el.art.style.willChange = '';
-      el.layer.style.setProperty('--mr', '400vmax');
+      el.grain.style.opacity = '';
+      el.layer.style.webkitMaskImage = 'none';
+      el.layer.style.maskImage = 'none';
       await wait(900);
       el.opening.remove();
       resolve();
