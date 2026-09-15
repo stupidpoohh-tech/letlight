@@ -1,0 +1,57 @@
+/* ------------------------------------------------------------------
+   보이ㄷㅏ — 디자인 토큰
+   빈티지 자연 백과사전 / 판화 / 낮은 채도
+   ------------------------------------------------------------------ */
+
+/* Freesentation 이 기기에 설치되어 있으면 UI 서체로 먼저 쓰인다.
+   없으면 Gowun Dodum 으로 자연스럽게 내려간다. */
+
+:root {
+  /* 종이와 잉크 */
+  --paper:        #f4ecd9;
+  --paper-warm:   #e9dcbe;
+  --paper-deep:   #ddcda8;
+  --ink:          #2f2e27;
+  --ink-soft:     #55523f;
+  --ink-faint:    #7d7860;
+
+  /* 하늘 */
+  --sky-top:      #bcd2dd;
+  --sky-mid:      #d7dfd8;
+  --sky-low:      #ecdfbe;
+  --sun:          #f6e2a8;
+  --sun-core:     #fdf4dc;
+
+  /* 대지 — 세이지 / 올리브 / 흙 */
+  --hill-1:       #c3c9aa;
+  --hill-2:       #aab38b;
+  --hill-3:       #929c72;
+  --hill-4:       #79855b;
+  --hill-5:       #66734c;
+  --earth:        #c9ae80;
+  --earth-deep:   #a98f65;
+  --water:        #b9cdd2;
+  --stone:        #9d9884;
+
+  /* 구름 */
+  --cloud-body:   #f8f3e6;
+  --cloud-shade:  #dcd6c2;
+  --cloud-ink:    #6f6a55;
+
+  /* 어둠 */
+  --void:         #000a14;
+
+  /* 서체 */
+  --font-ui:    "Freesentation", "Gowun Dodum", "Apple SD Gothic Neo",
+                system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  --font-book:  "Gowun Batang", "Nanum Myeongjo", "Apple SD Gothic Neo",
+                Georgia, serif;
+
+  /* 리듬 */
+  --ease-quiet: cubic-bezier(.32, .06, .22, 1);
+  --ease-soft:  cubic-bezier(.4, 0, .2, 1);
+
+  /* 안전 영역 */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

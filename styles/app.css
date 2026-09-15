@@ -1,0 +1,548 @@
+/* ==================================================================
+   보이ㄷㅏ — Let There Be Light
+   순서 원칙:  WORLD  >  QUESTION  >  UI
+   운동 원칙:  slow / quiet / deliberate
+   ================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  background: var(--void);
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-ui);
+  word-break: keep-all;          /* 한글은 어절 단위로 끊는다 */
+  overflow-wrap: break-word;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+#stage {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ------------------------------------------------------------------
+   1. 세계 — 빛이 닿은 곳만 보인다
+   ------------------------------------------------------------------ */
+
+#world-layer {
+  position: absolute; inset: 0;
+  z-index: 1;
+  --mx: 50%; --my: 56%; --mr: 0px;
+  --falloff: #000 0%, #000 9%, rgba(0,0,0,.9) 30%,
+             rgba(0,0,0,.62) 53%, rgba(0,0,0,.28) 76%, transparent 100%;
+  -webkit-mask-image: radial-gradient(circle var(--mr) at var(--mx) var(--my), var(--falloff));
+  mask-image: radial-gradient(circle var(--mr) at var(--mx) var(--my), var(--falloff));
+}
+
+#world-art, #sky-fx {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+#world-art svg, #sky-fx svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* 세계 위의 어둠. 오프닝이 진행되며 걷힌다 */
+#veil {
+  position: absolute; inset: 0;
+  z-index: 2;
+  background: var(--void);
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* 최초의 빛 한 점 */
+#glow {
+  position: absolute;
+  z-index: 3;
+  left: 50%; top: 56%;
+  width: 2px; height: 2px;
+  margin: -1px 0 0 -1px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle,
+      rgba(255,253,246,1)     0%,
+      rgba(254,247,227,.90)  10%,
+      rgba(248,231,180,.36)  26%,
+      rgba(244,221,160,.13)  44%,
+      rgba(244,221,160,.05)  62%,
+      rgba(244,221,160,.018) 80%,
+      rgba(244,221,160,0)   100%);
+}
+
+/* ------------------------------------------------------------------
+   2. 오프닝 문장
+   ------------------------------------------------------------------ */
+
+#opening {
+  position: absolute; inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4rem;
+  padding: calc(var(--safe-top) + 24px) 28px calc(var(--safe-bottom) + 24px);
+  text-align: center;
+}
+
+.opening-line {
+  margin: 0;
+  opacity: 0;
+  font-family: var(--font-book);
+  color: #f3ead6;
+  letter-spacing: .04em;
+  will-change: opacity;
+}
+
+#line-fiat, #line-after {
+  font-size: clamp(1.55rem, 6.4vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* 두 문장은 같은 자리를 쓴다 */
+.verse { display: grid; }
+.verse > p { grid-area: 1 / 1; }
+
+/* 터치 가능한 문장 — 버튼처럼 생기지 않는다 */
+.law {
+  font-family: var(--font-ui);
+  font-size: clamp(.94rem, 3.9vw, 1.12rem);
+  line-height: 1.6;
+  letter-spacing: .02em;
+  color: #cfc9b6;
+  cursor: pointer;
+  padding: 18px 20px;   /* 시각적으로는 조용하되 터치 영역은 넉넉하게 */
+  margin: -18px -20px;
+  border: 0; background: none;
+}
+.law.is-breathing { animation: breathe 5.2s var(--ease-quiet) infinite; }
+@keyframes breathe {
+  0%, 100% { opacity: .38; }
+  50%      { opacity: .66; }
+}
+
+/* ------------------------------------------------------------------
+   3. 세계 위의 질문들
+   ------------------------------------------------------------------ */
+
+#nodes { position: absolute; inset: 0; pointer-events: none; }
+
+/* 인쇄 질감 + 비네트. 빛이 닿은 곳에만 얹힌다. */
+#paper-fx {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: .34;
+  mix-blend-mode: multiply;
+  box-shadow: inset 0 0 130px 44px rgba(47,46,39,.16);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
+}
+
+.qnode {
+  position: absolute;
+  pointer-events: auto;
+  --anchor: -50%;
+  width: max-content;            /* 글자에 딱 맞는 터치 영역 */
+  max-width: 74vw;
+  transform: translate(var(--anchor), -50%);
+  padding: 12px 16px;
+  margin: 0;
+  font-family: var(--font-book);
+  font-size: clamp(.86rem, 3.8vw, 1.05rem);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  text-align: center;
+  color: var(--ink);
+  text-shadow:
+     0 0 9px  rgba(244,236,217,.92),
+     0 0 20px rgba(244,236,217,.75),
+     0 0 34px rgba(244,236,217,.5);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 1.1s var(--ease-quiet), filter 1.1s var(--ease-quiet);
+  will-change: opacity;
+}
+
+.qnode > span {
+  display: block;
+  animation: drift var(--drift-dur, 13s) ease-in-out var(--drift-delay, 0s) infinite;
+}
+@keyframes drift {
+  0%, 100% { transform: translateY(0)    rotate(0deg); }
+  50%      { transform: translateY(-6px) rotate(-.25deg); }
+}
+
+.qnode.is-dimmed { opacity: .05 !important; filter: blur(1.4px); }
+.qnode.is-chosen { opacity: 1 !important; }
+
+/* ------------------------------------------------------------------
+   4. 시트 — 문제 / 도감
+   ------------------------------------------------------------------ */
+
+.sheet {
+  position: absolute; inset: 0;
+  z-index: 8;
+  display: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0;
+  transition: opacity .9s var(--ease-quiet);
+}
+.sheet.is-open    { display: block; }
+.sheet.is-visible { opacity: 1; }
+
+/* -- 문제: 세계가 뒤에 희미하게 남는다 ------------------------------ */
+
+#quiz {
+  z-index: 30;                       /* 문제를 푸는 동안에는 이동을 덮는다 */
+  background: rgba(244, 236, 217, .70);
+  -webkit-backdrop-filter: blur(2.5px) saturate(.9);
+  backdrop-filter: blur(2.5px) saturate(.9);
+}
+
+.quiz-inner {
+  min-height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 56px) 30px calc(var(--safe-bottom) + 56px);
+  max-width: 560px; margin: 0 auto;
+}
+
+.quiz-q {
+  margin: 0 0 2.8rem;
+  font-family: var(--font-book);
+  font-size: clamp(1.22rem, 5.4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--ink);
+  transition: opacity .9s var(--ease-quiet);
+}
+
+.choices { list-style: none; margin: 0; padding: 0; }
+
+.choice {
+  position: relative;
+  padding: 19px 4px 19px 30px;
+  font-size: clamp(.95rem, 4.05vw, 1.06rem);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-top: 1px solid rgba(47,46,39,.13);
+  transition: color .6s var(--ease-quiet), opacity .8s var(--ease-quiet);
+}
+.choices .choice:last-child { border-bottom: 1px solid rgba(47,46,39,.13); }
+
+.choice::before {
+  content: attr(data-key);
+  position: absolute; left: 2px; top: 19px;
+  font-family: var(--font-book);
+  font-size: .9em;
+  color: var(--ink-faint);
+  transition: color .6s var(--ease-quiet);
+}
+
+/* 선택 표시: 밑줄이 천천히 그어진다 */
+.choice::after {
+  content: "";
+  position: absolute; left: 30px; right: 4px; bottom: 13px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .75s var(--ease-quiet);
+}
+.choice.is-picked         { color: var(--ink); }
+.choice.is-picked::before { color: var(--ink); }
+.choice.is-picked::after  { transform: scaleX(1); }
+
+.choice.is-spent        { opacity: .3; cursor: default; }
+.choice.is-spent::after { transform: scaleX(0); }
+.choice.is-hushed       { opacity: .12; cursor: default; }
+
+.quiz-nudge {
+  margin: 2.1rem 0 0;
+  font-size: .88rem;
+  line-height: 1.7;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity .9s var(--ease-quiet);
+}
+.quiz-nudge.is-on { opacity: 1; }
+
+/* -- 정답 이후 ------------------------------------------------------ */
+
+.verdict {
+  margin: 0 0 2.4rem;
+  font-family: var(--font-book);
+  font-size: 1.02rem;
+  letter-spacing: .1em;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-quiet);
+}
+.verdict.is-on { opacity: 1; }
+
+.explain p {
+  margin: 0 0 1.25rem;
+  font-family: var(--font-book);
+  font-size: clamp(1.02rem, 4.3vw, 1.16rem);
+  line-height: 1.85;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 1.3s var(--ease-quiet), transform 1.3s var(--ease-quiet);
+}
+.explain p.is-on { opacity: 1; transform: none; }
+
+.concept-tag {
+  margin: 2.2rem 0 0;
+  font-size: .84rem;
+  letter-spacing: .06em;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-quiet);
+}
+.concept-tag.is-on { opacity: 1; }
+.concept-tag b { font-weight: 400; color: var(--ink-soft); }
+
+/* 조용한 진행 어포던스 */
+.quiet-action {
+  align-self: flex-start;
+  margin-top: 3rem;
+  padding: 14px 2px;
+  font-size: .92rem;
+  letter-spacing: .05em;
+  color: var(--ink-faint);
+  border: 0; background: none;
+  font-family: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-quiet), color .5s var(--ease-quiet);
+}
+.quiet-action.is-on { opacity: 1; }
+.quiet-action::after {
+  content: ""; display: block; margin-top: 7px; height: 1px;
+  background: currentColor; opacity: .45;
+}
+
+/* -- 다음 발견 (preview) -------------------------------------------- */
+
+#quiz.is-preview { background: rgba(244,236,217,.66); }
+
+.preview-inner {
+  min-height: 100%;
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: center;
+  padding: calc(var(--safe-top) + 56px) 34px calc(var(--safe-bottom) + 56px);
+  max-width: 520px; margin: 0 auto;
+  text-align: center;
+}
+.preview-kicker {
+  margin: 0 0 1.6rem;
+  font-size: .8rem; letter-spacing: .24em;
+  color: var(--ink-faint);
+}
+.preview-q {
+  margin: 0 0 1.8rem;
+  font-family: var(--font-book);
+  font-size: clamp(1.2rem, 5.2vw, 1.44rem);
+  font-weight: 700; line-height: 1.6;
+}
+.preview-hint {
+  margin: 0; font-size: .95rem; line-height: 1.9; color: var(--ink-soft);
+}
+.preview-inner .quiet-action { align-self: center; }
+
+/* ------------------------------------------------------------------
+   5. 도감 — 오래된 자연 백과사전의 한 장
+   ------------------------------------------------------------------ */
+
+#codex {
+  background: var(--paper);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(169,143,101,.12), transparent 70%);
+}
+#codex::after {   /* 종이 결 */
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  opacity: .5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.codex-inner {
+  position: relative; z-index: 1;
+  max-width: 560px; margin: 0 auto;
+  padding: calc(var(--safe-top) + 44px) 30px calc(var(--safe-bottom) + 130px);
+}
+
+.codex-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(47,46,39,.2);
+}
+.codex-title {
+  margin: 0; font-family: var(--font-book);
+  font-size: 1.16rem; font-weight: 700; letter-spacing: .1em;
+}
+.codex-count { font-size: .8rem; letter-spacing: .08em; color: var(--ink-faint); }
+
+/* 목록 */
+.codex-list { list-style: none; margin: 0; padding: 0; }
+.codex-row {
+  display: flex; align-items: center; gap: 18px;
+  padding: 20px 2px;
+  border-bottom: 1px solid rgba(47,46,39,.11);
+  cursor: pointer;
+}
+.codex-row.is-locked { cursor: default; opacity: .38; }
+.codex-thumb {
+  flex: 0 0 62px; width: 62px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.codex-thumb svg { width: 100%; height: 100%; }
+.codex-row-name {
+  font-family: var(--font-book); font-size: 1.08rem; font-weight: 700;
+  margin: 0 0 3px;
+}
+.codex-row-en {
+  font-size: .76rem; letter-spacing: .12em; color: var(--ink-faint);
+  text-transform: uppercase; margin: 0;
+}
+.codex-row.is-locked .codex-row-name { font-weight: 400; letter-spacing: .14em; }
+
+/* 항목 페이지 */
+.entry-back {
+  display: inline-block; margin: 0 0 26px; padding: 10px 2px;
+  font-size: .86rem; letter-spacing: .08em; color: var(--ink-faint);
+  border: 0; background: none; font-family: inherit; cursor: pointer;
+}
+
+.plate {
+  position: relative;
+  margin: 0 0 30px;
+  padding: 26px 18px 18px;
+  background: rgba(255,253,246,.55);
+  border: 1px solid rgba(47,46,39,.16);
+}
+.plate svg { display: block; width: 100%; height: auto; }
+.plate-cap {
+  margin: 16px 0 0; text-align: center;
+  font-family: var(--font-book); font-size: .78rem;
+  font-style: italic; color: var(--ink-faint);
+}
+
+.entry-name {
+  margin: 0 0 2px;
+  font-family: var(--font-book);
+  font-size: clamp(1.8rem, 8vw, 2.25rem);
+  font-weight: 700; letter-spacing: .02em;
+}
+.entry-en {
+  margin: 0 0 30px;
+  font-size: .84rem; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+.field { margin: 0 0 28px; }
+.field-label {
+  margin: 0 0 9px;
+  font-size: .73rem; letter-spacing: .2em; color: var(--ink-faint);
+}
+.field-body {
+  margin: 0;
+  font-family: var(--font-book);
+  font-size: 1.04rem; line-height: 1.9; color: var(--ink);
+}
+.field-body.quote { font-weight: 700; }
+.field-en {
+  font-size: .78rem; letter-spacing: .14em; color: var(--ink-faint);
+}
+
+.rule { height: 1px; background: rgba(47,46,39,.17); margin: 34px 0; }
+
+.unknown-list { list-style: none; margin: 0; padding: 0; }
+.unknown-list li {
+  padding: 13px 0;
+  font-family: var(--font-book);
+  font-size: .98rem; line-height: 1.6;
+  color: var(--ink-faint);
+  opacity: .62;
+}
+.unknown-list li span { letter-spacing: .12em; margin-right: 10px; }
+
+.footnote {
+  margin: 34px 0 0;
+  font-size: .78rem; line-height: 1.8; color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------
+   6. 하단 이동 — 세계보다 뒤에 있어야 한다
+   ------------------------------------------------------------------ */
+
+#nav {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  display: flex;
+  padding: 14px 8px calc(var(--safe-bottom) + 12px);
+  background: var(--paper);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -1px 0 rgba(47,46,39,.1);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 1.6s var(--ease-quiet), transform 1.6s var(--ease-quiet);
+  pointer-events: none;
+}
+#nav.is-on { opacity: 1; transform: none; pointer-events: auto; }
+
+.nav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 8px 4px 6px;
+  border: 0; background: none;
+  font-family: inherit; font-size: .8rem; letter-spacing: .02em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color .5s var(--ease-quiet);
+}
+.nav-item svg {
+  width: 28px; height: 22px;
+  fill: currentColor; stroke: currentColor;
+  stroke-width: 1.4; stroke-linejoin: round;
+}
+.nav-item svg .snow { fill: var(--paper); stroke: none; }
+.nav-item[data-view="codex"] svg { fill: none; stroke-width: 1.5; }
+.nav-item.is-active { color: var(--hill-5); }
+.nav-item.is-active::after {
+  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor; margin-top: 1px;
+}
+
+/* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */
+.nav-item.is-fresh { animation: fresh 3.4s var(--ease-quiet) 3; }
+@keyframes fresh {
+  0%, 100% { color: var(--ink-faint); }
+  45%      { color: var(--hill-5); }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .qnode > span, .law.is-breathing, .nav-item.is-fresh { animation: none; }
+}
