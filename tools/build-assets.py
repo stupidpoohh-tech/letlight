@@ -37,6 +37,12 @@ GROWTH_WIDTH = 520
 RIVER_MAIN = "river2.png"
 RIVER_WIDTH = 640
 
+# 순환 배지.  { 만들어질 이름: 루트에 올린 원본 }
+BADGES = {
+    "water-cycle": "badge-water-cycle.png",   # 물의 순환
+}
+BADGE_WIDTH = 420
+
 
 def build_world(src: Path, dst: Path):
     im = Image.open(src).convert("RGB")
@@ -86,6 +92,7 @@ def main():
     jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
     jobs += [(ROOT / src, OUT / f"{name}.webp", GROWTH_WIDTH) for name, src in GROWTH.items()]
     jobs += [(ROOT / RIVER_MAIN, OUT / "river.webp", RIVER_WIDTH)]
+    jobs += [(ROOT / src, OUT / f"{name}.webp", BADGE_WIDTH) for name, src in BADGES.items()]
 
     missing = []
     for src, dst, width in jobs:

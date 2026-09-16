@@ -12,6 +12,8 @@ import { state, markSolved, opensOf, isSolved } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
+import { openCycle } from './cycle.js';
+import { cycleClosedBy, livingElements, badgeSrcs } from '../data/cycles.js';
 
 const NODE_REST = 0.40;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
@@ -43,7 +45,7 @@ export function mountWorld({ onStateChange } = {}) {
 
   /* 구름은 첫 문제 직후에 필요하다. 미리 받아 둔다.
      자라는 그림은 한참 뒤에 쓰이므로 비가 올 때 받는다. */
-  preload([CLOUD_AT.src]);
+  preload([CLOUD_AT.src, ...badgeSrcs()]);
 }
 
 /* ------------------------------------------------------------------
@@ -447,6 +449,31 @@ async function revealMatureTree() {
   state.matureTreeVisible = true;
 }
 
+/* ------------------------------------------------------------------
+   고리가 닫힌 뒤 — 그 고리에 속한 것들이 움직이기 시작한다
+   ------------------------------------------------------------------ */
+
+/** 닫힌 순환에 속한 세계 요소를 살려 둔다. 여러 번 불러도 같다. */
+export function animateCycles() {
+  const live = livingElements();
+
+  if (live.has('cloud') && cloud) cloud.anchor.classList.add('is-alive');
+
+  if (live.has('river')) {
+    const anchor = el.fx.querySelector('.river-anchor');
+    const img = anchor && anchor.querySelector('.river-img');
+    if (anchor && img && !img.dataset.missing && !anchor.querySelector('.river-flow')) {
+      const flow = document.createElement('div');
+      flow.className = 'river-flow';
+      /* 강 그림 그대로를 틀로 써서, 물길 안에서만 빛이 지나간다.
+         css 변수 안의 url() 은 스타일시트 기준으로 풀리므로 여기서 미리 푼다. */
+      const src = new URL(RIVER_SRC, document.baseURI).href;
+      flow.style.setProperty('--river', `url("${src}")`);
+      anchor.appendChild(flow);
+    }
+  }
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
@@ -485,6 +512,14 @@ async function choose(nodeEl, node) {
   await wait(300);
   const effect = EFFECTS[node.effect];
   if (effect) await effect();
+
+  /* 이 질문으로 한 바퀴가 닫혔다면, 그것부터 알린다 */
+  const closed = cycleClosedBy(node.id);
+  if (closed) {
+    await wait(900);
+    await openCycle(closed);
+    animateCycles();
+  }
 
   await wait(700);
   /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
@@ -564,4 +599,7 @@ export async function restoreWorld() {
     state.plantVisible = stage !== 'sprout';
     state.matureTreeVisible = stage === 'matureTree';
   }
+
+  /* 이미 닫아 둔 고리는 알림 없이 다시 움직인다 */
+  animateCycles();
 }

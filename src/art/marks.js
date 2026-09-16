@@ -5,8 +5,8 @@ const INK = '#2f312c';
 const SOFT = '#b4b8a8';
 const OLIVE = '#7d8760';
 
-const svg = (inner) =>
-  `<svg class="mark" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg"
+const svg = (inner, box = '0 0 200 150') =>
+  `<svg class="mark" viewBox="${box}" xmlns="http://www.w3.org/2000/svg"
         fill="none" stroke-linecap="round" stroke-linejoin="round">
      <defs>
        <marker id="mk-tip" viewBox="0 0 8 8" refX="6" refY="4"
@@ -171,4 +171,47 @@ export function mark(conceptId) {
   const fn = MARKS[conceptId];
   return fn ? fn() : svg(`<circle cx="100" cy="75" r="26" stroke="${SOFT}"
                             stroke-width="1" stroke-dasharray="4 5"/>`);
+}
+
+/* 순환의 고리 — 이름 몇 개가 한 바퀴를 돈다.
+   배지 그림이 아직 없을 때 그 자리에도 이것을 쓴다. */
+export function ring(names = [], { labels = true } = {}) {
+  const n = names.length;
+  if (!n) return '';
+  const cx = 100, cy = 92, r = 54;
+  const at = (i, rad = r) => {
+    const a = -Math.PI / 2 + (i / n) * Math.PI * 2;
+    return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad];
+  };
+
+  /* 점과 점 사이를 도는 파선 화살표 */
+  let arcs = '';
+  for (let i = 0; i < n; i++) {
+    const gap = 0.36;
+    const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2 + gap;
+    const a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2 - gap;
+    const p0 = [cx + Math.cos(a0) * r, cy + Math.sin(a0) * r];
+    const p1 = [cx + Math.cos(a1) * r, cy + Math.sin(a1) * r];
+    arcs += `<path d="M${p0[0].toFixed(1)} ${p0[1].toFixed(1)}
+                      A ${r} ${r} 0 0 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}"
+                   stroke="${SOFT}" stroke-width="1.1" stroke-dasharray="3 4"
+                   marker-end="url(#mk-tip)"/>`;
+  }
+
+  const marks = names.map((name, i) => {
+    const [x, y] = at(i);
+    const ux = Math.cos(-Math.PI / 2 + (i / n) * Math.PI * 2);
+    const uy = Math.sin(-Math.PI / 2 + (i / n) * Math.PI * 2);
+    const anchor = ux > 0.4 ? 'start' : ux < -0.4 ? 'end' : 'middle';
+    const tx = x + ux * 11;
+    const ty = y + uy * 11 + (uy < -0.4 ? -2 : uy > 0.4 ? 10 : 4);
+    const dot = `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"
+                         fill="${OLIVE}" stroke="none"/>`;
+    if (!labels) return dot;
+    return dot + `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="${INK}" stroke="none"
+                  text-anchor="${anchor}" font-size="12"
+                  font-family="system-ui,sans-serif">${name}</text>`;
+  }).join('');
+
+  return svg(arcs + marks, labels ? '0 0 200 184' : '38 30 124 124');
 }

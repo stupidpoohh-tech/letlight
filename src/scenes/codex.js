@@ -11,9 +11,11 @@ import {
   foundWorlds, foundConcepts, worldCount, conceptQuestions, conceptName,
 } from '../data/library.js';
 import { state, isSolved } from '../core/state.js';
+import { CYCLES, closedCycles } from '../data/cycles.js';
 import { thumb } from '../art/plates.js';
-import { mark } from '../art/marks.js';
+import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
+import { badgeArt, hasBadge } from './cycle.js';
 
 const sheet = () => document.getElementById('codex');
 
@@ -103,6 +105,20 @@ function questionRow(id, { locked = false } = {}) {
     </li>`;
 }
 
+/** 배지 한 칸. 그림이 아직이면 같은 자리에 고리 도식이 들어간다. */
+function badgeRow(id) {
+  const c = CYCLES[id];
+  return `<li class="ex-badge" data-go="cycle" data-arg="${id}"
+              role="button" tabindex="0">
+      <span class="ex-badge-art">${badgeArt(c, { small: true })}</span>
+      <span class="ex-badge-text">
+        <span class="ex-badge-name">${c.title}</span>
+        <span class="ex-badge-en">${c.en}</span>
+      </span>
+      ${ARROW}
+    </li>`;
+}
+
 /* ------------------------------------------------------------------
    1. 백과사전 홈
    ------------------------------------------------------------------ */
@@ -110,6 +126,7 @@ function questionRow(id, { locked = false } = {}) {
 function renderHome() {
   const recent = [...state.solvedOrder].reverse();
   const locked = Object.keys(NODES).filter((id) => !isSolved(id));
+  const cycles = closedCycles();
 
   const block = (n, kicker, name, found, total, art, target) => `
     <button class="ex-block" type="button" data-go="${target}">
@@ -132,6 +149,15 @@ function renderHome() {
       ${block(2, '발견한 원리', '원리', foundConcepts().length, CONCEPT_TOTAL,
               ORBIT, 'concepts')}
     </div>
+
+    ${cycles.length ? `
+      <section class="ex-section">
+        <div class="ex-section-head">
+          <h3 class="ex-section-title">발견한 순환</h3>
+          <span class="ex-section-note">한 바퀴가 닫힌 것</span>
+        </div>
+        <ul class="ex-badges">${cycles.map(badgeRow).join('')}</ul>
+      </section>` : ''}
 
     ${recent.length ? `
       <section class="ex-section">
@@ -312,6 +338,32 @@ function renderConcept(id) {
 }
 
 /* ------------------------------------------------------------------
+   5-1. 순환 상세
+   ------------------------------------------------------------------ */
+
+function renderCycle(id) {
+  const c = CYCLES[id];
+  const qs = c.requiredNodes.filter(isSolved);
+  return page('백과사전', `
+    <p class="ex-crumb">순환 <span>/</span> ${c.title}</p>
+    ${hasBadge(c) ? `<div class="ex-hero ex-hero--badge">${badgeArt(c)}</div>` : ''}
+    <h2 class="ex-title ex-title--detail">${c.title}</h2>
+    <p class="ex-lead">${br(c.lead)}</p>
+
+    <section class="ex-section">
+      <h3 class="ex-section-title">한 바퀴</h3>
+      <div class="ex-ring">${ring(c.ring)}</div>
+      <p class="ex-ring-line">${[...c.ring, c.ring[0]].join(' → ')}</p>
+    </section>
+
+    <section class="ex-section">
+      <h3 class="ex-section-title">이 고리를 이룬 질문</h3>
+      <ul class="ex-list">${qs.map((q) => questionRow(q)).join('')}</ul>
+    </section>
+  `);
+}
+
+/* ------------------------------------------------------------------
    6. 글
    ------------------------------------------------------------------ */
 
@@ -327,6 +379,7 @@ const SCREENS = {
   concepts: renderConcepts,
   world:    renderWorld,
   concept:  renderConcept,
+  cycle:    renderCycle,
   article:  renderArticleScreen,
 };
 

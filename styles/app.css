@@ -108,6 +108,23 @@ body {
   filter: brightness(1.07) contrast(1.06);
 }
 
+/* 고리가 닫히면 대기가 살아 있는 것처럼 아주 느리게 움직인다.
+   자리를 옮기는 것이 아니라, 숨 쉬는 정도다. */
+@keyframes cloud-live {
+  0%, 100% { transform: translateX(0)      scale(1);     }
+  50%      { transform: translateX(-0.8%)  scale(1.016); }
+}
+@keyframes cloud-live-stir {
+  0%, 100% { opacity: 0;    }
+  50%      { opacity: .085; }
+}
+.cloud-anchor.is-alive .cloud-body {
+  animation: cloud-live 38s ease-in-out infinite;
+}
+.cloud-anchor.is-alive .cloud-stir {
+  animation: cloud-live-stir 26s ease-in-out infinite;
+}
+
 /* 구름이 생기기 직전, 하늘 한 조각이 옅어진다 */
 .sky-hush {
   position: absolute;
@@ -476,6 +493,62 @@ body {
 }
 
 /* ------------------------------------------------------------------
+   5-1. 순환이 닫히는 순간
+   ------------------------------------------------------------------ */
+
+#cycle {
+  position: absolute; inset: 0;
+  z-index: 40;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 28px;
+  background: rgba(20, 22, 18, .34);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity calc(.9s * var(--rate)) var(--ease-quiet);
+}
+#cycle.is-open    { display: flex; }
+#cycle.is-visible { opacity: 1; }
+
+.cyc-card {
+  width: 100%; max-width: 330px;
+  padding: 34px 28px 22px;
+  text-align: center;
+  background: #fbf6ea;
+  border: 1px solid rgba(47,46,39,.14);
+  box-shadow: 0 18px 44px rgba(20,22,18,.16);
+}
+
+.cyc-kicker {
+  margin: 0 0 12px;
+  font-size: .76rem; letter-spacing: .13em;
+  color: var(--ink-faint);
+}
+.cyc-title {
+  margin: 0 0 22px;
+  font-family: var(--font-book);
+  font-size: 1.56rem; font-weight: 700; letter-spacing: -.01em;
+  color: var(--ink);
+}
+
+.cyc-badge { margin: 0 0 20px; }
+.cyc-badge-img  { display: block; width: 64%; margin: 0 auto; height: auto; }
+.cyc-badge-ring .mark { display: block; width: 84%; margin: 0 auto; height: auto; }
+
+.cyc-lead {
+  margin: 0 0 14px;
+  font-size: .92rem; line-height: 1.8;
+  color: var(--ink-soft);
+}
+.cyc-line {
+  margin: 0 0 20px;
+  font-size: .78rem; letter-spacing: .04em;
+  color: var(--ink-faint);
+}
+.cyc-ok { display: inline-block; }
+
+/* ------------------------------------------------------------------
    6. 하단 이동 — 세계보다 뒤에 있어야 한다
    ------------------------------------------------------------------ */
 
@@ -559,6 +632,33 @@ body {
       transparent 5%, #000 13%, #000 var(--edge), transparent calc(var(--edge) + 13%));
   mask-image: linear-gradient(to bottom,
       transparent 5%, #000 13%, #000 var(--edge), transparent calc(var(--edge) + 13%));
+}
+
+/* 고리가 닫히면 물이 계속 흐른다.
+   강 그림을 그대로 틀로 써서, 물길 안에서만 빛 한 줄이 앞으로 내려온다. */
+.river-flow {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: .55;
+  background-image: linear-gradient(to bottom,
+      rgba(255,251,236,0)   0%,
+      rgba(255,251,236,.92) 11%,
+      rgba(255,251,236,0)  24%);
+  background-repeat: no-repeat;
+  background-size: 100% 230%;
+  -webkit-mask-image: var(--river);
+  mask-image: var(--river);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: river-flow 17s linear infinite;
+}
+/* 배경이 요소보다 크면 position % 가 커질수록 위로 간다.
+   강은 먼 곳에서 앞으로 흐르므로 값을 줄여 간다. */
+@keyframes river-flow {
+  from { background-position: 0  35%; }
+  to   { background-position: 0 -73%; }
 }
 
 /* 물을 받아들인 땅 */
