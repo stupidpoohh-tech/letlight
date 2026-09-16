@@ -17,7 +17,7 @@ import { cycleClosedBy, livingElements, badgeSrcs } from '../data/cycles.js';
 
 const NODE_REST = 0.40;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
-const GROWTH_AT = { left: 40, top: 82, width: 23 };
+const GROWTH_AT = { left: 72, top: 82, width: 23 };
 
 /* 비가 땅에 닿은 뒤 생기는 층. 그림이 올라오면 이 자리에 놓인다. */
 const SOIL_AT = { left: 50, top: 84, width: 100, src: WATER_LAYERS.soil };
