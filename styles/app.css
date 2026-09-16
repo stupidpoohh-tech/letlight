@@ -469,6 +469,32 @@ body {
   .qnode > span, .law.is-breathing, .nav-item.is-fresh { animation: none; }
 }
 
+/* ---- 비가 땅에 닿은 뒤의 층 ---- */
+
+/* 물을 받아들인 땅 */
+.soil-deep {
+  position: absolute;
+  left: 0; right: 0; top: 62%; bottom: 0;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  background: linear-gradient(to bottom,
+      rgba(92,106,94,0)     0%,
+      rgba(66,80,70,.42)   22%,
+      rgba(48,62,52,.64)   66%,
+      rgba(40,54,46,.72)  100%);
+}
+
+.layer-anchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.layer-img {
+  display: block;
+  width: 100%; height: auto;
+  opacity: 0;
+}
+
 /* ---- 씨앗에서 첫 잎까지 ---- */
 
 .growth-anchor {

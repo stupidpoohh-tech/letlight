@@ -14,15 +14,22 @@ export const state = {
   rainVisible: false,
   sproutVisible: false,
   plantVisible: false,
+  soilWaterVisible: false,
+  matureTreeVisible: false,
 };
 
 export const statusOf  = (id) => state.nodes[id];
 export const isSolved  = (id) => state.nodes[id] === 'solved';
 export const solvedIds = () => NODE_ORDER.filter(isSolved);
 
+/** 한 질문이 여는 다음 질문들. 하나일 수도, 갈라질 수도 있다. */
+export const opensOf = (id) =>
+  [].concat((NODES[id] && NODES[id].next) || []).filter(Boolean);
+
 export function markSolved(id) {
   state.nodes[id] = 'solved';
   if (!state.solvedOrder.includes(id)) state.solvedOrder.push(id);
-  const next = NODES[id] && NODES[id].next;
-  if (next && state.nodes[next] === 'locked') state.nodes[next] = 'available';
+  opensOf(id).forEach((next) => {
+    if (state.nodes[next] === 'locked') state.nodes[next] = 'available';
+  });
 }

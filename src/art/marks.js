@@ -93,7 +93,79 @@ const carbonFixation = () => svg(`
   <text x="150" y="122" fill="${SOFT}" stroke="none"
         font-size="9" font-family="system-ui,sans-serif">C₆</text>`);
 
-const MARKS = { scattering, growth, imbibition, photosynthesis, carbonFixation };
+/* 침투 — 물이 흙 입자 사이의 공극을 따라 땅속으로 들어간다 */
+const infiltration = () => svg(`
+  <line x1="18" y1="52" x2="182" y2="52" stroke="${INK}" stroke-width="1.3"/>
+  ${[[42, 22], [74, 16], [108, 24], [140, 18]]
+    .map(([x, y]) => arrow(x, y, x - 3, 48)).join('')}
+  ${(() => {
+    let g = ''; let a = 7 * 9301;
+    const rnd = () => ((a = (a * 9301 + 49297) % 233280) / 233280);
+    for (let i = 0; i < 26; i++) {
+      const x = 22 + rnd() * 156;
+      const y = 60 + rnd() * 76;
+      g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"
+                    r="${(3.4 + rnd() * 5).toFixed(1)}" stroke="${INK}"
+                    stroke-width="1" opacity=".55"/>`;
+    }
+    return g;
+  })()}
+  <path d="M74 54 C 70 70, 82 82, 78 98 C 74 112, 86 122, 84 136"
+        stroke="${OLIVE}" stroke-width="1.6" opacity=".85"/>
+  <path d="M120 54 C 126 68, 114 78, 118 92 C 122 104, 112 114, 116 128"
+        stroke="${OLIVE}" stroke-width="1.4" opacity=".7"/>
+  <text x="18" y="146" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">공극</text>`);
+
+/* 지표 유출 — 받아들이지 못한 물이 표면에 남아 낮은 곳으로 모인다 */
+const runoff = () => svg(`
+  <path d="M14 46 C 60 52, 104 74, 150 106 L 190 128" stroke="${INK}" stroke-width="1.3"/>
+  ${[[40, 12], [72, 8], [104, 14], [136, 10]]
+    .map(([x, y]) => arrow(x, y, x - 2, y + 26)).join('')}
+  <path d="M30 50 C 74 58, 116 80, 160 112" stroke="${OLIVE}" stroke-width="2.2" opacity=".85"/>
+  <path d="M38 56 C 78 64, 118 86, 158 118" stroke="${OLIVE}" stroke-width="1.2" opacity=".5"/>
+  ${[[58, 62], [96, 82], [132, 104]]
+    .map(([x, y]) => arrow(x, y + 6, x + 16, y + 18, '2 3')).join('')}
+  <ellipse cx="176" cy="132" rx="16" ry="5" stroke="${OLIVE}" stroke-width="1.2" opacity=".7"/>
+  <text x="16" y="132" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">지표</text>`);
+
+/* 자기조직화 — 같은 규칙이 생장점에서 반복되며 전체 형태가 나타난다 */
+const selfOrganization = () => svg(`
+  <line x1="100" y1="140" x2="100" y2="96" stroke="${INK}" stroke-width="1.6"/>
+  <path d="M100 96 L 74 68 M100 96 L 126 68" stroke="${INK}" stroke-width="1.4"/>
+  <path d="M74 68 L 58 48 M74 68 L 86 46 M126 68 L 114 46 M126 68 L 142 48"
+        stroke="${INK}" stroke-width="1.1"/>
+  <path d="M58 48 L 48 34 M58 48 L 64 32 M86 46 L 80 30 M86 46 L 94 32
+           M114 46 L 106 32 M114 46 L 120 30 M142 48 L 136 32 M142 48 L 152 34"
+        stroke="${SOFT}" stroke-width="1"/>
+  ${[[48, 34], [64, 32], [80, 30], [94, 32], [106, 32], [120, 30], [136, 32], [152, 34]]
+    .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.4" fill="${OLIVE}" stroke="none"/>`).join('')}
+  <circle cx="100" cy="96" r="9" stroke="${SOFT}" stroke-width="1" stroke-dasharray="3 4"/>
+  ${arrow(30, 108, 30, 60)}
+  <text x="12" y="126" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">반복</text>`);
+
+/* 표현형 가소성 — 같은 씨앗이 자란 자리에 따라 다른 형태가 된다 */
+const plasticity = () => svg(`
+  <circle cx="100" cy="24" r="6" stroke="${INK}" stroke-width="1.3"/>
+  ${arrow(92, 32, 60, 62)}${arrow(108, 32, 140, 62)}
+  <line x1="56" y1="132" x2="56" y2="76" stroke="${INK}" stroke-width="1.5"/>
+  <path d="M56 100 L 44 88 M56 88 L 68 78 M56 112 L 46 104" stroke="${INK}" stroke-width="1"/>
+  <ellipse cx="56" cy="76" rx="15" ry="20" stroke="${SOFT}" stroke-width="1.1"/>
+  <line x1="144" y1="132" x2="144" y2="104" stroke="${INK}" stroke-width="1.5"/>
+  <path d="M144 104 L 118 92 M144 104 L 170 92 M144 110 L 124 106 M144 110 L 164 106"
+        stroke="${INK}" stroke-width="1"/>
+  <ellipse cx="144" cy="96" rx="34" ry="13" stroke="${SOFT}" stroke-width="1.1"/>
+  <line x1="30" y1="132" x2="82" y2="132" stroke="${INK}" stroke-width="1" opacity=".5"/>
+  <line x1="112" y1="132" x2="180" y2="132" stroke="${INK}" stroke-width="1" opacity=".5"/>
+  <text x="30" y="146" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">숲 속</text>
+  <text x="130" y="146" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">벌판</text>`);
+
+const MARKS = { scattering, growth, imbibition, photosynthesis, carbonFixation,
+                infiltration, runoff, selfOrganization, plasticity };
 
 export function mark(conceptId) {
   const fn = MARKS[conceptId];

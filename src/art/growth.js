@@ -7,7 +7,13 @@ import { tween, ease } from '../core/anim.js';
 import { GROWTH_STAGES } from './assets.js';
 
 /* 같은 자리에서 자란다 */
-const SCALE = { sprout: 0.58, youngTree: 1 };
+const SCALE = { sprout: 0.58, youngTree: 1, matureTree: 1.3 };
+
+function setScale(img, sx, sy) {
+  img.dataset.sx = sx.toFixed(4);
+  img.dataset.sy = sy.toFixed(4);
+  img.style.transform = `translateX(-50%) scale(${img.dataset.sx}, ${img.dataset.sy})`;
+}
 
 /**
  * @param {number} o.left  화면 가로 위치 (%)
@@ -28,7 +34,7 @@ export function buildGrowth({ left = 40, top = 82, width = 17 } = {}) {
     img.alt = '';
     img.decoding = 'async';
     img.dataset.stage = key;
-    img.style.transform = `translateX(-50%) scale(${SCALE[key] ?? 1})`;
+    setScale(img, SCALE[key] ?? 1, SCALE[key] ?? 1);
     /* 아직 올라오지 않은 그림은 조용히 빠진다.
        hidden 만으로는 .growth-stage 의 display 가 이겨서 깨진 이미지가 남는다. */
     img.addEventListener('error', () => {
@@ -49,6 +55,8 @@ export function setStage(growth, key, { duration = 1400 } = {}) {
   const next = growth.stages.get(key);
   const prev = growth.current;
   if (!next || next === prev) return Promise.resolve();
+  /* 다음 그림이 아직 올라오지 않았으면 앞 단계를 지우지 않는다 */
+  if (next.dataset.missing) return Promise.resolve();
   growth.current = next;
 
   return tween({
@@ -58,5 +66,19 @@ export function setStage(growth, key, { duration = 1400 } = {}) {
       if (prev) prev.style.opacity = (1 - t).toFixed(3);
     },
     onDone: () => { if (prev) prev.style.opacity = '0'; },
+  });
+}
+
+/** 생장점이 한 번 더 일한다.
+    위로 자라고(y), 가지가 옆으로 갈라지며(x) 몸이 조금씩 달라진다.
+    나무를 절차적으로 그리는 것이 아니라, 같은 일이 반복된다는 감각만 남긴다. */
+export function growPulse(growth, { x = 1, y = 1, duration = 1100 } = {}) {
+  const img = growth.current;
+  if (!img || img.dataset.missing) return Promise.resolve();
+  const sx0 = parseFloat(img.dataset.sx || 1);
+  const sy0 = parseFloat(img.dataset.sy || 1);
+  return tween({
+    duration, easing: ease.inOut,
+    onUpdate: (t) => setScale(img, sx0 + sx0 * (x - 1) * t, sy0 + sy0 * (y - 1) * t),
   });
 }

@@ -24,14 +24,15 @@ export const WORLDS = {
   rain: {
     title: '비', en: 'Rain', plate: 'rain',
     lead: '성장한 강수 입자가 땅으로 떨어지는 현상',
-    questions: ['rainStart'],
-    concepts: ['growth'],
+    questions: ['rainStart', 'waterInfiltration'],
+    concepts: ['growth', 'infiltration', 'runoff'],
   },
   plant: {
     title: '식물', en: 'Plant', plate: 'plant',
     lead: '햇빛과 물로 살아가는 생명의 세계',
-    questions: ['seedWater', 'plantGrowth'],
-    concepts: ['imbibition', 'photosynthesis', 'carbonFixation'],
+    questions: ['seedWater', 'plantGrowth', 'treeForm'],
+    concepts: ['imbibition', 'photosynthesis', 'carbonFixation',
+               'selfOrganization', 'plasticity'],
   },
   fog: {
     title: '안개', en: 'Fog',
@@ -74,10 +75,32 @@ export const CONCEPT_META = {
     lead: '공기 중에 흩어져 있던 탄소가\n유기물 안으로 들어오는 단계.',
     siblings: ['캘빈 회로', '루비스코', '무기질 영양소', '독립영양생물'],
   },
+  infiltration: {
+    first: 'waterInfiltration', worlds: ['rain'], ahead: '지하수',
+    lead: '물이 흙 입자 사이의 공극으로 들어가\n땅속을 따라 이동하는 과정.',
+    siblings: ['공극', '포화', '모세관력', '대공극', '토양 다짐'],
+  },
+  runoff: {
+    first: 'waterInfiltration', worlds: ['rain'], ahead: '하천',
+    lead: '땅이 받아들이지 못한 물이 지표에 남아\n낮은 곳으로 모여 흐르는 현상.',
+    siblings: ['침투초과 유출', '포화초과 유출', '강우 강도', '포화'],
+  },
+  selfOrganization: {
+    first: 'treeForm', worlds: ['plant'], ahead: '패턴',
+    lead: '가까운 것들끼리의 국소적인 상호작용만으로\n전체의 규칙적인 형태가 나타나는 성질.',
+    siblings: ['줄기 정단분열조직', '옥신', 'PIN 단백질', '엽서', '액아', '정아우세'],
+  },
+  plasticity: {
+    first: 'treeForm', worlds: ['plant'], ahead: '적응',
+    lead: '같은 유전형이 자란 환경에 따라\n서로 다른 형태로 나타나는 성질.',
+    siblings: ['사이토키닌', '스트리고락톤', '식물 구조', '수관', '공간 경쟁'],
+  },
 };
 
 export const CONCEPT_ORDER = [
-  'scattering', 'growth', 'imbibition', 'photosynthesis', 'carbonFixation',
+  'scattering', 'growth', 'infiltration', 'runoff',
+  'imbibition', 'photosynthesis', 'carbonFixation',
+  'selfOrganization', 'plasticity',
 ];
 
 /* ------------------------------------------------------------------

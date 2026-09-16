@@ -4,10 +4,11 @@
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
 import { buildRainLayer, addDrops } from '../art/rain.js';
-import { buildGrowth, setStage } from '../art/growth.js';
-import { GROWTH_STAGES, preload, isReady } from '../art/assets.js';
+import { buildGrowth, setStage, growPulse } from '../art/growth.js';
+import { buildLayer, fadeIn } from '../art/layer.js';
+import { GROWTH_STAGES, WATER_LAYERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
-import { state, markSolved } from '../core/state.js';
+import { state, markSolved, opensOf } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
@@ -15,6 +16,10 @@ import { openArticle } from './article.js';
 const NODE_REST = 0.40;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
 const GROWTH_AT = { left: 40, top: 82, width: 23 };
+
+/* 비가 땅에 닿은 뒤 생기는 층. 그림이 올라오면 이 자리에 놓인다. */
+const SOIL_AT = { left: 50, top: 84, width: 100, src: WATER_LAYERS.soil };
+const FLOW_AT = { left: 64, top: 90, width: 52, src: WATER_LAYERS.flow };
 
 const el = {};
 let cloud = null;
@@ -174,7 +179,7 @@ async function revealRain() {
   if (!cloud) return;
 
   /* 다음 장면에서 쓸 그림을 지금 받아 둔다 */
-  preload(Object.values(GROWTH_STAGES));
+  preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
 
   /* 1. 구름 자체가 먼저 조금 변한다 */
   await thickenCloud(cloud, { to: 0.52, duration: 2400 });
@@ -282,11 +287,75 @@ async function revealYoungTree() {
   state.plantVisible = true;
 }
 
+/* ------------------------------------------------------------------
+   세계의 변화 5 — 빗물이 땅으로 들어간다
+   ------------------------------------------------------------------ */
+
+/** 그림이 아직 올라오지 않은 층은 조용히 건너뛴다 */
+async function addWaterLayer(at, { to = 1, duration = 2600 } = {}) {
+  if (!isReady(at.src)) return;
+  const l = buildLayer(at.src, at);
+  el.fx.appendChild(l.anchor);
+  await nextFrame();
+  await fadeIn(l, { to, duration });
+}
+
+async function revealSoilWater() {
+  /* 1. 물을 받아들인 땅은 색이 더 짙어진다.
+     비가 그친 뒤의 젖은 땅(#wet)은 이미 떠 있으므로 그 위에 한 겹 더 얹는다. */
+  const deep = document.createElement('div');
+  deep.className = 'soil-deep';
+  el.fx.appendChild(deep);
+  await nextFrame();
+  await tween({
+    from: 0, to: 1, duration: 2600, easing: ease.inOut,
+    onUpdate: (v) => { deep.style.opacity = v.toFixed(3); },
+  });
+
+  /* 2. 들어간 물은 사라지지 않는다. 지표 아래 공극으로 옮겨 간다. */
+  await addWaterLayer(SOIL_AT, { to: 0.88, duration: 3000 });
+
+  /* 3. 미처 들어가지 못한 물은 낮은 곳으로 모여 작은 물길이 된다 */
+  await addWaterLayer(FLOW_AT, { to: 0.82, duration: 2600 });
+
+  state.soilWaterVisible = true;
+}
+
+/* ------------------------------------------------------------------
+   세계의 변화 6 — 같은 일이 반복되어 큰 나무가 된다
+   ------------------------------------------------------------------ */
+
+async function revealMatureTree() {
+  await plantGround();
+
+  /* 생장 → 분기 → 달라진 몸이 다음 성장의 조건이 된다 → 다시 생장.
+     나무를 절차적으로 그리지 않는다. 같은 규칙이 되풀이되는 것만 보인다. */
+  const ROUNDS = [
+    { x: 1.02, y: 1.07 },   // 위로 자란다
+    { x: 1.07, y: 1.02 },   // 옆으로 갈라진다
+    { x: 1.04, y: 1.05 },   // 다시 자란다
+  ];
+  for (const r of ROUNDS) {
+    await growPulse(growth, { ...r, duration: 1100 });
+    await wait(420);
+  }
+
+  /* 큰 나무는 갈아 끼워지는 것이 아니라, 자라던 흐름 위에서 이어진다 */
+  await setStage(growth, 'matureTree', { duration: 3400 });
+  await growPulse(growth, { x: 1.52, y: 1.52, duration: 3200 });
+
+  /* 마지막으로 수관이 조금 더 넓어진다 */
+  await growPulse(growth, { x: 1.04, y: 1.01, duration: 1600 });
+  state.matureTreeVisible = true;
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
   seed:  revealSprout,
   plant: revealYoungTree,
+  water: revealSoilWater,
+  tree:  revealMatureTree,
 };
 
 /* ------------------------------------------------------------------
@@ -319,7 +388,7 @@ async function choose(nodeEl, node) {
   await wait(700);
   /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
   busy = false;
-  if (node.next) await showNode(node.next);
+  for (const next of opensOf(node.id)) await showNode(next);
 }
 
 export function wireNodes() {
@@ -344,9 +413,19 @@ export function hideNodes(on) {
 /* 확인용 지름길. #from=seedWater 처럼 중간부터 볼 때 세계를 맞춰 둔다.
    앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
 export async function devPrepare(id) {
-  if (id !== 'seedWater' && id !== 'plantGrowth') return;
+  preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
+
+  if (id === 'waterInfiltration') {
+    el.wet.style.opacity = '1';
+    return;
+  }
   if (id === 'plantGrowth') {
     await plantGround();
     await setStage(growth, 'sprout', { duration: 300 });
+    return;
+  }
+  if (id === 'treeForm') {
+    await plantGround();
+    await setStage(growth, 'youngTree', { duration: 300 });
   }
 }

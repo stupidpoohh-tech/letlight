@@ -77,6 +77,9 @@ export function plate(kind) {
   if (kind === 'plant') {
     return isReady(GROWTH_STAGES.youngTree) ? growthPlate(GROWTH_STAGES.youngTree) : '';
   }
+  if (kind === 'tree') {
+    return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
+  }
   return '';
 }
 
@@ -87,6 +90,7 @@ const THUMB_SRC = {
   rain:   RAIN.src,
   sprout: GROWTH_STAGES.sprout,
   plant:  GROWTH_STAGES.youngTree,
+  tree:   GROWTH_STAGES.matureTree,
 };
 
 export function thumb(kind) {
