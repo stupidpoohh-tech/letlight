@@ -468,10 +468,14 @@ async function choose(nodeEl, node) {
   await wait(880);
 
   await openQuiz(node);        // 맞힐 때까지 돌아오지 않는다
+  await openArticle(node);     // 읽는다
+
+  /* 나오는 문제가 있으면 그것까지 지나야 한 질문이 끝난다.
+     없는 노드는 여기서 바로 넘어간다. */
+  if (node.exitQuiz) await openQuiz(node, { kind: 'exit' });
+
   markSolved(node.id);
   onChange && onChange();
-
-  await openArticle(node);     // 읽고 나면 세계로 돌아온다
 
   /* 답을 얻은 질문은 물러나고, 알아낸 것이 세계에 남는다 */
   restoreNodes();

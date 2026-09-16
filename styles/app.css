@@ -308,12 +308,23 @@ body {
 
 .quiz-inner {
   min-height: 100%;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column;
   padding: calc(var(--safe-top) + 56px) 30px calc(var(--safe-bottom) + 56px);
   max-width: 560px; margin: 0 auto;
   transition: opacity calc(.8s * var(--rate)) var(--ease-quiet);
 }
+/* 가운데에 두되, 글이 길어지면 위가 잘리는 대신 자연히 늘어난다 */
+.quiz-inner > :first-child { margin-top: auto; }
+.quiz-inner > :last-child  { margin-bottom: auto; }
 .quiz-inner.is-leaving { opacity: 0; }
+
+/* 지금 어느 걸음인지. 제목이 아니라 아주 작은 표시다. */
+.quiz-step {
+  margin: 0 0 1.5rem;
+  font-size: .76rem;
+  letter-spacing: .13em;
+  color: var(--ink-faint);
+}
 
 .quiz-q {
   margin: 0 0 2.8rem;
@@ -379,6 +390,13 @@ body {
   transition: opacity calc(.9s * var(--rate)) var(--ease-quiet);
 }
 .quiz-nudge.is-on { opacity: 1; }
+
+/* 나오는 문제를 맞히면 그때 생기는 문 */
+.quiz-foot {
+  margin-top: 2.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid rgba(47,46,39,.13);
+}
 
 /* -- 지식: 흰 바탕 위의 글. 자세한 조판은 codex.css 에 있다 -------- */
 

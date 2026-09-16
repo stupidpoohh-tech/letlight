@@ -5,6 +5,7 @@ import { openSheet, closeSheet, chrome, br } from '../core/sheet.js';
 import { CONCEPTS } from '../data/nodes.js';
 import { CONCEPT_META } from '../data/library.js';
 import { plate } from '../art/plates.js';
+import { hasExitQuiz } from './quiz.js';
 
 const sheet = () => document.getElementById('article');
 
@@ -42,14 +43,17 @@ export function renderArticle(node) {
     </div>`;
 }
 
-/** 문제를 맞힌 뒤 읽는다. 다 읽으면 세계로 돌아간다. */
+/** 문제를 맞힌 뒤 읽는다.
+    다 읽으면 세계로 돌아가거나, 한 번 더 생각해 본다. */
 export function openArticle(node) {
   const el = sheet();
+  const next = hasExitQuiz(node);
   el.innerHTML = `
     <div class="article-inner">
       ${renderArticle(node)}
       <div class="article-foot">
-        <button class="quiet-action is-on" type="button">세계로 돌아가기</button>
+        <button class="quiet-action is-on" type="button">${
+          next ? '한 번 더 생각해보기' : '세계로 돌아가기'}</button>
       </div>
     </div>`;
 
@@ -57,7 +61,8 @@ export function openArticle(node) {
     chrome(false);
     await openSheet(el);
     el.querySelector('.quiet-action').addEventListener('click', async () => {
-      chrome(true);
+      /* 문제가 한 번 더 남았으면 세계의 것들을 다시 꺼내지 않는다 */
+      chrome(!next);
       await closeSheet(el);
       resolve();
     }, { once: true });
