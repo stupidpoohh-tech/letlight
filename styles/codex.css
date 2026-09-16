@@ -453,34 +453,67 @@
   user-select: text; -webkit-user-select: text;
 }
 
-/* ---- 소리 ---- */
+/* ---- 손잡이 (소리 · 진행) ---- */
 
-.ex-sound-row {
+.ex-settings {
   margin-top: 46px;
   padding-top: 18px;
   border-top: 1px solid var(--ex-line-2);
 }
-.ex-sound {
+
+.ex-set {
   display: flex; align-items: baseline; gap: 12px;
   padding: 6px 2px;
   border: 0; background: none;
   font-family: inherit;
   cursor: pointer;
 }
-.ex-sound-name {
+.ex-set-name {
   font-size: .82rem; letter-spacing: .04em;
   color: var(--ex-ink-3);
 }
-.ex-sound-state {
+.ex-set-state {
   font-size: .82rem; letter-spacing: .1em;
   color: var(--ex-ink-2);
   border-bottom: 1px solid var(--ex-line);
   padding-bottom: 2px;
 }
-.ex-sound[aria-pressed="true"] .ex-sound-state {
+.ex-sound[aria-pressed="true"] .ex-set-state {
   color: var(--ex-accent);
   border-bottom-color: var(--ex-accent);
 }
+.ex-reset.is-asking .ex-set-state {
+  color: var(--ex-ink);
+  border-bottom-color: var(--ex-ink);
+}
+
+/* 되돌릴 수 없는 일이라 한 번 더 묻는다 */
+.ex-reset-sure {
+  margin-top: 10px;
+  padding: 14px 14px 12px;
+  background: var(--ex-bg-soft);
+  border: 1px solid var(--ex-line);
+}
+.ex-reset-sure[hidden] { display: none; }
+
+.ex-reset-warn {
+  margin: 0 0 12px;
+  font-size: .8rem; line-height: 1.7;
+  color: var(--ex-ink-2);
+}
+.ex-reset-pick { display: flex; gap: 20px; }
+.ex-reset-pick button {
+  padding: 4px 2px;
+  border: 0; background: none;
+  font-family: inherit;
+  font-size: .82rem; letter-spacing: .08em;
+  cursor: pointer;
+}
+.ex-reset-pick .ex-reset-yes {
+  color: #8a5a4e;
+  border-bottom: 1px solid #d9c3bc;
+}
+.ex-reset-pick .ex-reset-no { color: var(--ex-ink-3); }
 
 /* ---- 만든 사람 ---- */
 

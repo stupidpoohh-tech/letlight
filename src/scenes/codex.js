@@ -17,6 +17,7 @@ import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
 import { badgeArt, hasBadge } from './cycle.js';
 import { isMuted, setMuted, unlock } from '../core/sound.js';
+import { clearProgress } from '../core/state.js';
 
 const sheet = () => document.getElementById('codex');
 
@@ -43,12 +44,26 @@ const ORBIT = `<svg class="ex-orbit" viewBox="0 0 120 100" fill="none" aria-hidd
 
 const two = (n) => String(n).padStart(2, '0');
 
-const soundRow = () => `
-  <div class="ex-sound-row">
-    <button class="ex-sound" type="button" aria-pressed="${!isMuted()}">
-      <span class="ex-sound-name">소리</span>
-      <span class="ex-sound-state">${isMuted() ? '끔' : '켬'}</span>
-    </button>
+const setRow = (cls, name, state, extra = '') => `
+  <button class="ex-set ${cls}" type="button" ${extra}>
+    <span class="ex-set-name">${name}</span>
+    <span class="ex-set-state">${state}</span>
+  </button>`;
+
+/* 소리와 진행. 세계 화면에는 손잡이를 두지 않는다. */
+const settings = () => `
+  <div class="ex-settings">
+    ${setRow('ex-sound', '소리', isMuted() ? '끔' : '켬',
+             `aria-pressed="${!isMuted()}"`)}
+    ${setRow('ex-reset', '진행', '초기화')}
+    <div class="ex-reset-sure" hidden>
+      <p class="ex-reset-warn">알아낸 질문과 지금까지 변한 세계가 모두 지워집니다.<br>
+        되돌릴 수 없습니다.</p>
+      <div class="ex-reset-pick">
+        <button class="ex-reset-yes" type="button">지운다</button>
+        <button class="ex-reset-no" type="button">그만두기</button>
+      </div>
+    </div>
   </div>`;
 
 const MADE = `
@@ -183,7 +198,7 @@ function renderHome() {
         <ul class="ex-list">${locked.map((id) => questionRow(id, { locked: true })).join('')}</ul>
       </section>` : ''}
 
-    ${soundRow()}
+    ${settings()}
 
     ${MADE}
   `);
@@ -411,8 +426,27 @@ function paint() {
     unlock();                       /* 누른 김에 소리를 연다 */
     setMuted(!isMuted());
     snd.setAttribute('aria-pressed', String(!isMuted()));
-    snd.querySelector('.ex-sound-state').textContent = isMuted() ? '끔' : '켬';
+    snd.querySelector('.ex-set-state').textContent = isMuted() ? '끔' : '켬';
   });
+
+  /* 초기화는 한 번 더 묻는다. 되돌릴 수 없는 일이다. */
+  const reset = pageEl.querySelector('.ex-reset');
+  const sure  = pageEl.querySelector('.ex-reset-sure');
+  if (reset && sure) {
+    const ask = (on) => {
+      sure.hidden = !on;
+      reset.querySelector('.ex-set-state').textContent = on ? '정말?' : '초기화';
+      reset.classList.toggle('is-asking', on);
+      if (on) sure.querySelector('.ex-reset-no').focus({ preventScroll: true });
+    };
+    reset.addEventListener('click', () => ask(sure.hidden));
+    sure.querySelector('.ex-reset-no').addEventListener('click', () => ask(false));
+    sure.querySelector('.ex-reset-yes').addEventListener('click', () => {
+      clearProgress();
+      /* 세계를 손으로 되돌리지 않는다. 처음부터 다시 연다. */
+      location.replace(location.pathname + location.search);
+    });
+  }
   pageEl.querySelectorAll('.ex-thumb-img').forEach((img) => {
     img.addEventListener('error', () => { img.style.visibility = 'hidden'; });
   });
