@@ -19,8 +19,9 @@ export const CYCLES = {
     ring: ['구름', '비', '강', '증발'],
 
     /* 이 질문들을 다 알아내면 고리가 닫힌다.
-       증발 질문이 생기면 여기에 한 줄 더하면 된다. */
-    requiredNodes: ['cloudWhite', 'rainStart', 'waterInfiltration'],
+       마지막은 증발한 물이 다시 구름이 되기까지를 보는 질문이다.
+       증발 질문이 따로 생기면 여기에 한 줄 더하면 된다. */
+    requiredNodes: ['cloudWhite', 'rainStart', 'waterInfiltration', 'waterLatentHeat'],
 
     badge: 'assets/water-cycle.webp',
 

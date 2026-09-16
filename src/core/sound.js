@@ -18,6 +18,9 @@ let muted = false;
 
 try { muted = localStorage.getItem(KEY) === 'off'; } catch (e) { /* 막아 둔 브라우저 */ }
 
+/* 전체 크기. 휴대폰 스피커에서도 들려야 한다. */
+const LEVEL = 1.7;
+
 const beds = new Map();        /* 상시 소리 */
 const wanted = new Set();      /* 아직 소리를 열기 전에 켜 달라고 한 것들 */
 
@@ -111,12 +114,12 @@ const BEDS = {
   }),
   rain: () => makeBed({
     filters: [{ type: 'highpass', freq: 520 }, { type: 'lowpass', freq: 5200, q: 0.5 }],
-    gain: 0.062,
+    gain: 0.082,
     sway: { on: 'gain', rate: 0.11, depth: 0.16 },
   }),
   river: () => makeBed({
     filters: [{ type: 'lowpass', freq: 760, q: 1.1 }, { type: 'highpass', freq: 140 }],
-    gain: 0.05,
+    gain: 0.066,
     sway: { on: 'freq', rate: 0.07, depth: 190 },
   }),
 };
@@ -133,10 +136,26 @@ export function unlock() {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return Promise.resolve();
 
+  /* iOS 의 무음 스위치는 웹 오디오까지 막는다.
+     이 소리는 벨소리가 아니라 재생이라고 알려 주면 지나갈 수 있다. */
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) { /* 모르는 브라우저는 그냥 지나간다 */ }
+
   try { ctx = new AC(); } catch (e) { return Promise.resolve(); }
+
+  /* 겹쳐도 찌그러지지 않게 마지막에 한 번 눌러 담는다 */
+  const cap = ctx.createDynamicsCompressor();
+  cap.threshold.value = -12;
+  cap.knee.value = 24;
+  cap.ratio.value = 4;
+  cap.attack.value = 0.006;
+  cap.release.value = 0.25;
+  cap.connect(ctx.destination);
+
   master = ctx.createGain();
-  master.gain.value = muted ? 0 : 1;
-  master.connect(ctx.destination);
+  master.gain.value = muted ? 0 : LEVEL;
+  master.connect(cap);
   noise = makeNoise();
 
   ambience('air', true, 6000);
@@ -156,11 +175,13 @@ export function unlock() {
 export function setMuted(on) {
   muted = Boolean(on);
   try { localStorage.setItem(KEY, muted ? 'off' : 'on'); } catch (e) { /* 위와 같다 */ }
+  /* 손잡이가 두 군데 있다. 한쪽을 만지면 다른 쪽도 따라온다. */
+  dispatchEvent(new CustomEvent('boida:sound'));
   if (!ctx) return;
   const t = ctx.currentTime;
   master.gain.cancelScheduledValues(t);
   master.gain.setValueAtTime(master.gain.value, t);
-  master.gain.linearRampToValueAtTime(muted ? 0 : 1, t + 0.5);
+  master.gain.linearRampToValueAtTime(muted ? 0 : LEVEL, t + 0.5);
 }
 
 /* ------------------------------------------------------------------

@@ -427,6 +427,7 @@ function paint() {
     setMuted(!isMuted());
     snd.setAttribute('aria-pressed', String(!isMuted()));
     snd.querySelector('.ex-set-state').textContent = isMuted() ? '끔' : '켬';
+    snd.setAttribute('aria-pressed', String(!isMuted()));
   });
 
   /* 초기화는 한 번 더 묻는다. 되돌릴 수 없는 일이다. */

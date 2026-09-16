@@ -559,6 +559,46 @@ body {
 .cyc-ok { display: inline-block; }
 
 /* ------------------------------------------------------------------
+   5-2. 소리 — 세계 위의 아주 작은 손잡이
+   ------------------------------------------------------------------ */
+
+#sound-toggle {
+  position: absolute;
+  top: calc(var(--safe-top) + 14px);
+  right: 14px;
+  z-index: 20;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; border: 0; background: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity calc(1.2s * var(--rate)) var(--ease-quiet);
+}
+#sound-toggle.is-on { opacity: .42; pointer-events: auto; }
+#sound-toggle.is-on:hover,
+#sound-toggle.is-on:focus-visible { opacity: .72; }
+
+#sound-toggle svg {
+  width: 21px; height: auto;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#sound-toggle .horn { fill: var(--ink); stroke-width: 1.2; }
+#sound-toggle .wave { transition: opacity calc(.5s * var(--rate)) var(--ease-quiet); }
+#sound-toggle .cut {
+  stroke: var(--ink);
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  transition: stroke-dashoffset calc(.5s * var(--rate)) var(--ease-quiet);
+}
+#sound-toggle.is-muted .wave { opacity: 0; }
+#sound-toggle.is-muted .cut  { stroke-dashoffset: 0; }
+
+/* ------------------------------------------------------------------
    6. 하단 이동 — 세계보다 뒤에 있어야 한다
    ------------------------------------------------------------------ */
 

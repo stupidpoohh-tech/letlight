@@ -10,9 +10,10 @@ import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
 import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
-import { unlock } from './core/sound.js';
+import { unlock, isMuted, setMuted } from './core/sound.js';
 
 const nav = document.getElementById('nav');
+const sndBtn = document.getElementById('sound-toggle');
 const navItems = [...nav.querySelectorAll('.nav-item')];
 const codexBtn = navItems.find((b) => b.dataset.view === 'codex');
 
@@ -46,6 +47,16 @@ nav.addEventListener('click', (e) => {
 addEventListener('pointerdown', unlock, { once: true });
 addEventListener('keydown', unlock, { once: true });
 
+/* 소리 손잡이는 세계 위에도, 도감 아래에도 있다. 한쪽을 만지면 둘 다 따라온다. */
+const paintSound = () => {
+  sndBtn.classList.toggle('is-muted', isMuted());
+  sndBtn.setAttribute('aria-pressed', String(!isMuted()));
+  sndBtn.setAttribute('aria-label', isMuted() ? '소리 켜기' : '소리 끄기');
+};
+sndBtn.addEventListener('click', () => { unlock(); setMuted(!isMuted()); });
+addEventListener('boida:sound', paintSound);
+paintSound();
+
 /* 틀 안에서는 vh 가 맞지 않는다. 무대 높이를 따로 내보낸다. */
 syncStageUnits();
 addEventListener('resize', syncStageUnits);
@@ -72,6 +83,8 @@ async function start() {
   await wait(skip ? 200 : 1200);
   nav.classList.add('is-on');
   nav.setAttribute('aria-hidden', 'false');
+  sndBtn.classList.add('is-on');
+  sndBtn.setAttribute('aria-hidden', 'false');
 
   wireNodes();
 
