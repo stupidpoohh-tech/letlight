@@ -4,6 +4,7 @@
    알수록 보이ㄷㅏ */
 
 import { wait } from './core/anim.js';
+import { syncStageUnits } from './core/stage.js';
 import { state, solvedIds, markSolved } from './core/state.js';
 import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
@@ -39,6 +40,11 @@ nav.addEventListener('click', (e) => {
   const b = e.target.closest('.nav-item');
   if (b) goto(b.dataset.view);
 });
+
+/* 틀 안에서는 vh 가 맞지 않는다. 무대 높이를 따로 내보낸다. */
+syncStageUnits();
+addEventListener('resize', syncStageUnits);
+addEventListener('orientationchange', syncStageUnits);
 
 async function start() {
   /* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */

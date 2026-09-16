@@ -40,6 +40,18 @@ const ORBIT = `<svg class="ex-orbit" viewBox="0 0 120 100" fill="none" aria-hidd
 
 const two = (n) => String(n).padStart(2, '0');
 
+const MADE = `
+  <footer class="ex-made">
+    <span class="ex-made-by">만든사람 DADA</span>
+    <a class="ex-made-home" href="https://dada-town.com/"
+       target="_blank" rel="noopener noreferrer" aria-label="DADA 홈페이지로">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3.5 10.6 12 3.8l8.5 6.8V20a.9.9 0 0 1-.9.9h-4.4v-6H8.8v6H4.4a.9.9 0 0 1-.9-.9z"
+              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </footer>`;
+
 /* ------------------------------------------------------------------
    화면 스택
    ------------------------------------------------------------------ */
@@ -135,6 +147,8 @@ function renderHome() {
         </div>
         <ul class="ex-list">${locked.map((id) => questionRow(id, { locked: true })).join('')}</ul>
       </section>` : ''}
+
+    ${MADE}
   `);
 }
 

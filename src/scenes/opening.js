@@ -7,6 +7,7 @@
    플레이어의 터치가 최초의 관측이다. */
 
 import { tween, ease, wait, slice } from '../core/anim.js';
+import { stageRect } from '../core/stage.js';
 
 /* 어둠이 걷히는 단계.  [reveal, 어둠의 농도] */
 const VEIL_STOPS = [
@@ -40,14 +41,16 @@ export function runOpening() {
     grain:   document.getElementById('paper-fx'),
   };
 
-  /* 화면을 다 덮고 나면 마스크는 더 이상 할 일이 없다.
-     매 프레임 전체 화면 그라디언트를 다시 만들지 않도록 떼어낸다. */
-  const reach = Math.hypot(innerWidth, innerHeight) * 1.08;
+  /* 무대를 다 덮고 나면 마스크는 더 이상 할 일이 없다.
+     매 프레임 전체 그라디언트를 다시 만들지 않도록 떼어낸다. */
+  const box = stageRect();
+  const reach = Math.hypot(box.width, box.height) * 1.08;
+  const span = Math.max(box.width, box.height);
   let masked = true;
   let lastFilter = '';
 
   const setReveal = (r) => {
-    const radius = Math.pow(r, 1.42) * Math.max(innerWidth, innerHeight) * 2.05;
+    const radius = Math.pow(r, 1.42) * span * 2.05;
     if (masked) {
       if (radius > reach) {
         masked = false;
@@ -112,10 +115,11 @@ export function runOpening() {
       el.law.removeEventListener('keydown', onKey);
       el.law.classList.remove('is-breathing');
 
-      /* 최초의 빛은 누른 자리에서 태어난다 */
+      /* 최초의 빛은 누른 자리에서 태어난다 (무대 안의 좌표로) */
+      const stage = stageRect();
       const r = el.law.getBoundingClientRect();
-      const px = r.width ? r.left + r.width / 2 : innerWidth / 2;
-      const py = r.height ? r.top + r.height / 2 : innerHeight * 0.54;
+      const px = (r.width ? r.left + r.width / 2 : stage.left + stage.width / 2) - stage.left;
+      const py = (r.height ? r.top + r.height / 2 : stage.top + stage.height * 0.54) - stage.top;
       el.glow.style.left = `${px}px`;
       el.glow.style.top  = `${py}px`;
       el.layer.style.setProperty('--mx', `${px}px`);

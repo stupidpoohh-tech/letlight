@@ -8,6 +8,7 @@ import { buildGrowth, setStage } from '../art/growth.js';
 import { GROWTH_STAGES, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved } from '../core/state.js';
+import { stageRect } from '../core/stage.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 
@@ -54,13 +55,13 @@ function addNode(node) {
   if (x <= 0.4) {
     n.style.setProperty('--anchor', '0');
     n.style.textAlign = 'left';
-    n.style.maxWidth = `${Math.min(84, (1 - x) * 100 - 4).toFixed(0)}vw`;
+    n.style.maxWidth = `${Math.min(84, (1 - x) * 100 - 4).toFixed(0)}%`;
   } else if (x >= 0.6) {
     n.style.setProperty('--anchor', '-100%');
     n.style.textAlign = 'right';
-    n.style.maxWidth = `${Math.min(84, x * 100 - 4).toFixed(0)}vw`;
+    n.style.maxWidth = `${Math.min(84, x * 100 - 4).toFixed(0)}%`;
   } else {
-    n.style.maxWidth = '84vw';
+    n.style.maxWidth = '84%';
   }
 
   if (!node.disabled) {
@@ -95,16 +96,20 @@ const NEAR = {
   cloud() {
     const n = el.fx.querySelector('.cloud-body');
     if (!n) return null;
+    const b = stageRect();
     const r = n.getBoundingClientRect();
     if (!r.height) return null;
-    return { x: (r.left + r.width / 2) / innerWidth, y: (r.bottom + 30) / innerHeight };
+    return { x: (r.left + r.width / 2 - b.left) / b.width,
+             y: (r.bottom + 30 - b.top) / b.height };
   },
   growth() {
     const n = [...el.fx.querySelectorAll('.growth-stage')]
       .find((i) => !i.dataset.missing && parseFloat(i.style.opacity || 0) > 0.1);
     if (n) {
+      const b = stageRect();
       const r = n.getBoundingClientRect();
-      if (r.height) return { x: (r.left + r.width / 2) / innerWidth, y: (r.top - 24) / innerHeight };
+      if (r.height) return { x: (r.left + r.width / 2 - b.left) / b.width,
+                             y: (r.top - 24 - b.top) / b.height };
     }
     /* 아직 아무것도 자라지 않았으면 자랄 자리 바로 위 */
     return { x: GROWTH_AT.left / 100, y: (GROWTH_AT.top - 9) / 100 };

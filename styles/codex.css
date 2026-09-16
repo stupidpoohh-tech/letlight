@@ -395,3 +395,27 @@
   color: #262723;
   user-select: text; -webkit-user-select: text;
 }
+
+/* ---- 만든 사람 ---- */
+
+.ex-made {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px;
+  margin-top: 54px;
+  padding-top: 28px;
+  border-top: 1px solid var(--ex-line-2);
+}
+.ex-made-by {
+  font-size: .82rem; font-weight: 500; letter-spacing: -.01em;
+  color: var(--ex-ink-3);
+}
+.ex-made-home {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border: 1px solid var(--ex-line);
+  border-radius: 10px;
+  color: var(--ex-ink-2);
+  transition: border-color .25s ease, color .25s ease;
+}
+.ex-made-home:hover { border-color: var(--ex-accent); color: var(--ex-accent); }
+.ex-made-home svg { width: 20px; height: 20px; }

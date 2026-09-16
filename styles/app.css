@@ -24,7 +24,23 @@ body {
   touch-action: manipulation;
 }
 
-#stage { position: fixed; inset: 0; overflow: hidden; isolation: isolate; }
+#stage {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* 넓은 화면에서는 늘리지 않는다.
+   가운데에 모바일 폭의 틀을 두고 그 안에서만 돌아간다. */
+@media (min-width: 560px) {
+  #stage {
+    top: 50%; left: 50%; right: auto; bottom: auto;
+    width: 420px;
+    height: min(100vh - 32px, 900px);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .08);
+  }
+}
 
 /* ------------------------------------------------------------------
    1. 세계 — 빛이 닿은 곳만 보인다
@@ -129,7 +145,8 @@ body {
   0%   { transform: translate3d(0, 0, 0);      opacity: 0; }
   8%   { opacity: var(--o, .5); }
   86%  { opacity: var(--o, .5); }
-  100% { transform: translate3d(-2.2vh, 41vh, 0); opacity: 0; }
+  100% { transform: translate3d(calc(var(--vh, 1vh) * -2.2), calc(var(--vh, 1vh) * 41), 0);
+         opacity: 0; }
 }
 
 #veil {
@@ -229,7 +246,7 @@ body {
   pointer-events: auto;
   --anchor: -50%;
   width: max-content;            /* 글자에 딱 맞는 터치 영역 */
-  max-width: 74vw;
+  max-width: 74%;                /* 화면이 아니라 무대 기준 */
   transform: translate(var(--anchor), -50%);
   padding: 12px 16px;
   margin: 0;
