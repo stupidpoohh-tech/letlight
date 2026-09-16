@@ -456,6 +456,21 @@ async function revealMatureTree() {
    고리가 닫힌 뒤 — 그 고리에 속한 것들이 움직이기 시작한다
    ------------------------------------------------------------------ */
 
+/** 강 그림 그대로를 틀로 쓰는 한 겹. 물길 안에서만 보인다.
+    css 변수 안의 url() 은 스타일시트 기준으로 풀리므로 여기서 미리 푼다. */
+function riverLayer(cls) {
+  const anchor = el.fx.querySelector('.river-anchor');
+  const img = anchor && anchor.querySelector('.river-img');
+  if (!anchor || !img || img.dataset.missing) return null;
+  if (anchor.querySelector(`.${cls}`)) return null;
+
+  const layer = document.createElement('div');
+  layer.className = cls;
+  layer.style.setProperty('--river', `url("${new URL(RIVER_SRC, document.baseURI).href}")`);
+  anchor.appendChild(layer);
+  return layer;
+}
+
 /** 닫힌 순환에 속한 세계 요소를 살려 둔다. 여러 번 불러도 같다. */
 export function animateCycles() {
   const live = livingElements();
@@ -464,18 +479,75 @@ export function animateCycles() {
 
   if (live.has('river')) {
     ambience('river', true, 5000);
-    const anchor = el.fx.querySelector('.river-anchor');
-    const img = anchor && anchor.querySelector('.river-img');
-    if (anchor && img && !img.dataset.missing && !anchor.querySelector('.river-flow')) {
-      const flow = document.createElement('div');
-      flow.className = 'river-flow';
-      /* 강 그림 그대로를 틀로 써서, 물길 안에서만 빛이 지나간다.
-         css 변수 안의 url() 은 스타일시트 기준으로 풀리므로 여기서 미리 푼다. */
-      const src = new URL(RIVER_SRC, document.baseURI).href;
-      flow.style.setProperty('--river', `url("${src}")`);
-      anchor.appendChild(flow);
-    }
+    riverLayer('river-flow');
   }
+}
+
+/* ------------------------------------------------------------------
+   세계의 변화 7 — 강과 구름 사이에 숨어 있던 에너지의 길
+
+   새 물체를 놓지 않는다. 있던 것들 위로, 보이지 않던 흐름이 드러난다.
+   수증기를 흰 연기로 그리지 않는다. 그리는 것은 공기의 흔들림뿐이다.
+   ------------------------------------------------------------------ */
+
+const HEAT_AT = { left: 45, top: 29, width: 15, height: 34 };
+
+/** 흐름을 이루는 것들을 만들어 둔다. 보이게 하는 것은 부르는 쪽이 정한다. */
+function buildEnergyFlow() {
+  /* 1. 강 표면이 햇빛을 받아 아주 미세하게 반짝인다 */
+  riverLayer('river-shimmer');
+  /* 2. 물이 떠나는 자리는 조금 식는다 */
+  riverLayer('river-cool');
+
+  /* 3~5. 강 위에서 시작된 공기의 흔들림이 위로 이어지다 구름 앞에서 사라진다 */
+  if (!el.fx.querySelector('.heat-column')) {
+    const col = document.createElement('div');
+    col.className = 'heat-column';
+    col.style.left = `${HEAT_AT.left}%`;
+    col.style.top = `${HEAT_AT.top}%`;
+    col.style.width = `${HEAT_AT.width}%`;
+    col.style.height = `${HEAT_AT.height}%`;
+    col.innerHTML = [0, 1, 2].map((i) =>
+      `<div class="heat-wisp" style="animation-delay:${(-i * 3.4).toFixed(1)}s"></div>`).join('');
+    el.fx.appendChild(col);
+  }
+
+  return {
+    river: [...el.fx.querySelectorAll('.river-shimmer, .river-cool')],
+    column: el.fx.querySelector('.heat-column'),
+  };
+}
+
+async function revealEnergyFlow() {
+  const flow = buildEnergyFlow();
+  await nextFrame();
+
+  /* 강 표면부터. 반짝임과 식음이 먼저 든다. */
+  await tween({
+    duration: 3000, easing: ease.inOut,
+    onUpdate: (t) => { flow.river.forEach((n) => { n.style.opacity = t.toFixed(3); }); },
+  });
+
+  /* 그다음, 그 위의 공기가 흔들리기 시작한다 */
+  if (flow.column) {
+    await tween({
+      duration: 3400, easing: ease.inOut,
+      onUpdate: (t) => { flow.column.style.opacity = t.toFixed(3); },
+    });
+  }
+
+  /* 6. 흐름이 닿은 구름은 안에서 오르내림이 조금 더 또렷해진다 */
+  if (cloud) cloud.anchor.classList.add('is-stirring');
+  state.energyVisible = true;
+}
+
+/** 이미 알아낸 흐름. 연출 없이 그냥 거기 있다. */
+function settleEnergyFlow() {
+  const flow = buildEnergyFlow();
+  flow.river.forEach((n) => { n.style.opacity = '1'; });
+  if (flow.column) flow.column.style.opacity = '1';
+  if (cloud) cloud.anchor.classList.add('is-stirring');
+  state.energyVisible = true;
 }
 
 const EFFECTS = {
@@ -485,6 +557,7 @@ const EFFECTS = {
   plant: revealYoungTree,
   water: revealSoilWater,
   tree:  revealMatureTree,
+  heat:  revealEnergyFlow,
 };
 
 /* ------------------------------------------------------------------
@@ -593,6 +666,8 @@ export async function restoreWorld() {
     state.soilWaterVisible = true;
     settleRiver();
   }
+
+  if (isSolved('waterLatentHeat')) settleEnergyFlow();
 
   const stage = isSolved('treeForm')     ? 'matureTree'
               : isSolved('plantGrowth')  ? 'youngTree'

@@ -18,8 +18,8 @@ export const WORLDS = {
   cloud: {
     title: '구름', en: 'Cloud', plate: 'cloud',
     lead: '하늘에 떠 있는 미세한 물방울과 얼음 결정의 집합',
-    questions: ['cloudWhite'],
-    concepts: ['scattering'],
+    questions: ['cloudWhite', 'waterLatentHeat'],
+    concepts: ['scattering', 'latentHeat'],
   },
   rain: {
     title: '비', en: 'Rain', plate: 'rain',
@@ -95,10 +95,15 @@ export const CONCEPT_META = {
     lead: '같은 유전형이 자란 환경에 따라\n서로 다른 형태로 나타나는 성질.',
     siblings: ['사이토키닌', '스트리고락톤', '식물 구조', '수관', '공간 경쟁'],
   },
+  latentHeat: {
+    first: 'waterLatentHeat', worlds: ['cloud'], ahead: '대기 순환',
+    lead: '온도를 바꾸지 않으면서 상변화에 드나드는 에너지.\n온도계에는 보이지 않는다.',
+    siblings: ['증발', '응결', '엔탈피', '상변화', '단열 냉각', '단열감률', '대기 순환'],
+  },
 };
 
 export const CONCEPT_ORDER = [
-  'scattering', 'growth', 'infiltration', 'runoff',
+  'scattering', 'growth', 'infiltration', 'runoff', 'latentHeat',
   'imbibition', 'photosynthesis', 'carbonFixation',
   'selfOrganization', 'plasticity',
 ];

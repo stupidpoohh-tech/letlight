@@ -4,6 +4,7 @@ import { GROWTH_STAGES, isReady } from './assets.js';
 
 const CLOUD = { src: 'assets/cloud-3.webp', w: 760, h: 540 };
 const RAIN  = { src: 'assets/cloud-4.webp', w: 760, h: 571 };
+const RIVER = { src: 'assets/river.webp' };
 
 /** 구름 — 비스듬히 들어온 햇빛이 여러 방향으로 흩어진다 */
 function cloudPlate() {
@@ -49,6 +50,23 @@ function rainPlate() {
     </svg>`;
 }
 
+/** 강 — 물이 오르는 자리. 새 그림을 그리지 않고 있는 강에 주석만 얹는다. */
+function riverPlate() {
+  let up = '';
+  for (let i = 0; i < 7; i++) {
+    const x = 96 + i * 34 + (i % 2) * 9;
+    const h = 30 + ((i * 13) % 26);
+    up += `<path d="M${x} ${196 - i % 3 * 6} C ${x - 5} ${196 - h * 0.5}, ${x + 5} ${196 - h * 0.75}, ${x} ${196 - h}"
+                 stroke-width="1.1"/>`;
+  }
+  return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#9aa4a8" stroke-linecap="round" stroke-dasharray="3 5" opacity="0.6">${up}</g>
+      <image href="${RIVER.src}" x="64" y="76" width="272" height="212"
+             preserveAspectRatio="xMidYMax meet"/>
+      <line x1="28" y1="290" x2="372" y2="290" stroke="#2f2e27" stroke-width="1" opacity="0.18"/>
+    </svg>`;
+}
+
 /* 씨앗·식물 도판. 그림의 실제 비율을 모르므로 틀에 맞춰 넣는다. */
 function growthPlate(src) {
   return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
@@ -77,6 +95,9 @@ export function plate(kind) {
   if (kind === 'plant') {
     return isReady(GROWTH_STAGES.youngTree) ? growthPlate(GROWTH_STAGES.youngTree) : '';
   }
+  if (kind === 'river') {
+    return isReady(RIVER.src) ? riverPlate() : '';
+  }
   if (kind === 'tree') {
     return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
   }
@@ -91,6 +112,7 @@ const THUMB_SRC = {
   sprout: GROWTH_STAGES.sprout,
   plant:  GROWTH_STAGES.youngTree,
   tree:   GROWTH_STAGES.matureTree,
+  river:  RIVER.src,
 };
 
 export function thumb(kind) {

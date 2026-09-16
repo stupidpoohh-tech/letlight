@@ -164,8 +164,29 @@ const plasticity = () => svg(`
   <text x="130" y="146" fill="${SOFT}" stroke="none"
         font-size="9" font-family="system-ui,sans-serif">벌판</text>`);
 
+/* 잠열 — 온도계에는 보이지 않는 에너지가 물의 상태를 따라 옮겨 간다 */
+const latentHeat = () => svg(`
+  <line x1="16" y1="122" x2="88" y2="122" stroke="${INK}" stroke-width="1.3"/>
+  ${[26, 44, 62, 78].map((x, i) =>
+    arrow(x, 118 - i % 2 * 3, x + 4, 62 + i % 2 * 6)).join('')}
+  <text x="16" y="138" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">증발</text>
+
+  <path d="M104 52 C 100 40, 114 30, 126 34 C 132 22, 152 22, 158 33
+           C 172 30, 182 42, 176 52 Z" stroke="${INK}" stroke-width="1.2"/>
+  ${[[118, 60], [134, 64], [152, 60]].map(([x, y]) =>
+    `<circle cx="${x}" cy="${y}" r="2.2" stroke="${INK}" stroke-width="1"/>`).join('')}
+  ${[[116, 74], [136, 78], [156, 74]].map(([x, y]) =>
+    arrow(x, y, x + (x > 136 ? 22 : -22), y + 26, '2 3')).join('')}
+  <text x="150" y="20" fill="${OLIVE}" stroke="none"
+        font-size="9" letter-spacing="1.2" font-family="system-ui,sans-serif">응결</text>
+
+  <line x1="96" y1="96" x2="188" y2="96" stroke="${SOFT}" stroke-width="1" stroke-dasharray="2 5"/>
+  <text x="96" y="112" fill="${SOFT}" stroke="none"
+        font-size="9" font-family="system-ui,sans-serif">대기로</text>`);
+
 const MARKS = { scattering, growth, imbibition, photosynthesis, carbonFixation,
-                infiltration, runoff, selfOrganization, plasticity };
+                infiltration, runoff, selfOrganization, plasticity, latentHeat };
 
 export function mark(conceptId) {
   const fn = MARKS[conceptId];
