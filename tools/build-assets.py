@@ -24,15 +24,10 @@ NAV_TOP = 1462      # 이 아래로는 시안의 하단바
 WORLD_WIDTH = 1180
 CLOUD_WIDTH = 760
 
-# 씨앗에서 첫 잎까지.  { 만들어질 이름: 루트에 올린 원본 }
-# 원본을 올리면 여기서 함께 변환된다. 아직 없는 것은 건너뛴다.
+# 자라는 단계.  { 만들어질 이름: 루트에 올린 원본 }
 GROWTH = {
-    "seed-dry":           "seed-dry.png",
-    "seed-swollen":       "seed-swollen.png",
-    "seed-cracked":       "seed-cracked.png",
-    "seed-radicle":       "seed-radicle.png",
-    "sprout":             "sprout.png",
-    "plant-first-leaves": "tree1.png",
+    "sprout":     "tree1.png",   # 새싹
+    "young-tree": "tree2.png",   # 어린나무
 }
 GROWTH_WIDTH = 520
 

@@ -239,14 +239,16 @@ body {
   letter-spacing: .01em;
   text-align: center;
   color: var(--ink);
+  /* 하늘 위에서도, 짙은 들판 위에서도 읽혀야 한다 */
   text-shadow:
-     0 0 9px  rgba(244,236,217,.92),
-     0 0 20px rgba(244,236,217,.75),
-     0 0 34px rgba(244,236,217,.5);
+     0 0 7px  rgba(250,246,236,.98),
+     0 0 15px rgba(250,246,236,.95),
+     0 0 28px rgba(250,246,236,.85),
+     0 0 46px rgba(250,246,236,.6);
   opacity: 0;
   cursor: pointer;
-  transition: opacity calc(1.4s * var(--rate)) var(--ease-quiet),
-              filter calc(1.1s * var(--rate)) var(--ease-quiet);
+  transition: opacity calc(1s * var(--rate)) var(--ease-quiet),
+              filter calc(.9s * var(--rate)) var(--ease-quiet);
 }
 
 .qnode > span {
@@ -458,6 +460,7 @@ body {
   height: 0;
   pointer-events: none;
 }
+.growth-stage[hidden] { display: none; }
 .growth-stage {
   position: absolute;
   left: 50%; bottom: 0;

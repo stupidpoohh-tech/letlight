@@ -6,15 +6,8 @@
 import { tween, ease } from '../core/anim.js';
 import { GROWTH_STAGES } from './assets.js';
 
-/* 같은 자리에 심겨 있되, 자랄수록 커진다 */
-const SCALE = {
-  seedDry:     0.28,
-  seedSwollen: 0.32,
-  seedCracked: 0.36,
-  seedRadicle: 0.46,
-  sprout:      0.66,
-  firstLeaves: 1,
-};
+/* 같은 자리에서 자란다 */
+const SCALE = { sprout: 0.58, youngTree: 1 };
 
 /**
  * @param {number} o.left  화면 가로 위치 (%)
@@ -36,8 +29,13 @@ export function buildGrowth({ left = 40, top = 82, width = 17 } = {}) {
     img.decoding = 'async';
     img.dataset.stage = key;
     img.style.transform = `translateX(-50%) scale(${SCALE[key] ?? 1})`;
-    /* 아직 올라오지 않은 그림은 조용히 빠진다 */
-    img.addEventListener('error', () => { img.hidden = true; img.dataset.missing = '1'; });
+    /* 아직 올라오지 않은 그림은 조용히 빠진다.
+       hidden 만으로는 .growth-stage 의 display 가 이겨서 깨진 이미지가 남는다. */
+    img.addEventListener('error', () => {
+      img.dataset.missing = '1';
+      img.hidden = true;
+      img.style.display = 'none';
+    });
     img.src = src;
     anchor.appendChild(img);
     stages.set(key, img);

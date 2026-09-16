@@ -15,11 +15,13 @@ export function renderArticle(node) {
     .flatMap((id) => (CONCEPT_META[id] ? CONCEPT_META[id].siblings : []))
     .slice(0, 3);
 
+  const art = plate(node.article.plate);
+
   return `
     ${linked.length ? `<p class="article-rel">
         <b>연결 원리</b><span>|</span>${linked.join(' · ')}</p>` : ''}
 
-    <div class="article-plate">${plate(node.article.plate)}</div>
+    ${art ? `<div class="article-plate">${art}</div>` : ''}
 
     <h2 class="article-title">${br(node.article.title)}</h2>
     ${found.map((c) => `

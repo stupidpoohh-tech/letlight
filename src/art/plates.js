@@ -70,14 +70,14 @@ export function plate(kind) {
   if (kind === 'rain')  return rainPlate();
 
   /* 그림이 아직 올라오지 않았으면 빈 틀을 둔다 */
+  /* 그림이 아직이면 빈 틀 대신 아무것도 두지 않는다 */
   if (kind === 'sprout') {
-    return isReady(GROWTH_STAGES.sprout) ? growthPlate(GROWTH_STAGES.sprout) : unknownPlate();
+    return isReady(GROWTH_STAGES.sprout) ? growthPlate(GROWTH_STAGES.sprout) : '';
   }
   if (kind === 'plant') {
-    return isReady(GROWTH_STAGES.firstLeaves)
-      ? growthPlate(GROWTH_STAGES.firstLeaves) : unknownPlate();
+    return isReady(GROWTH_STAGES.youngTree) ? growthPlate(GROWTH_STAGES.youngTree) : '';
   }
-  return unknownPlate();
+  return '';
 }
 
 
@@ -86,7 +86,7 @@ const THUMB_SRC = {
   cloud:  CLOUD.src,
   rain:   RAIN.src,
   sprout: GROWTH_STAGES.sprout,
-  plant:  GROWTH_STAGES.firstLeaves,
+  plant:  GROWTH_STAGES.youngTree,
 };
 
 export function thumb(kind) {

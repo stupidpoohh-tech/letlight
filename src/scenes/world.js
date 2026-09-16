@@ -11,9 +11,9 @@ import { state, markSolved } from '../core/state.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 
-const NODE_REST = 0.32;          // 평소의 희미함
+const NODE_REST = 0.40;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
-const GROWTH_AT = { left: 40, top: 82, width: 20 };
+const GROWTH_AT = { left: 40, top: 82, width: 23 };
 
 const el = {};
 let cloud = null;
@@ -33,9 +33,9 @@ export function mountWorld({ onStateChange } = {}) {
   grain.id = 'paper-fx';
   el.layer.insertBefore(grain, el.nodes);
 
-  /* 세계가 바뀔 때 기다리지 않도록 미리 받아 둔다.
-     아직 올라오지 않은 그림은 그냥 준비되지 않은 채로 남는다. */
-  preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES)]);
+  /* 구름은 첫 문제 직후에 필요하다. 미리 받아 둔다.
+     자라는 그림은 한참 뒤에 쓰이므로 비가 올 때 받는다. */
+  preload([CLOUD_AT.src]);
 }
 
 /* ------------------------------------------------------------------
@@ -43,13 +43,14 @@ export function mountWorld({ onStateChange } = {}) {
    ------------------------------------------------------------------ */
 
 function addNode(node) {
+  const at = anchorOf(node);
   const n = document.createElement('div');
   n.className = 'qnode' + (node.disabled ? ' is-disabled' : '');
   n.dataset.node = node.id;
-  n.style.left = `${node.at.x * 100}%`;
-  n.style.top  = `${node.at.y * 100}%`;
+  n.style.left = `${(at.x * 100).toFixed(2)}%`;
+  n.style.top  = `${(at.y * 100).toFixed(2)}%`;
 
-  const x = node.at.x;
+  const x = at.x;
   if (x <= 0.4) {
     n.style.setProperty('--anchor', '0');
     n.style.textAlign = 'left';
@@ -87,6 +88,36 @@ export async function showNode(id, { delay = 0 } = {}) {
   await wait(1400);
 }
 
+/* 방금 생긴 것의 곁. 화면 비율이 달라져도 따라간다. */
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+const NEAR = {
+  cloud() {
+    const n = el.fx.querySelector('.cloud-body');
+    if (!n) return null;
+    const r = n.getBoundingClientRect();
+    if (!r.height) return null;
+    return { x: (r.left + r.width / 2) / innerWidth, y: (r.bottom + 30) / innerHeight };
+  },
+  growth() {
+    const n = [...el.fx.querySelectorAll('.growth-stage')]
+      .find((i) => !i.dataset.missing && parseFloat(i.style.opacity || 0) > 0.1);
+    if (n) {
+      const r = n.getBoundingClientRect();
+      if (r.height) return { x: (r.left + r.width / 2) / innerWidth, y: (r.top - 24) / innerHeight };
+    }
+    /* 아직 아무것도 자라지 않았으면 자랄 자리 바로 위 */
+    return { x: GROWTH_AT.left / 100, y: (GROWTH_AT.top - 9) / 100 };
+  },
+};
+
+function anchorOf(node) {
+  const find = node.near && NEAR[node.near];
+  const p = find && find();
+  if (!p) return node.at;
+  return { x: clamp(p.x, 0.16, 0.84), y: clamp(p.y, 0.08, 0.86) };
+}
+
 const eachNode = (fn) => el.nodes.querySelectorAll('.qnode').forEach(fn);
 
 function dimOthers(chosen) {
@@ -109,7 +140,7 @@ async function revealCloud() {
   el.fx.appendChild(hush);
 
   await tween({
-    from: 0, to: 0.5, duration: 1900, easing: ease.inOut,
+    from: 0, to: 0.5, duration: 1100, easing: ease.inOut,
     onUpdate: (v) => { hush.style.opacity = v.toFixed(3); },
   });
   tween({
@@ -117,7 +148,7 @@ async function revealCloud() {
     onUpdate: (v) => { hush.style.opacity = v.toFixed(3); },
     onDone: () => hush.remove(),
   });
-  await wait(450);
+  await wait(180);
 
   /* 안개 같은 작은 형태들이 모여 하나의 구름이 된다 */
   cloud = buildCloud(CLOUD_AT);
@@ -136,6 +167,9 @@ async function revealCloud() {
 
 async function revealRain() {
   if (!cloud) return;
+
+  /* 다음 장면에서 쓸 그림을 지금 받아 둔다 */
+  preload(Object.values(GROWTH_STAGES));
 
   /* 1. 구름 자체가 먼저 조금 변한다 */
   await thickenCloud(cloud, { to: 0.52, duration: 2400 });
@@ -167,50 +201,57 @@ async function revealRain() {
     onUpdate: (v) => { el.wet.style.opacity = v.toFixed(3); },
   });
   state.rainVisible = true;
-
-  /* 젖은 땅 위에 마른 씨앗 하나. 아직 아무 일도 일어나지 않았다. */
-  await wait(900);
-  await plantSeed();
 }
 
 /* ------------------------------------------------------------------
-   세계의 변화 3 — 씨앗이 깨어난다
+   세계의 변화 3 — 비가 그치고 새싹이 올라온다
    ------------------------------------------------------------------ */
 
-/** 마른 씨앗을 땅에 둔다. 아직 변화는 없다. */
-async function plantSeed() {
+async function plantGround() {
   if (growth) return;
   growth = buildGrowth(GROWTH_AT);
   el.fx.appendChild(growth.anchor);
   await nextFrame();
-  await setStage(growth, 'seedDry', { duration: 1800 });
+}
+
+/** 내리던 비가 잦아든다 */
+async function stopRain() {
+  const layer = cloud && cloud.drift.querySelector('.rain');
+  if (!layer) return;
+  await tween({
+    from: 1, to: 0, duration: 3000, easing: ease.inOut,
+    onUpdate: (v) => { layer.style.opacity = v.toFixed(3); },
+    onDone: () => layer.remove(),
+  });
+  /* 비를 다 쏟은 구름은 다시 조금 옅어진다 */
+  if (cloud) {
+    tween({
+      from: 0.52, to: 0.16, duration: 2600, easing: ease.inOut,
+      onUpdate: (v) => { cloud.dense.style.opacity = v.toFixed(3); },
+    });
+  }
+  state.rainVisible = false;
 }
 
 async function revealSprout() {
-  await plantSeed();
-
-  await setStage(growth, 'seedSwollen', { duration: 1700 });  // 물을 흡수해 부푼다
-  await wait(600);
-  await setStage(growth, 'seedCracked', { duration: 1300 });  // 씨껍질이 갈라진다
+  await stopRain();
   await wait(500);
-  await setStage(growth, 'seedRadicle', { duration: 1500 });  // 배근이 아래로 나온다
-  await wait(600);
-  await setStage(growth, 'sprout',      { duration: 2100 });  // 싹이 지면 위로 올라온다
+  await plantGround();
+  await setStage(growth, 'sprout', { duration: 2600 });
   state.sproutVisible = true;
 }
 
 /* ------------------------------------------------------------------
-   세계의 변화 4 — 첫 잎
+   세계의 변화 4 — 어린나무
    ------------------------------------------------------------------ */
 
-async function revealFirstLeaves() {
-  await plantSeed();
+async function revealYoungTree() {
+  await plantGround();
 
   /* 씨앗 안에 저장돼 있던 것에 기대던 생명이,
-     이제 바깥의 빛을 쓰기 시작한다.
-     식물 그림이 아직 없으면 빛만 남아 떠 있게 되므로 함께 생략한다. */
-  if (!isReady(GROWTH_STAGES.firstLeaves)) {
-    await setStage(growth, 'firstLeaves', { duration: 2400 });
+     이제 바깥의 빛을 쓰기 시작한다 */
+  if (!isReady(GROWTH_STAGES.youngTree)) {
+    await setStage(growth, 'youngTree', { duration: 2600 });
     state.plantVisible = true;
     return;
   }
@@ -218,19 +259,19 @@ async function revealFirstLeaves() {
   const light = document.createElement('div');
   light.className = 'sun-touch';
   light.style.left = `${GROWTH_AT.left}%`;
-  light.style.top = `${GROWTH_AT.top - 7}%`;
+  light.style.top = `${GROWTH_AT.top - 12}%`;
   el.fx.appendChild(light);
 
   await tween({
-    from: 0, to: 0.6, duration: 1900, easing: ease.inOut,
+    from: 0, to: 0.6, duration: 1600, easing: ease.inOut,
     onUpdate: (v) => { light.style.opacity = v.toFixed(3); },
   });
 
-  await setStage(growth, 'firstLeaves', { duration: 2400 });  // 줄기가 자라고 첫 잎이 펼쳐진다
+  await setStage(growth, 'youngTree', { duration: 2600 });
 
-  /* 빛은 완전히 사라지지 않는다. 이제 이 식물이 쓰는 것이다. */
+  /* 빛은 완전히 사라지지 않는다. 이제 이 나무가 쓰는 것이다. */
   await tween({
-    from: 0.6, to: 0.14, duration: 2600, easing: ease.inOut,
+    from: 0.6, to: 0.12, duration: 2400, easing: ease.inOut,
     onUpdate: (v) => { light.style.opacity = v.toFixed(3); },
   });
   state.plantVisible = true;
@@ -240,7 +281,7 @@ const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
   seed:  revealSprout,
-  plant: revealFirstLeaves,
+  plant: revealYoungTree,
 };
 
 /* ------------------------------------------------------------------
@@ -263,14 +304,14 @@ async function choose(nodeEl, node) {
   /* 답을 얻은 질문은 물러나고, 알아낸 것이 세계에 남는다 */
   restoreNodes();
   nodeEl.style.opacity = '0';
-  await wait(1300);
+  await wait(800);
   nodeEl.remove();
 
-  await wait(700);
+  await wait(300);
   const effect = EFFECTS[node.effect];
   if (effect) await effect();
 
-  await wait(2000);
+  await wait(700);
   /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
   busy = false;
   if (node.next) await showNode(node.next);
@@ -299,6 +340,8 @@ export function hideNodes(on) {
    앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
 export async function devPrepare(id) {
   if (id !== 'seedWater' && id !== 'plantGrowth') return;
-  await plantSeed();
-  if (id === 'plantGrowth') await setStage(growth, 'sprout', { duration: 400 });
+  if (id === 'plantGrowth') {
+    await plantGround();
+    await setStage(growth, 'sprout', { duration: 300 });
+  }
 }
