@@ -24,11 +24,16 @@ NAV_TOP = 1462      # 이 아래로는 시안의 하단바
 WORLD_WIDTH = 1180
 CLOUD_WIDTH = 760
 
-# 씨앗에서 첫 잎까지. 루트에 원본 PNG 를 올리면 여기서 함께 변환된다.
-GROWTH = [
-    "seed-dry", "seed-swollen", "seed-cracked",
-    "seed-radicle", "sprout", "plant-first-leaves",
-]
+# 씨앗에서 첫 잎까지.  { 만들어질 이름: 루트에 올린 원본 }
+# 원본을 올리면 여기서 함께 변환된다. 아직 없는 것은 건너뛴다.
+GROWTH = {
+    "seed-dry":           "seed-dry.png",
+    "seed-swollen":       "seed-swollen.png",
+    "seed-cracked":       "seed-cracked.png",
+    "seed-radicle":       "seed-radicle.png",
+    "sprout":             "sprout.png",
+    "plant-first-leaves": "tree1.png",
+}
 GROWTH_WIDTH = 520
 
 
@@ -78,7 +83,7 @@ def main():
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
 
     jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
-    jobs += [(ROOT / f"{n}.png", OUT / f"{n}.webp", GROWTH_WIDTH) for n in GROWTH]
+    jobs += [(ROOT / src, OUT / f"{name}.webp", GROWTH_WIDTH) for name, src in GROWTH.items()]
 
     missing = []
     for src, dst, width in jobs:

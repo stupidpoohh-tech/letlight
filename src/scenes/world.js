@@ -13,7 +13,7 @@ import { openArticle } from './article.js';
 
 const NODE_REST = 0.32;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
-const GROWTH_AT = { left: 40, top: 82, width: 17 };
+const GROWTH_AT = { left: 40, top: 82, width: 20 };
 
 const el = {};
 let cloud = null;

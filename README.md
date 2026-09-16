@@ -89,14 +89,18 @@ Opening → World Reveal → Node 1 → Cloud Appears → Node 2 → Rain Falls
 `tools/build-assets.py` 를 돌리면 `assets/` 에 같은 이름의 webp 가 생기고
 바로 연결된다. 투명 배경 PNG 를 권한다.
 
-| 올릴 원본 | 만들어지는 것 | 쓰이는 순간 |
-|---|---|---|
-| `seed-dry.png` | `assets/seed-dry.webp` | 비가 그친 뒤 땅에 놓이는 마른 씨앗 |
-| `seed-swollen.png` | `assets/seed-swollen.webp` | 물을 흡수해 부푼 씨앗 |
-| `seed-cracked.png` | `assets/seed-cracked.webp` | 씨껍질이 갈라진 씨앗 |
-| `seed-radicle.png` | `assets/seed-radicle.webp` | 배근이 아래로 나온 씨앗 |
-| `sprout.png` | `assets/sprout.webp` | 지면 위로 올라온 싹 |
-| `plant-first-leaves.png` | `assets/plant-first-leaves.webp` | 첫 잎이 펼쳐진 식물 |
+| 올릴 원본 | 만들어지는 것 | 쓰이는 순간 | 상태 |
+|---|---|---|---|
+| `seed-dry.png` | `assets/seed-dry.webp` | 비가 그친 뒤 땅에 놓이는 마른 씨앗 | 없음 |
+| `seed-swollen.png` | `assets/seed-swollen.webp` | 물을 흡수해 부푼 씨앗 | 없음 |
+| `seed-cracked.png` | `assets/seed-cracked.webp` | 씨껍질이 갈라진 씨앗 | 없음 |
+| `seed-radicle.png` | `assets/seed-radicle.webp` | 배근이 아래로 나온 씨앗 | 없음 |
+| `sprout.png` | `assets/sprout.webp` | 지면 위로 올라온 싹 | 없음 |
+| `tree1.png` | `assets/plant-first-leaves.webp` | 첫 잎이 펼쳐진 식물 | 연결됨 |
+
+파일 이름이 다를 때는 `tools/build-assets.py` 의 `GROWTH` 에서
+`{ 만들어질 이름: 올린 원본 }` 으로 이어 주면 된다.
+`tree2·3.png` (자란 나무)와 `encyclopedia1~4.png` (도감 시안)는 아직 쓰지 않는다.
 
 모두 같은 지점에 심긴 것처럼 아래를 기준으로 겹쳐 그려진다.
 그림이 아직 없으면 그 단계는 보이지 않고, 흐름과 진행은 그대로 흐른다.
