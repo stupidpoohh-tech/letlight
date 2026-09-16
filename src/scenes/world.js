@@ -468,11 +468,10 @@ async function choose(nodeEl, node) {
   await wait(880);
 
   await openQuiz(node);        // 맞힐 때까지 돌아오지 않는다
-  await openArticle(node);     // 읽는다
 
-  /* 나오는 문제가 있으면 그것까지 지나야 한 질문이 끝난다.
-     없는 노드는 여기서 바로 넘어간다. */
-  if (node.exitQuiz) await openQuiz(node, { kind: 'exit' });
+  /* 글을 읽고, 나오는 문제가 있으면 그 아래에서 이어 푼다.
+     한 질문은 여기까지 지나야 끝난다. */
+  await openArticle(node);
 
   markSolved(node.id);
   onChange && onChange();

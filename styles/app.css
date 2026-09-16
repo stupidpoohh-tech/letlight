@@ -391,12 +391,6 @@ body {
 }
 .quiz-nudge.is-on { opacity: 1; }
 
-/* 나오는 문제를 맞히면 그때 생기는 문 */
-.quiz-foot {
-  margin-top: 2.6rem;
-  padding-top: 1.6rem;
-  border-top: 1px solid rgba(47,46,39,.13);
-}
 
 /* -- 지식: 흰 바탕 위의 글. 자세한 조판은 codex.css 에 있다 -------- */
 
@@ -410,11 +404,58 @@ body {
   padding: calc(var(--safe-top) + 58px) 26px calc(var(--safe-bottom) + 72px);
 }
 
+/* ---- 글 맨 아래에서 한 번 더 ---- */
+
+.article-exit {
+  margin-top: 3.4rem;
+  padding-top: 2.2rem;
+  border-top: 1px solid #e7e8e3;
+}
+.exit-step {
+  margin: 0 0 1.2rem;
+  font-size: .72rem;
+  letter-spacing: .2em;
+  color: var(--ex-accent, #7d8760);
+}
+.exit-q {
+  margin: 0 0 2rem;
+  font-family: var(--font-ui);
+  font-size: clamp(1.06rem, 4.4vw, 1.16rem);
+  font-weight: 700;
+  line-height: 1.66;
+  letter-spacing: -.02em;
+  color: var(--ex-ink, #1c1d1a);
+}
+
+/* 보기는 문제 화면과 같은 짜임을 쓰되, 흰 바탕에 맞춘다 */
+.article-exit .choice {
+  font-family: var(--font-ui);
+  color: var(--ex-ink-2, #55574f);
+  border-top-color: #ecede8;
+}
+.article-exit .choices .choice:last-child { border-bottom-color: #ecede8; }
+.article-exit .choice::before        { color: var(--ex-ink-3, #8e9186); }
+.article-exit .choice.is-picked,
+.article-exit .choice.is-right       { color: var(--ex-ink, #1c1d1a); }
+.article-exit .choice.is-picked::before { color: var(--ex-ink, #1c1d1a); }
+.article-exit .choice.is-picked::after  { background: var(--ex-ink, #1c1d1a); }
+.article-exit .choice.is-right::after   { background: var(--ex-accent, #7d8760); }
+.article-exit .choice.is-right::before  { color: var(--ex-accent, #7d8760); }
+.article-exit .choice.is-hushed         { opacity: .16; }
+.article-exit .quiz-nudge {
+  font-family: var(--font-ui);
+  color: var(--ex-ink-3, #8e9186);
+}
+
 .article-foot {
   margin-top: 3.2rem;
   padding-top: 1.9rem;
   border-top: 1px solid #e7e8e3;
 }
+/* 아직 열리지 않은 문은 선조차 남기지 않는다 */
+.article-foot:empty { display: none; }
+/* 나오는 문제 바로 뒤라면 선이 겹친다 */
+.article-exit + .article-foot { margin-top: 2.4rem; padding-top: 1.7rem; }
 
 /* 조용한 진행 어포던스 */
 .quiet-action {

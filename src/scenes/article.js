@@ -1,11 +1,12 @@
 /* 지식 — 알아낸 것을 읽는 자리.
    이 화면에서는 글이 주인공이다. */
 
-import { openSheet, closeSheet, chrome, br } from '../core/sheet.js';
+import { nextFrame, wait } from '../core/anim.js';
+import { openSheet, closeSheet, chrome, br, revealIn } from '../core/sheet.js';
 import { CONCEPTS } from '../data/nodes.js';
 import { CONCEPT_META } from '../data/library.js';
 import { plate } from '../art/plates.js';
-import { hasExitQuiz } from './quiz.js';
+import { mountChoices } from './quiz.js';
 
 const sheet = () => document.getElementById('article');
 
@@ -44,27 +45,56 @@ export function renderArticle(node) {
 }
 
 /** 문제를 맞힌 뒤 읽는다.
-    다 읽으면 세계로 돌아가거나, 한 번 더 생각해 본다. */
+
+    나오는 문제가 있으면 글 맨 아래에서 이어 푼다. 화면을 옮기지 않는다.
+    `세계로 돌아가기` 는 그 문제를 맞힌 뒤에야 생긴다.
+    나오는 문제가 없는 노드는 처음부터 버튼만 있다. */
 export function openArticle(node) {
   const el = sheet();
-  const next = hasExitQuiz(node);
+  const q = node.exitQuiz;
+
   el.innerHTML = `
     <div class="article-inner">
       ${renderArticle(node)}
-      <div class="article-foot">
-        <button class="quiet-action is-on" type="button">${
-          next ? '한 번 더 생각해보기' : '세계로 돌아가기'}</button>
-      </div>
+      ${q ? `
+        <section class="article-exit">
+          <p class="exit-step">한 번 더 생각해보기</p>
+          <h3 class="exit-q">${br(q.prompt)}</h3>
+          <div class="exit-body"></div>
+        </section>` : ''}
+      <div class="article-foot"></div>
     </div>`;
 
   return new Promise(async (resolve) => {
     chrome(false);
     await openSheet(el);
-    el.querySelector('.quiet-action').addEventListener('click', async () => {
-      /* 문제가 한 번 더 남았으면 세계의 것들을 다시 꺼내지 않는다 */
-      chrome(!next);
+
+    const foot = el.querySelector('.article-foot');
+
+    const leave = async () => {
+      chrome(true);
       await closeSheet(el);
       resolve();
-    }, { once: true });
+    };
+
+    /** 맞힌 뒤에야 생기는 문. 그전에는 아예 없다. */
+    const openDoor = async ({ scroll = false } = {}) => {
+      foot.innerHTML =
+        '<button class="quiet-action" type="button">세계로 돌아가기</button>';
+      await nextFrame();
+      const btn = foot.querySelector('.quiet-action');
+      btn.classList.add('is-on');
+      btn.addEventListener('click', leave, { once: true });
+      if (scroll) revealIn(btn);
+    };
+
+    if (!q) { openDoor(); return; }
+
+    mountChoices(el.querySelector('.exit-body'), q, {
+      onRight: async () => {
+        await wait(900);
+        openDoor({ scroll: true });
+      },
+    });
   });
 }
