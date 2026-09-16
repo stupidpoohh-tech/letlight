@@ -471,16 +471,30 @@ function riverLayer(cls) {
   return layer;
 }
 
+/* 고리가 닫히면 살아나는 것들.
+
+   상시 움직임은 여기 적힌 것이 전부다. 비는 들어 있지 않다.
+   비는 한 질문에서 잠깐 내렸다 그치는 것이지, 세계가 늘 하는 일이 아니다.
+
+   다른 고리를 더할 때는 여기에 이름 하나를 더하고
+   cycles.js 의 animates 에 그 이름을 적으면 된다. */
+const LIVING = {
+  /* 구름은 오가는 폭이 넓어지고, 안에서 숨이 생긴다 */
+  cloud() {
+    if (cloud) cloud.anchor.classList.add('is-alive');
+  },
+  /* 강은 물빛이 천천히 들고 나고, 그 위로 빛 한 줄이 앞으로 내려온다 */
+  river() {
+    ambience('river', true, 5000);
+    const anchor = el.fx.querySelector('.river-anchor');
+    if (anchor) anchor.classList.add('is-living');
+    riverLayer('river-flow');
+  },
+};
+
 /** 닫힌 순환에 속한 세계 요소를 살려 둔다. 여러 번 불러도 같다. */
 export function animateCycles() {
-  const live = livingElements();
-
-  if (live.has('cloud') && cloud) cloud.anchor.classList.add('is-alive');
-
-  if (live.has('river')) {
-    ambience('river', true, 5000);
-    riverLayer('river-flow');
-  }
+  livingElements().forEach((name) => { if (LIVING[name]) LIVING[name](); });
 }
 
 /* ------------------------------------------------------------------

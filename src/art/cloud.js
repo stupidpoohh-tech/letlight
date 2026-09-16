@@ -84,14 +84,12 @@ export function formCloud(cloud, { duration = 5200 } = {}) {
 }
 
 /** 다 만들어진 구름은 아주 천천히 흐른다. */
-export function driftCloud(cloud, { speed = 0.55, bob = 0.5 } = {}) {
-  let t = 0;
-  const id = setInterval(() => {
-    t += 0.25;
-    cloud.drift.style.transform =
-      `translate(${(t * speed).toFixed(2)}px, ${(Math.sin(t * 0.05) * bob).toFixed(2)}px)`;
-  }, 250);
-  return () => clearInterval(id);
+/** 구름이 떠다니기 시작한다.
+
+    한쪽으로 계속 밀려가면 한참 뒤에는 화면 밖으로 나가 버린다.
+    제자리에서 아주 느리게 오가도록 CSS 에 맡긴다. 타이머를 쓰지 않는다. */
+export function driftCloud(cloud) {
+  cloud.drift.classList.add('is-drifting');
 }
 
 /** 밀도가 아주 약간 높아진다. 비가 오기 직전. */

@@ -91,6 +91,13 @@ body {
   will-change: opacity;
 }
 .cloud-drift { position: relative; display: block; }
+
+/* 늘 있는 떠다님. 제자리에서 아주 느리게 오간다. */
+@keyframes cloud-drift {
+  0%, 100% { transform: translate(-7px,  1.5px); }
+  50%      { transform: translate( 7px, -1.5px); }
+}
+.cloud-drift.is-drifting { animation: cloud-drift 104s ease-in-out infinite; }
 .cloud-drift img {
   display: block;
   width: 100%; height: auto;
@@ -108,15 +115,23 @@ body {
   filter: brightness(1.07) contrast(1.06);
 }
 
-/* 고리가 닫히면 대기가 살아 있는 것처럼 아주 느리게 움직인다.
-   자리를 옮기는 것이 아니라, 숨 쉬는 정도다. */
+/* 고리가 닫히면 조금 더 살아 있다.
+   자리를 크게 옮기는 것이 아니라, 오가는 폭이 넓어지고 숨이 생긴다. */
 @keyframes cloud-live {
   0%, 100% { transform: translateX(0)      scale(1);     }
-  50%      { transform: translateX(-0.8%)  scale(1.016); }
+  50%      { transform: translateX(-0.9%)  scale(1.018); }
 }
 @keyframes cloud-live-stir {
   0%, 100% { opacity: 0;    }
   50%      { opacity: .085; }
+}
+.cloud-anchor.is-alive .cloud-drift.is-drifting {
+  animation-duration: 76s;
+  animation-name: cloud-drift-live;
+}
+@keyframes cloud-drift-live {
+  0%, 100% { transform: translate(-12px,  2.4px); }
+  50%      { transform: translate( 12px, -2.4px); }
 }
 .cloud-anchor.is-alive .cloud-body {
   animation: cloud-live 38s ease-in-out infinite;
@@ -648,7 +663,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .qnode > span, .law.is-breathing, .nav-item.is-fresh { animation: none; }
+  .qnode > span, .law.is-breathing, .nav-item.is-fresh,
+  .cloud-drift.is-drifting, .cloud-anchor.is-alive .cloud-body,
+  .cloud-anchor.is-alive .cloud-stir, .cloud-anchor.is-stirring .cloud-stir,
+  .river-anchor.is-living .river-img, .river-flow, .river-shimmer, .heat-wisp {
+    animation: none;
+  }
 }
 
 /* ---- 비가 땅에 닿은 뒤의 층 ---- */
@@ -689,11 +709,11 @@ body {
 .river-flow {
   position: absolute; inset: 0;
   pointer-events: none;
-  opacity: .55;
+  opacity: .42;
   background-image: linear-gradient(to bottom,
       rgba(255,251,236,0)   0%,
-      rgba(255,251,236,.92) 11%,
-      rgba(255,251,236,0)  24%);
+      rgba(255,251,236,.88) 12%,
+      rgba(255,251,236,0)  27%);
   background-repeat: no-repeat;
   background-size: 100% 230%;
   -webkit-mask-image: var(--river);
@@ -702,13 +722,23 @@ body {
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  animation: river-flow 17s linear infinite;
+  animation: river-flow 23s linear infinite;
 }
 /* 배경이 요소보다 크면 position % 가 커질수록 위로 간다.
    강은 먼 곳에서 앞으로 흐르므로 값을 줄여 간다. */
 @keyframes river-flow {
   from { background-position: 0  35%; }
   to   { background-position: 0 -73%; }
+}
+
+/* 고리가 닫힌 강은 색면으로 굳어 있지 않다.
+   물빛이 아주 천천히 들고 난다. */
+@keyframes river-breathe {
+  0%, 100% { filter: brightness(1)     saturate(1);    }
+  50%      { filter: brightness(1.035) saturate(1.03); }
+}
+.river-anchor.is-living .river-img {
+  animation: river-breathe 27s ease-in-out infinite;
 }
 
 /* 강에서 물이 떠나는 자리.
