@@ -9,8 +9,8 @@ export const GROWTH_STAGES = {
 
 /* 비가 땅에 닿은 뒤. 그림이 아직 없으면 그 층은 조용히 빠진다. */
 export const WATER_LAYERS = {
-  soil: 'assets/soil-water.webp',    // 지표 아래의 물
-  flow: 'assets/surface-flow.webp',  // 낮은 곳으로 모인 작은 물길
+  soil:  'assets/soil-water.webp',  // 지표 아래의 물 (아직 없음)
+  river: 'assets/river.webp',       // 낮은 곳으로 모인 물이 이룬 강
 };
 
 const ready = new Set();

@@ -471,6 +471,37 @@ body {
 
 /* ---- 비가 땅에 닿은 뒤의 층 ---- */
 
+/* 강.
+
+   세계 그림은 한 장으로 합쳐져 있어서 강을 언덕 뒤로 넣을 수 없다.
+   그래서 골짜기를 따라 흐르도록 자리를 맞추고, 그 위를 종이 결(#paper-fx)이
+   덮게 두었다.
+
+   크기와 자리는 무대 폭이 아니라 무대 높이(--vh)를 따른다.
+   세계 그림이 object-fit:cover 로 좌우가 잘리기 때문에, 화면에 보이는
+   지형의 크기는 무대 높이에 비례하기 때문이다. */
+
+.river-anchor {
+  position: absolute;
+  left: 49%;
+  top: 61.9%;
+  transform: translateX(calc(var(--vh, 1vh) * -19.5));
+  pointer-events: none;
+}
+.river-img {
+  --edge: 100%;
+  display: block;
+  height: calc(var(--vh, 1vh) * 41.8);
+  width: auto;
+  opacity: 0;
+  /* 지평선 쪽에서 앞쪽으로 이어진다.
+     맨 끝(5~13%)은 연출이 끝난 뒤에도 옅게 남아 먼 능선에 잠긴다. */
+  -webkit-mask-image: linear-gradient(to bottom,
+      transparent 5%, #000 13%, #000 var(--edge), transparent calc(var(--edge) + 13%));
+  mask-image: linear-gradient(to bottom,
+      transparent 5%, #000 13%, #000 var(--edge), transparent calc(var(--edge) + 13%));
+}
+
 /* 물을 받아들인 땅 */
 .soil-deep {
   position: absolute;

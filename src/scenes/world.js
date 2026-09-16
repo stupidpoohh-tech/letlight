@@ -4,11 +4,11 @@
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
 import { buildRainLayer, addDrops } from '../art/rain.js';
-import { buildGrowth, setStage, growPulse } from '../art/growth.js';
+import { buildGrowth, setStage, growPulse, settleStage } from '../art/growth.js';
 import { buildLayer, fadeIn } from '../art/layer.js';
 import { GROWTH_STAGES, WATER_LAYERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
-import { state, markSolved, opensOf } from '../core/state.js';
+import { state, markSolved, opensOf, isSolved } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
@@ -19,7 +19,9 @@ const GROWTH_AT = { left: 40, top: 82, width: 23 };
 
 /* 비가 땅에 닿은 뒤 생기는 층. 그림이 올라오면 이 자리에 놓인다. */
 const SOIL_AT = { left: 50, top: 84, width: 100, src: WATER_LAYERS.soil };
-const FLOW_AT = { left: 64, top: 90, width: 52, src: WATER_LAYERS.flow };
+
+/* 연출이 끝났을 때의 큰 나무. 돌려놓을 때도 같은 값을 쓴다. */
+const TREE_GROWN = { x: 1.581, y: 1.535 };
 
 const el = {};
 let cloud = null;
@@ -291,13 +293,109 @@ async function revealYoungTree() {
    세계의 변화 5 — 빗물이 땅으로 들어간다
    ------------------------------------------------------------------ */
 
+/** 땅에 얹히는 층. 구름·비·나무보다 아래, 먼저 깔린 땅 층보다 위에 들어간다. */
+function addGround(node) {
+  node.classList.add('is-ground');
+  const last = [...el.fx.querySelectorAll(':scope > .is-ground')].pop();
+  if (last) last.after(node); else el.fx.prepend(node);
+}
+
 /** 그림이 아직 올라오지 않은 층은 조용히 건너뛴다 */
 async function addWaterLayer(at, { to = 1, duration = 2600 } = {}) {
   if (!isReady(at.src)) return;
   const l = buildLayer(at.src, at);
-  el.fx.appendChild(l.anchor);
+  addGround(l.anchor);
   await nextFrame();
   await fadeIn(l, { to, duration });
+}
+
+/* ------------------------------------------------------------------
+   강 — 낮은 곳으로 모인 물
+
+   그림은 한 장이고, 원래 그 골짜기에 있었던 것처럼 보이면 된다.
+   생기는 순간에만 한 번 드러나고, 그 뒤로는 그냥 세계의 일부다.
+   ------------------------------------------------------------------ */
+
+const RIVER_SRC = WATER_LAYERS.river;
+
+/** 세계 그림 바로 위, 구름·비·나무보다 아래에 놓는다 */
+function buildRiver() {
+  const anchor = document.createElement('div');
+  anchor.className = 'river-anchor';
+  const img = document.createElement('img');
+  img.className = 'river-img';
+  img.alt = '';
+  img.decoding = 'async';
+  img.addEventListener('error', () => {
+    img.dataset.missing = '1';
+    img.hidden = true;
+    img.style.display = 'none';
+  });
+  img.src = RIVER_SRC;
+  anchor.appendChild(img);
+  addGround(anchor);
+  state.riverVisible = true;
+  return img;
+}
+
+const riverEl = () => el.fx.querySelector('.river-img');
+
+/* 물빛 → 형태 → 수면의 반사. 세 단계의 결. */
+const lerp = (a, b, t) => a + (b - a) * t;
+const waterFilter = (t) =>
+  `saturate(${lerp(0.22, 1, t).toFixed(3)}) brightness(${lerp(1.14, 1, t).toFixed(3)})`;
+
+async function revealRiver() {
+  if (riverEl()) return;
+  if (!isReady(RIVER_SRC)) {
+    /* 아직 못 받았으면 시간을 끌지 않는다. 받아졌으면 그냥 거기 있고,
+       없는 파일이면 error 핸들러가 조용히 숨긴다. */
+    settleRiver();
+    return;
+  }
+  const img = buildRiver();
+  await nextFrame();
+
+  const edge = (v) => img.style.setProperty('--edge', `${v.toFixed(2)}%`);
+  edge(13);
+  img.style.filter = waterFilter(0);
+
+  /* 1. 지평선 쪽에 아주 희미한 물빛 */
+  await tween({
+    duration: 810, easing: ease.inOut,
+    onUpdate: (t) => {
+      edge(13 + t * 11);
+      img.style.opacity = (t * 0.42).toFixed(3);
+    },
+  });
+
+  /* 2. 강의 형태가 지평선에서 앞쪽으로 이어진다 */
+  await tween({
+    duration: 1350, easing: ease.inOut,
+    onUpdate: (t) => {
+      edge(24 + t * 76);
+      img.style.opacity = lerp(0.42, 0.86, t).toFixed(3);
+      img.style.filter = waterFilter(t * 0.45);
+    },
+  });
+
+  /* 3. 마지막으로 수면의 반사가 드러난다 */
+  await tween({
+    duration: 810, easing: ease.inOut,
+    onUpdate: (t) => {
+      img.style.opacity = lerp(0.86, 1, t).toFixed(3);
+      img.style.filter = waterFilter(lerp(0.45, 1, t));
+    },
+  });
+  img.style.filter = '';
+}
+
+/** 이미 알아낸 강. 연출 없이 그냥 거기 있다. */
+function settleRiver() {
+  if (riverEl()) return;
+  const img = buildRiver();
+  img.style.setProperty('--edge', '100%');
+  img.style.opacity = '1';
 }
 
 async function revealSoilWater() {
@@ -305,7 +403,7 @@ async function revealSoilWater() {
      비가 그친 뒤의 젖은 땅(#wet)은 이미 떠 있으므로 그 위에 한 겹 더 얹는다. */
   const deep = document.createElement('div');
   deep.className = 'soil-deep';
-  el.fx.appendChild(deep);
+  addGround(deep);
   await nextFrame();
   await tween({
     from: 0, to: 1, duration: 2600, easing: ease.inOut,
@@ -315,10 +413,10 @@ async function revealSoilWater() {
   /* 2. 들어간 물은 사라지지 않는다. 지표 아래 공극으로 옮겨 간다. */
   await addWaterLayer(SOIL_AT, { to: 0.88, duration: 3000 });
 
-  /* 3. 미처 들어가지 못한 물은 낮은 곳으로 모여 작은 물길이 된다 */
-  await addWaterLayer(FLOW_AT, { to: 0.82, duration: 2600 });
-
   state.soilWaterVisible = true;
+
+  /* 3. 미처 들어가지 못한 물은 낮은 곳으로 모여 강이 된다 */
+  await revealRiver();
 }
 
 /* ------------------------------------------------------------------
@@ -344,7 +442,7 @@ async function revealMatureTree() {
   await setStage(growth, 'matureTree', { duration: 3400 });
   await growPulse(growth, { x: 1.52, y: 1.52, duration: 3200 });
 
-  /* 마지막으로 수관이 조금 더 넓어진다 */
+  /* 마지막으로 수관이 조금 더 넓어진다. 끝나면 TREE_GROWN 만큼 자라 있다. */
   await growPulse(growth, { x: 1.04, y: 1.01, duration: 1600 });
   state.matureTreeVisible = true;
 }
@@ -410,22 +508,57 @@ export function hideNodes(on) {
   el.nodes.style.opacity = on ? '0' : '1';
 }
 
-/* 확인용 지름길. #from=seedWater 처럼 중간부터 볼 때 세계를 맞춰 둔다.
-   앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
-export async function devPrepare(id) {
-  preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
+/* 지난번에 보던 세계를 소리 없이 돌려놓는다.
+   알아낸 질문만 저장하고, 나머지는 전부 여기에서 되짚는다.
+   어떤 연출도 다시 틀지 않는다. `#from=` 지름길도 이 길을 쓴다. */
+export async function restoreWorld() {
+  preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
 
-  if (id === 'waterInfiltration') {
+  if (isSolved('cloudWhite')) {
+    cloud = buildCloud(CLOUD_AT);
+    el.fx.appendChild(cloud.anchor);
+    await nextFrame();
+    await formCloud(cloud, { duration: 0 });
+    driftCloud(cloud);
+    state.cloudVisible = true;
+  }
+
+  if (isSolved('rainStart')) {
     el.wet.style.opacity = '1';
-    return;
+    /* 비는 새싹이 올라오면서 그친다 */
+    if (cloud && !isSolved('seedWater')) {
+      cloud.dense.style.opacity = '0.52';
+      const rain = buildRainLayer(cloud.drift);
+      addDrops(rain, 58);
+      rain.style.opacity = '1';
+      state.rainVisible = true;
+    } else if (cloud) {
+      cloud.dense.style.opacity = '0.16';
+    }
   }
-  if (id === 'plantGrowth') {
-    await plantGround();
-    await setStage(growth, 'sprout', { duration: 300 });
-    return;
+
+  if (isSolved('waterInfiltration')) {
+    const deep = document.createElement('div');
+    deep.className = 'soil-deep';
+    deep.style.opacity = '1';
+    addGround(deep);
+    if (isReady(SOIL_AT.src)) {
+      const l = buildLayer(SOIL_AT.src, SOIL_AT);
+      l.img.style.opacity = '0.88';
+      addGround(l.anchor);
+    }
+    state.soilWaterVisible = true;
+    settleRiver();
   }
-  if (id === 'treeForm') {
+
+  const stage = isSolved('treeForm')     ? 'matureTree'
+              : isSolved('plantGrowth')  ? 'youngTree'
+              : isSolved('seedWater')    ? 'sprout' : null;
+  if (stage) {
     await plantGround();
-    await setStage(growth, 'youngTree', { duration: 300 });
+    settleStage(growth, stage, stage === 'matureTree' ? TREE_GROWN : {});
+    state.sproutVisible = true;
+    state.plantVisible = stage !== 'sprout';
+    state.matureTreeVisible = stage === 'matureTree';
   }
 }

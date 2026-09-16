@@ -32,6 +32,11 @@ GROWTH = {
 }
 GROWTH_WIDTH = 520
 
+# 강.  후보로 river1~5.png 를 올려 두었고, 그중 하나만 세계에 쓴다.
+# 나머지는 지우지 않고 variant 후보로 남겨 둔다.
+RIVER_MAIN = "river2.png"
+RIVER_WIDTH = 640
+
 
 def build_world(src: Path, dst: Path):
     im = Image.open(src).convert("RGB")
@@ -80,6 +85,7 @@ def main():
 
     jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
     jobs += [(ROOT / src, OUT / f"{name}.webp", GROWTH_WIDTH) for name, src in GROWTH.items()]
+    jobs += [(ROOT / RIVER_MAIN, OUT / "river.webp", RIVER_WIDTH)]
 
     missing = []
     for src, dst, width in jobs:

@@ -5,10 +5,10 @@
 
 import { wait } from './core/anim.js';
 import { syncStageUnits } from './core/stage.js';
-import { state, solvedIds, markSolved } from './core/state.js';
+import { state, solvedIds, availableIds, markSolved } from './core/state.js';
 import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
-import { mountWorld, showNode, wireNodes, hideNodes, devPrepare } from './scenes/world.js';
+import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
 
 const nav = document.getElementById('nav');
@@ -70,13 +70,18 @@ async function start() {
 
   wireNodes();
 
-  /* 확인용 지름길: #from=seedWater 처럼 중간 노드부터 볼 수 있다.
-     앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
+  /* 확인용 지름길: #from=seedWater 처럼 중간 노드부터 볼 수 있다. */
   const from = (location.hash.match(/from=([A-Za-z]+)/) || [])[1];
   if (from && NODES[from]) {
     NODE_ORDER.slice(0, NODE_ORDER.indexOf(from)).forEach(markSolved);
-    await devPrepare(from);
-    await showNode(from, { delay: 400 });
+  }
+
+  /* 지난번에 알아낸 것이 있으면 그 세계를 그대로 돌려놓는다.
+     연출은 다시 틀지 않는다. */
+  if (solvedIds().length) {
+    await restoreWorld();
+    if (solvedIds().length) codexBtn.classList.add('is-fresh');
+    for (const id of availableIds()) await showNode(id, { delay: 400 });
     return;
   }
 

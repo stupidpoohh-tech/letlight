@@ -82,3 +82,14 @@ export function growPulse(growth, { x = 1, y = 1, duration = 1100 } = {}) {
     onUpdate: (t) => setScale(img, sx0 + sx0 * (x - 1) * t, sy0 + sy0 * (y - 1) * t),
   });
 }
+
+/** 연출을 다시 틀지 않고, 그 단계가 끝난 모습으로 바로 놓는다.
+    지난번에 보던 세계를 돌려놓을 때 쓴다. */
+export function settleStage(growth, key, { x = 1, y = 1 } = {}) {
+  const img = growth.stages.get(key);
+  if (!img || img.dataset.missing) return;
+  const base = SCALE[key] ?? 1;
+  setScale(img, base * x, base * y);
+  growth.stages.forEach((i) => { i.style.opacity = i === img ? '1' : '0'; });
+  growth.current = img;
+}
