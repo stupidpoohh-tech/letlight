@@ -25,11 +25,12 @@ async function goto(next) {
   if (next === 'codex') {
     view = 'codex';
     hideNodes(true);
-    await openCodex({ onClose: () => hideNodes(false) });
     codexBtn.classList.remove('is-fresh');
+    await openCodex({ onExit: () => { switching = false; goto('world'); } });
   } else {
     view = 'world';
     await closeCodex();
+    hideNodes(false);
   }
   switching = false;
 }

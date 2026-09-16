@@ -79,3 +79,17 @@ export function plate(kind) {
   }
   return unknownPlate();
 }
+
+
+/* 목록에 쓰는 작은 그림. 주석 없이 그림만. */
+const THUMB_SRC = {
+  cloud:  CLOUD.src,
+  rain:   RAIN.src,
+  sprout: GROWTH_STAGES.sprout,
+  plant:  GROWTH_STAGES.firstLeaves,
+};
+
+export function thumb(kind) {
+  const src = THUMB_SRC[kind];
+  return src ? `<img class="ex-thumb-img" src="${src}" alt="" decoding="async">` : '';
+}

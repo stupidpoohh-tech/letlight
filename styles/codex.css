@@ -1,0 +1,397 @@
+/* ==================================================================
+   백과사전 — 현대적인 자연과학 아카이브
+   흰 바탕 · 산세리프 · 가는 선 · 여백 · 정렬
+   카드도 그림자도 쓰지 않는다. 구분은 여백과 선과 타이포로 한다.
+   ================================================================== */
+
+:root {
+  --ex-bg:       #ffffff;
+  --ex-bg-soft:  #fafaf8;
+  --ex-ink:      #1c1d1a;
+  --ex-ink-2:    #55574f;
+  --ex-ink-3:    #8e9186;
+  --ex-line:     #e7e8e3;
+  --ex-line-2:   #f1f2ee;
+  --ex-accent:   #7d8760;   /* muted olive — 작은 곳에만 */
+}
+
+#codex {
+  background: var(--ex-bg);
+  background-image: none;
+  color: var(--ex-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+#codex::after { content: none; }   /* 종이 결 제거 */
+
+.ex-page {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 26px) 26px calc(var(--safe-bottom) + 108px);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .32s ease, transform .32s ease;
+}
+.ex-page.is-in { opacity: 1; transform: none; }
+
+/* ---- 상단 뒤로 ---- */
+
+.ex-back {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 30px; padding: 6px 2px;
+  border: 0; background: none;
+  font-family: inherit; font-size: 1.02rem; font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--ex-ink);
+  cursor: pointer;
+}
+.ex-back svg { width: 20px; height: 14px; flex: none; }
+
+/* ---- 제목 ---- */
+
+.ex-head { margin: 0 0 34px; }
+.ex-rule {
+  display: block; width: 26px; height: 2px;
+  background: var(--ex-accent);
+  margin-bottom: 18px;
+}
+.ex-kicker {
+  margin: 0 0 10px;
+  font-size: .72rem; letter-spacing: .22em;
+  color: var(--ex-ink-3);
+}
+.ex-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 6.6vw, 1.95rem);
+  font-weight: 700; line-height: 1.32; letter-spacing: -.02em;
+}
+.ex-title--detail { font-size: clamp(1.75rem, 8vw, 2.3rem); margin-bottom: 12px; }
+.ex-sub {
+  margin: 12px 0 0;
+  font-size: .92rem; line-height: 1.6;
+  color: var(--ex-ink-3);
+}
+.ex-lead {
+  margin: 0 0 6px;
+  font-size: 1rem; line-height: 1.75;
+  color: var(--ex-ink-2);
+}
+.ex-crumb {
+  margin: 0 0 22px;
+  font-size: .8rem; letter-spacing: .04em;
+  color: var(--ex-ink-3);
+}
+.ex-crumb span { margin: 0 6px; color: var(--ex-line); }
+
+/* ---- 홈: 박물관 인덱스 블록 ---- */
+
+.ex-blocks { display: grid; gap: 12px; margin-bottom: 46px; }
+
+.ex-block {
+  position: relative;
+  display: grid;
+  grid-template-columns: 112px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 20px 18px;
+  border: 1px solid var(--ex-line);
+  border-radius: 2px;
+  background: var(--ex-bg-soft);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .25s ease;
+}
+.ex-block:hover { border-color: #d8dad2; }
+.ex-block-no {
+  position: absolute; top: 12px; right: 16px;
+  font-size: .72rem; letter-spacing: .12em; color: var(--ex-ink-3);
+}
+.ex-block-art {
+  display: flex; align-items: center; justify-content: center;
+  height: 74px; overflow: hidden;
+}
+.ex-block-img { display: block; width: 100%; }
+.ex-block-art img, .ex-block-art svg {
+  max-width: 100%; max-height: 100%;
+  filter: saturate(.18) contrast(1.02);
+}
+.ex-block-text {
+  display: block;
+  padding-left: 18px;
+  border-left: 1px solid var(--ex-line);
+}
+.ex-block-kicker {
+  display: block; margin-bottom: 6px;
+  font-size: .74rem; letter-spacing: .1em; color: var(--ex-ink-3);
+}
+.ex-block-name {
+  display: block;
+  font-size: 1.32rem; font-weight: 700; letter-spacing: -.02em;
+}
+.ex-block-count {
+  display: block; margin-top: 8px;
+  font-size: .86rem; color: var(--ex-ink-3); letter-spacing: .04em;
+}
+.ex-block > .ex-arrow { color: var(--ex-ink-2); }
+
+/* ---- 구역 ---- */
+
+.ex-section { margin: 0 0 40px; }
+.ex-section--ruled { border-top: 1px solid var(--ex-line); padding-top: 30px; }
+.ex-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px;
+}
+.ex-section-title {
+  margin: 0 0 4px;
+  font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em;
+}
+.ex-section-title--gap { margin-top: 44px; }
+.ex-section-note { font-size: .78rem; color: var(--ex-ink-3); }
+
+/* ---- 질문 줄 ---- */
+
+.ex-list { list-style: none; margin: 14px 0 0; padding: 0; }
+
+.ex-row {
+  display: grid;
+  grid-template-columns: 62px 1fr 24px;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 2px;
+  border-top: 1px solid var(--ex-line-2);
+  cursor: pointer;
+  color: var(--ex-ink-3);
+}
+.ex-list .ex-row:last-child { border-bottom: 1px solid var(--ex-line-2); }
+.ex-row-title {
+  margin: 0;
+  font-size: .96rem; line-height: 1.5; font-weight: 500;
+  color: var(--ex-ink);
+}
+.ex-thumb {
+  display: flex; align-items: center; justify-content: center;
+  height: 44px; overflow: hidden;
+}
+.ex-thumb-img {
+  max-width: 100%; max-height: 100%;
+  display: block;
+  filter: saturate(.16) contrast(1.03);
+}
+.ex-row-lock { display: flex; justify-content: center; color: var(--ex-ink-3); }
+.ex-row.is-locked { cursor: default; }
+.ex-row.is-locked .ex-row-title { color: var(--ex-ink-3); font-weight: 400; }
+.ex-row.is-locked .ex-arrow { opacity: .35; }
+
+.ex-arrow { width: 24px; height: 12px; flex: none; }
+.ex-lock  { width: 15px; height: 17px; }
+
+/* ---- 목록 항목 (세계 · 원리) ---- */
+
+.ex-entries { list-style: none; margin: 26px 0 0; padding: 0; }
+
+.ex-entry {
+  display: grid;
+  grid-template-columns: 108px 1fr 24px;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 2px;
+  border-top: 1px solid var(--ex-line);
+  cursor: pointer;
+  color: var(--ex-ink-2);
+}
+.ex-entries .ex-entry:last-child { border-bottom: 1px solid var(--ex-line); }
+.ex-entry-art {
+  display: flex; align-items: center; justify-content: center;
+  height: 84px; overflow: hidden;
+}
+.ex-entry-art svg, .ex-entry-art img {
+  max-width: 100%; max-height: 100%;
+  filter: saturate(.16) contrast(1.03);
+}
+.ex-entry-text { display: block; min-width: 0; }
+.ex-entry-name {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 1.22rem; font-weight: 700; letter-spacing: -.02em;
+  color: var(--ex-ink);
+}
+.ex-entry-lead {
+  display: block; margin-top: 7px;
+  font-size: .89rem; line-height: 1.55; color: var(--ex-ink-3);
+}
+.ex-entry-meta {
+  display: block; margin-top: 12px;
+  font-size: .82rem; letter-spacing: .04em; color: var(--ex-ink-3);
+}
+.ex-entry.is-locked { cursor: default; }
+.ex-entry.is-locked .ex-entry-name { color: var(--ex-ink-2); }
+.ex-entry.is-locked .ex-entry-art { opacity: .5; }
+.ex-entry.is-locked .ex-arrow { opacity: .3; }
+
+/* ---- 연결된 원리 ---- */
+
+.ex-links { list-style: none; margin: 14px 0 0; padding: 0; }
+.ex-links li {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px;
+  padding: 15px 2px;
+  border-top: 1px solid var(--ex-line-2);
+  font-size: 1rem; font-weight: 500;
+  color: var(--ex-ink);
+  cursor: pointer;
+}
+.ex-links li:last-child { border-bottom: 1px solid var(--ex-line-2); }
+.ex-links .ex-arrow { color: var(--ex-ink-3); }
+
+/* ---- 세계 상세의 큰 그림 ---- */
+
+.ex-hero {
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 0 26px;
+  padding: 22px 18px;
+  min-height: 170px;
+  border: 1px solid var(--ex-line);
+  background: var(--ex-bg-soft);
+}
+.ex-hero img {
+  max-width: 78%; max-height: 190px; display: block;
+  filter: saturate(.18) contrast(1.03);
+}
+
+/* ---- 원리 상세: 관계 ---- */
+
+.ex-web {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px 18px;
+  margin: 10px 0 42px;
+}
+
+/* 관계를 잇는 선. 가는 선과 점만 쓴다. */
+.ex-rel { position: relative; padding-top: 16px; }
+.ex-rel[role="button"] { cursor: pointer; }
+
+.ex-rel::before, .ex-rel::after {
+  content: ''; position: absolute;
+  background: var(--ex-accent);
+  opacity: .42;
+}
+.ex-rel-dot {
+  position: absolute;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ex-accent);
+}
+
+/* 위 두 칸: 점 → 가로 → 세로로 내려가 가운데에서 멎는다 */
+.ex-rel.is-tl::before, .ex-rel.is-tr::before { top: 2px; height: 1px; }
+.ex-rel.is-tl::after,  .ex-rel.is-tr::after  { top: 2px; bottom: -26px; width: 1px; }
+.ex-rel.is-tl::before { left: 6px; right: 18%; }
+.ex-rel.is-tl::after  { right: 18%; }
+.ex-rel.is-tr::before { right: 6px; left: 18%; }
+.ex-rel.is-tr::after  { left: 18%; }
+.ex-rel.is-tl .ex-rel-dot { left: 0; top: 0; }
+.ex-rel.is-tr .ex-rel-dot { right: 0; top: 0; }
+
+/* 아래 두 칸: 거울상 */
+.ex-rel.is-bl, .ex-rel.is-br { padding-top: 0; padding-bottom: 16px; }
+.ex-rel.is-bl::before, .ex-rel.is-br::before { bottom: 2px; height: 1px; }
+.ex-rel.is-bl::after,  .ex-rel.is-br::after  { bottom: 2px; top: -12px; width: 1px; }
+.ex-rel.is-bl::before { left: 6px; right: 18%; }
+.ex-rel.is-bl::after  { right: 18%; }
+.ex-rel.is-br::before { right: 6px; left: 18%; }
+.ex-rel.is-br::after  { left: 18%; }
+.ex-rel.is-bl .ex-rel-dot { left: 0; bottom: 0; }
+.ex-rel.is-br .ex-rel-dot { right: 0; bottom: 0; }
+
+.ex-rel.is-tr, .ex-rel.is-br { text-align: right; }
+
+.ex-rel-kicker {
+  margin: 0 0 8px;
+  font-size: .78rem; letter-spacing: .02em; color: var(--ex-ink-3);
+}
+.ex-rel-body {
+  margin: 0;
+  font-size: .98rem; line-height: 1.5; font-weight: 700;
+  letter-spacing: -.015em; color: var(--ex-ink);
+}
+.ex-rel .ex-arrow { margin-top: 10px; color: var(--ex-ink-2); }
+.ex-rel.is-tr .ex-arrow, .ex-rel.is-br .ex-arrow { margin-left: auto; display: block; }
+
+.ex-web-center {
+  grid-column: 1 / -1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 0 2px;
+}
+.ex-web-center .mark { width: 100%; max-width: 230px; height: auto; display: block; }
+.ex-web-name {
+  margin: 4px 0 0;
+  font-size: 1.18rem; font-weight: 700; letter-spacing: -.01em;
+}
+.ex-web-en {
+  margin: 5px 0 0;
+  font-size: .72rem; letter-spacing: .2em; color: var(--ex-ink-3);
+}
+
+/* ---- 글 ---- */
+
+.ex-article .article-title { margin-top: 0; }
+
+/* ==================================================================
+   글 — 백과사전 안에서도, 문제를 푼 직후에도 같은 조판을 쓴다
+   ================================================================== */
+
+.article-rel {
+  display: flex; align-items: baseline; justify-content: flex-end;
+  flex-wrap: wrap; gap: 8px;
+  margin: 0 0 14px;
+  font-size: .8rem; line-height: 1.5;
+  color: var(--ex-ink-2);
+  text-align: right;
+}
+.article-rel b { font-weight: 700; color: var(--ex-accent); }
+.article-rel span { color: var(--ex-line); }
+
+.article-plate {
+  margin: 0 0 30px;
+  padding: 16px 14px;
+  border: 1px solid var(--ex-line);
+  background: var(--ex-bg-soft);
+}
+.article-plate svg { display: block; width: 100%; height: auto; filter: saturate(.2) contrast(1.02); }
+
+.article-title {
+  margin: 0 0 18px;
+  font-family: var(--font-ui);
+  font-size: clamp(1.52rem, 6.6vw, 2rem);
+  font-weight: 700; line-height: 1.38; letter-spacing: -.025em;
+  color: var(--ex-ink);
+}
+
+.article-concept {
+  margin: 0;
+  font-size: 1rem; font-weight: 500; letter-spacing: -.01em;
+  color: var(--ex-ink-2);
+}
+.article-concept-en {
+  margin: 5px 0 16px;
+  font-size: .76rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--ex-ink-3);
+}
+
+.article-rule {
+  height: 1px; background: var(--ex-line);
+  margin: 26px 0 32px;
+}
+
+.article-body p {
+  margin: 0 0 1.55rem;
+  font-family: var(--font-ui);
+  font-size: clamp(1rem, 4.2vw, 1.06rem);
+  line-height: 1.92;
+  letter-spacing: -.005em;
+  color: #262723;
+  user-select: text; -webkit-user-select: text;
+}

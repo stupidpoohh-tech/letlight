@@ -361,59 +361,22 @@ body {
 }
 .quiz-nudge.is-on { opacity: 1; }
 
-/* -- 지식: 세계 위로 조용히 올라오는 한 편의 글 --------------------- */
+/* -- 지식: 흰 바탕 위의 글. 자세한 조판은 codex.css 에 있다 -------- */
 
 #article {
   z-index: 30;
-  background: rgba(244, 236, 217, .88);
-  -webkit-backdrop-filter: blur(6px) saturate(.8);
-  backdrop-filter: blur(6px) saturate(.8);
+  background: #ffffff;
 }
 
 .article-inner {
-  max-width: 600px; margin: 0 auto;
-  padding: calc(var(--safe-top) + 64px) 30px calc(var(--safe-bottom) + 72px);
-}
-
-.article-title {
-  margin: 0 0 1.1rem;
-  font-family: var(--font-book);
-  font-size: clamp(1.44rem, 6.2vw, 1.82rem);
-  font-weight: 700;
-  line-height: 1.5;
-  letter-spacing: -.005em;
-}
-
-.article-concept {
-  margin: 0 0 .7rem;
-  font-size: .82rem;
-  letter-spacing: .06em;
-  color: var(--ink-soft);
-}
-.article-concept:last-of-type {
-  margin-bottom: 2.8rem;
-  padding-bottom: 1.6rem;
-  border-bottom: 1px solid rgba(47,46,39,.18);
-}
-.article-concept span {
-  display: block; margin-top: 4px;
-  font-size: .72rem; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
-
-.article-body p {
-  margin: 0 0 1.5rem;
-  font-family: var(--font-book);
-  font-size: clamp(1.02rem, 4.25vw, 1.12rem);
-  line-height: 2;
-  color: var(--ink);
-  user-select: text; -webkit-user-select: text;
+  max-width: 620px; margin: 0 auto;
+  padding: calc(var(--safe-top) + 58px) 26px calc(var(--safe-bottom) + 72px);
 }
 
 .article-foot {
-  margin-top: 3.4rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(47,46,39,.18);
+  margin-top: 3.2rem;
+  padding-top: 1.9rem;
+  border-top: 1px solid #e7e8e3;
 }
 
 /* 조용한 진행 어포던스 */
@@ -435,81 +398,6 @@ body {
 }
 
 /* ------------------------------------------------------------------
-   5. 도감 — 오래된 자연 백과사전
-   ------------------------------------------------------------------ */
-
-#codex {
-  background: var(--paper);
-  background-image:
-    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(255,255,255,.5), transparent 60%),
-    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(169,143,101,.12), transparent 70%);
-}
-#codex::after {   /* 종이 결 */
-  content: ""; position: fixed; inset: 0; pointer-events: none;
-  opacity: .5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
-}
-
-.codex-inner {
-  position: relative; z-index: 1;
-  max-width: 600px; margin: 0 auto;
-  padding: calc(var(--safe-top) + 44px) 30px calc(var(--safe-bottom) + 130px);
-}
-
-.codex-head {
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(47,46,39,.2);
-}
-.codex-title {
-  margin: 0; font-family: var(--font-book);
-  font-size: 1.16rem; font-weight: 700; letter-spacing: .1em;
-}
-
-.codex-list { list-style: none; margin: 0; padding: 0; }
-.codex-row {
-  display: flex; align-items: center; gap: 18px;
-  padding: 22px 2px;
-  border-bottom: 1px solid rgba(47,46,39,.11);
-  cursor: pointer;
-}
-.codex-row.is-locked { cursor: default; opacity: .38; }
-.codex-thumb {
-  flex: 0 0 66px; width: 66px; height: 54px;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-.codex-thumb svg { width: 100%; height: 100%; }
-.codex-row-name {
-  font-family: var(--font-book);
-  font-size: 1.02rem; font-weight: 700; line-height: 1.5;
-  margin: 0 0 5px;
-}
-.codex-row-en { font-size: .78rem; letter-spacing: .04em; color: var(--ink-faint); margin: 0; }
-.codex-row.is-locked .codex-row-name { font-weight: 400; letter-spacing: .14em; }
-
-.entry-back {
-  display: inline-block; margin: 0 0 24px; padding: 10px 2px;
-  font-size: .86rem; letter-spacing: .08em; color: var(--ink-faint);
-  border: 0; background: none; font-family: inherit; cursor: pointer;
-}
-
-.plate {
-  position: relative;
-  margin: 0 0 34px;
-  padding: 22px 16px 14px;
-  background: rgba(255,253,246,.55);
-  border: 1px solid rgba(47,46,39,.16);
-}
-.plate svg { display: block; width: 100%; height: auto; }
-
-.footnote {
-  margin: 34px 0 0;
-  font-size: .78rem; line-height: 1.8; color: var(--ink-faint);
-  font-style: italic;
-}
-
-/* ------------------------------------------------------------------
    6. 하단 이동 — 세계보다 뒤에 있어야 한다
    ------------------------------------------------------------------ */
 
@@ -517,12 +405,11 @@ body {
   position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
   display: flex;
-  padding: 14px 8px calc(var(--safe-bottom) + 12px);
-  background: var(--paper);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -1px 0 rgba(47,46,39,.1);
+  padding: 7px 8px calc(var(--safe-bottom) + 7px);
+  background: #ffffff;
+  border-top: 1px solid #ecede8;
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateY(10px);
   transition: opacity calc(1.6s * var(--rate)) var(--ease-quiet),
               transform calc(1.6s * var(--rate)) var(--ease-quiet);
   pointer-events: none;
@@ -531,32 +418,32 @@ body {
 
 .nav-item {
   flex: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  padding: 8px 4px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px 3px;
   border: 0; background: none;
-  font-family: inherit; font-size: .8rem; letter-spacing: .02em;
-  color: var(--ink-faint);
+  font-family: inherit; font-size: .72rem; letter-spacing: 0;
+  color: #9a9d93;
   cursor: pointer;
   transition: color calc(.5s * var(--rate)) var(--ease-quiet);
 }
 .nav-item svg {
-  width: 28px; height: 22px;
+  width: 22px; height: 17px;
   fill: currentColor; stroke: currentColor;
-  stroke-width: 1.4; stroke-linejoin: round;
+  stroke-width: 1.3; stroke-linejoin: round;
 }
-.nav-item svg .snow { fill: var(--paper); stroke: none; }
-.nav-item[data-view="codex"] svg { fill: none; stroke-width: 1.5; }
-.nav-item.is-active { color: var(--hill-5); }
+.nav-item svg .snow { fill: #ffffff; stroke: none; }
+.nav-item[data-view="codex"] svg { fill: none; stroke-width: 1.4; }
+.nav-item.is-active { color: #7d8760; }
 .nav-item.is-active::after {
-  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  content: ""; width: 3px; height: 3px; border-radius: 50%;
   background: currentColor; margin-top: 1px;
 }
 
 /* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */
 .nav-item.is-fresh { animation: fresh 3.4s var(--ease-quiet) 3; }
 @keyframes fresh {
-  0%, 100% { color: var(--ink-faint); }
-  45%      { color: var(--hill-5); }
+  0%, 100% { color: #9a9d93; }
+  45%      { color: #7d8760; }
 }
 
 @media (prefers-reduced-motion: reduce) {

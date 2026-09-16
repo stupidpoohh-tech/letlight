@@ -8,6 +8,8 @@ export const state = {
   nodes: Object.fromEntries(
     Object.keys(NODES).map((id, i) => [id, i === 0 ? 'available' : 'locked'])
   ),
+  /* 최근 발견 순서 (백과사전 표시용) */
+  solvedOrder: [],
   cloudVisible: false,
   rainVisible: false,
   sproutVisible: false,
@@ -20,6 +22,7 @@ export const solvedIds = () => NODE_ORDER.filter(isSolved);
 
 export function markSolved(id) {
   state.nodes[id] = 'solved';
+  if (!state.solvedOrder.includes(id)) state.solvedOrder.push(id);
   const next = NODES[id] && NODES[id].next;
   if (next && state.nodes[next] === 'locked') state.nodes[next] = 'available';
 }
