@@ -23,7 +23,8 @@ export const CYCLES = {
        증발 질문이 따로 생기면 여기에 한 줄 더하면 된다. */
     requiredNodes: ['cloudWhite', 'rainStart', 'waterInfiltration', 'waterLatentHeat'],
 
-    badge: 'assets/water-cycle.webp',
+    badge: 'assets/jem-drop.webp',
+    slot: 'drop',
 
     /* 닫히고 나면 움직이기 시작하는 것들 */
     animates: ['cloud', 'river'],
@@ -31,6 +32,27 @@ export const CYCLES = {
 };
 
 export const CYCLE_ORDER = ['waterCycle'];
+
+/* 보석함. 한 바퀴를 닫을 때마다 제 자리에 보석이 놓인다.
+
+   자리와 크기는 보석함 그림에서 잰 값이다 (그림 크기 대비 %).
+   아직 주인이 없는 자리는 비어 있다. */
+export const JEM_BOX = 'assets/jem-box.webp';
+
+export const JEM_SLOTS = [
+  { key: 'drop',  gem: 'assets/jem-drop.webp',
+    at: { left: 21.22, top: 48.82, width: 8.35 } },
+  { key: 'hex',   gem: 'assets/jem-hex.webp',
+    at: { left: 37.53, top: 48.53, width: 8.03 } },
+  { key: 'round', gem: 'assets/jem-round.webp',
+    at: { left: 52.88, top: 49.97, width: 10.03 } },
+  { key: 'heart', gem: 'assets/jem-heart.webp',
+    at: { left: 69.33, top: 50.27, width: 10.83 } },
+];
+
+/** 그 자리를 채운 순환. 아직 아무도 없으면 undefined. */
+export const cycleInSlot = (key) =>
+  CYCLE_ORDER.find((id) => CYCLES[id].slot === key && cycleClosed(id));
 
 export const cycleClosed = (id) =>
   ((CYCLES[id] && CYCLES[id].requiredNodes) || []).every(isSolved);

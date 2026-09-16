@@ -11,7 +11,7 @@
 """
 
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets"
@@ -37,11 +37,17 @@ GROWTH_WIDTH = 520
 RIVER_MAIN = "river2.png"
 RIVER_WIDTH = 640
 
-# 순환 배지.  { 만들어질 이름: 루트에 올린 원본 }
-BADGES = {
-    "water-cycle": "badge-water-cycle.png",   # 물의 순환
+# 보석함과 보석.  올려 주신 그림은 흰 바탕의 jpg 라서 바탕을 지워야 한다.
+JEM_BOX = "jembox.jpg"
+JEM_BOX_WIDTH = 900
+
+JEMS = {
+    "jem-drop":  "jem3.jpg",   # 물방울 · 파랑 — 물의 순환
+    "jem-hex":   "jem4.jpg",   # 육각 · 금빛
+    "jem-round": "jem1.jpg",   # 원 · 초록
+    "jem-heart": "jem2.jpg",   # 하트 · 붉은빛
 }
-BADGE_WIDTH = 420
+JEM_WIDTH = 300
 
 
 def build_world(src: Path, dst: Path):
@@ -61,6 +67,54 @@ def build_world(src: Path, dst: Path):
 
     im = im.resize((WORLD_WIDTH, round(im.height * WORLD_WIDTH / w)), Image.LANCZOS)
     im.save(dst, "WEBP", quality=80, method=6)
+    return im.size
+
+
+def build_gem(src: Path, dst: Path, max_width: int):
+    """흰 바탕 위에 그린 보석에서 바탕만 지운다.
+
+    안쪽의 옅은 면까지 함께 지우면 보석에 구멍이 뚫린다.
+    줄과 칸의 양 끝에서 안쪽으로 들어오는 방식으로,
+    바깥의 흰 바탕만 골라 낸다."""
+    import numpy as np
+
+    im = Image.open(src).convert("RGB")
+    a = np.asarray(im).astype(np.int16)
+    ink = a.min(axis=2) < 243          # 그림이 있는 자리
+
+    h, w = ink.shape
+    cols = np.arange(w)[None, :]
+    rows = np.arange(h)[:, None]
+
+    def span(mask, axis):
+        any_ = mask.any(axis=axis, keepdims=True)
+        idx = np.where(axis == 1, cols, rows)
+        first = np.where(mask, idx, 10**6).min(axis=axis, keepdims=True)
+        last = np.where(mask, idx, -1).max(axis=axis, keepdims=True)
+        return any_ & (idx >= first) & (idx <= last)
+
+    inside = span(ink, 1) & span(ink, 0)   # 줄과 칸 양쪽에서 안쪽
+
+    alpha = Image.fromarray((inside * 255).astype("uint8"), "L")
+    alpha = alpha.filter(ImageFilter.GaussianBlur(1.2))   # 가장자리를 부드럽게
+
+    out = im.convert("RGBA")
+    out.putalpha(alpha)
+    box = alpha.point(lambda v: 255 if v > 8 else 0).getbbox()
+    if box:
+        out = out.crop(box)
+    if out.width > max_width:
+        out = out.resize((max_width, round(out.height * max_width / out.width)), Image.LANCZOS)
+    out.save(dst, "WEBP", quality=88, method=6)
+    return out.size
+
+
+def build_flat(src: Path, dst: Path, max_width: int):
+    """바탕이 있는 그대로 줄이기만 한다. 보석함처럼 종이째 쓰는 그림."""
+    im = Image.open(src).convert("RGB")
+    if im.width > max_width:
+        im = im.resize((max_width, round(im.height * max_width / im.width)), Image.LANCZOS)
+    im.save(dst, "WEBP", quality=86, method=6)
     return im.size
 
 
@@ -92,7 +146,7 @@ def main():
     jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
     jobs += [(ROOT / src, OUT / f"{name}.webp", GROWTH_WIDTH) for name, src in GROWTH.items()]
     jobs += [(ROOT / RIVER_MAIN, OUT / "river.webp", RIVER_WIDTH)]
-    jobs += [(ROOT / src, OUT / f"{name}.webp", BADGE_WIDTH) for name, src in BADGES.items()]
+
 
     missing = []
     for src, dst, width in jobs:
@@ -100,6 +154,20 @@ def main():
             missing.append(src.name)
             continue
         size = build_cutout(src, dst, width)
+        kb = dst.stat().st_size / 1024
+        total += kb
+        print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"
+              f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
+
+    # 보석함은 종이째, 보석은 바탕을 지워서
+    extra = [(ROOT / JEM_BOX, OUT / "jem-box.webp", JEM_BOX_WIDTH, build_flat)]
+    extra += [(ROOT / src, OUT / f"{name}.webp", JEM_WIDTH, build_gem)
+              for name, src in JEMS.items()]
+    for src, dst, width, fn in extra:
+        if not src.exists():
+            missing.append(src.name)
+            continue
+        size = fn(src, dst, width)
         kb = dst.stat().st_size / 1024
         total += kb
         print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"

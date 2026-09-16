@@ -124,7 +124,7 @@ Opening → World Reveal → 구름 → 비 ─┬─ 씨앗 → 첫 잎 → 어
                             └─ 세계 상세
 ```
 
-- **홈** — 발견한 세계 · 발견한 원리 인덱스 블록, 최근 발견, 더 알아볼 것
+- **홈** — 발견한 세계 · 발견한 원리 인덱스 블록, 발견한 순환(보석함), 더 알아볼 것
 - **세계** — 발견한 현상과 존재 / 아직 더 열릴 세계
 - **원리 상세** — 처음 만난 곳 · 보이는 세계 · 함께 이해한 것 ·
   다음에 다시 나타날 곳 을 가는 선과 점으로 잇는다
@@ -279,19 +279,37 @@ waterCycle: {
 지형의 크기가 무대 높이에 비례한다. `styles/app.css` 의 `.river-anchor` ·
 `.river-img` 에 세 숫자(가로 위치 · 세로 위치 · 높이)로 들어 있다.
 
-아직 올라오지 않은 그림이 둘 있다.
+### 보석함
 
-| 올릴 원본 | 만들어지는 것 | 쓰이는 곳 |
+한 바퀴를 닫을 때마다 보석함의 제 자리에 보석이 놓인다.
+
+| 원본 | 만들어지는 것 | 자리 |
 |---|---|---|
-| — | `assets/soil-water.webp` | 지표 아래로 스며든 물 |
-| `badge-water-cycle.png` | `assets/water-cycle.webp` | 물의 순환 배지 |
+| `jembox.jpg` | `assets/jem-box.webp` | 보석함 (네 자리) |
+| `jem3.jpg` | `assets/jem-drop.webp` | 물방울 · 파랑 — 물의 순환 |
+| `jem4.jpg` | `assets/jem-hex.webp` | 육각 · 금빛 — 빈자리 |
+| `jem1.jpg` | `assets/jem-round.webp` | 원 · 초록 — 빈자리 |
+| `jem2.jpg` | `assets/jem-heart.webp` | 하트 · 붉은빛 — 빈자리 |
 
-없어도 화면은 깨지지 않는다.
-젖은 땅 층은 조용히 빠지고 (`src/art/assets.js` 의 `WATER_LAYERS`),
+원본이 흰 바탕의 jpg 라서 바탕을 지워야 한다.
+`tools/build-assets.py` 의 `build_gem()` 이 줄과 칸 양 끝에서 안쪽으로
+들어오는 방식으로 바깥 바탕만 골라 낸다. 안쪽의 옅은 면은 남는다.
+
+자리는 `src/data/cycles.js` 의 `JEM_SLOTS` 에 그림 크기 대비 % 로 들어 있다.
+새 고리를 더할 때는 그 고리에 `slot: 'hex' | 'round' | 'heart'` 를 적으면
+그 자리에 놓인다.
+
+---
+
+아직 올라오지 않은 그림이 하나 있다.
+
+| 필요한 파일 | 쓰이는 곳 |
+|---|---|
+| `assets/soil-water.webp` | 지표 아래로 스며든 물 |
+
+없어도 화면은 깨지지 않는다. 그 층만 조용히 빠지고
+(`src/art/assets.js` 의 `WATER_LAYERS`),
 그 노드의 도감 도판(`plate: 'soil'`) 자리도 비어 있다.
-배지 자리에는 그동안 고리 도식이 대신 들어간다.
-`badge-water-cycle.png` 를 루트에 올리고 `tools/build-assets.py` 를 돌리면
-팝업과 도감의 그 자리에 바로 들어간다.
 
 질문은 방금 생긴 것 곁에서 피어난다. 노드의 `near: 'cloud' | 'growth'` 가
 그 대상을 가리키고, 실제 위치는 화면에서 그 요소를 찾아 계산한다.

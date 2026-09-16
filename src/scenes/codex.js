@@ -10,14 +10,13 @@ import {
   CONCEPT_META, CONCEPT_ORDER, worldFound, conceptFound,
   foundWorlds, foundConcepts, worldCount, conceptQuestions, conceptName,
 } from '../data/library.js';
-import { state, isSolved } from '../core/state.js';
-import { CYCLES, closedCycles } from '../data/cycles.js';
+import { isSolved, clearProgress } from '../core/state.js';
+import { CYCLES, closedCycles, JEM_BOX, JEM_SLOTS, cycleInSlot } from '../data/cycles.js';
 import { thumb } from '../art/plates.js';
 import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
 import { badgeArt, hasBadge } from './cycle.js';
 import { isMuted, setMuted, unlock } from '../core/sound.js';
-import { clearProgress } from '../core/state.js';
 
 const sheet = () => document.getElementById('codex');
 
@@ -129,18 +128,23 @@ function questionRow(id, { locked = false } = {}) {
     </li>`;
 }
 
-/** 배지 한 칸. 그림이 아직이면 같은 자리에 고리 도식이 들어간다. */
-function badgeRow(id) {
-  const c = CYCLES[id];
-  return `<li class="ex-badge" data-go="cycle" data-arg="${id}"
-              role="button" tabindex="0">
-      <span class="ex-badge-art">${badgeArt(c, { small: true })}</span>
-      <span class="ex-badge-text">
-        <span class="ex-badge-name">${c.title}</span>
-        <span class="ex-badge-en">${c.en}</span>
-      </span>
-      ${ARROW}
-    </li>`;
+/** 보석함. 한 바퀴를 닫을 때마다 제 자리에 보석이 놓인다. */
+function jemBox() {
+  const gems = JEM_SLOTS.map((s) => {
+    const id = cycleInSlot(s.key);
+    if (!id) return '';
+    const c = CYCLES[id];
+    return `<button class="ex-jem" type="button" data-go="cycle" data-arg="${id}"
+                    aria-label="${c.title}"
+                    style="left:${s.at.left}%;top:${s.at.top}%;width:${s.at.width}%">
+        <img src="${s.gem}" alt="" decoding="async">
+      </button>`;
+  }).join('');
+
+  return `<div class="ex-jembox">
+      <img class="ex-jembox-img" src="${JEM_BOX}" alt="" decoding="async">
+      ${gems}
+    </div>`;
 }
 
 /* ------------------------------------------------------------------
@@ -148,7 +152,6 @@ function badgeRow(id) {
    ------------------------------------------------------------------ */
 
 function renderHome() {
-  const recent = [...state.solvedOrder].reverse();
   const locked = Object.keys(NODES).filter((id) => !isSolved(id));
   const cycles = closedCycles();
 
@@ -174,20 +177,16 @@ function renderHome() {
               ORBIT, 'concepts')}
     </div>
 
-    ${cycles.length ? `
-      <section class="ex-section">
-        <div class="ex-section-head">
-          <h3 class="ex-section-title">발견한 순환</h3>
-          <span class="ex-section-note">한 바퀴가 닫힌 것</span>
-        </div>
-        <ul class="ex-badges">${cycles.map(badgeRow).join('')}</ul>
-      </section>` : ''}
-
-    ${recent.length ? `
-      <section class="ex-section">
-        <h3 class="ex-section-title">최근 발견</h3>
-        <ul class="ex-list">${recent.map((id) => questionRow(id)).join('')}</ul>
-      </section>` : ''}
+    <section class="ex-section">
+      <div class="ex-section-head">
+        <h3 class="ex-section-title">발견한 순환</h3>
+        <span class="ex-section-note">한 바퀴가 닫힌 것</span>
+      </div>
+      ${jemBox()}
+      ${cycles.length
+        ? `<p class="ex-jembox-names">${cycles.map((id) => CYCLES[id].title).join(' · ')}</p>`
+        : '<p class="ex-jembox-names is-empty">아직 닫힌 고리가 없습니다</p>'}
+    </section>
 
     ${locked.length ? `
       <section class="ex-section">

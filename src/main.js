@@ -28,12 +28,15 @@ async function goto(next) {
   if (next === 'codex') {
     view = 'codex';
     hideNodes(true);
+    /* 도감에는 제 손잡이가 따로 있다. 세계 위의 것은 물러난다. */
+    sndBtn.classList.remove('is-on');
     codexBtn.classList.remove('is-fresh');
     await openCodex({ onExit: () => { switching = false; goto('world'); } });
   } else {
     view = 'world';
     await closeCodex();
     hideNodes(false);
+    if (sndBtn.getAttribute('aria-hidden') !== 'true') sndBtn.classList.add('is-on');
   }
   switching = false;
 }

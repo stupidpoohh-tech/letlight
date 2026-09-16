@@ -335,42 +335,47 @@
   font-size: .72rem; letter-spacing: .2em; color: var(--ex-ink-3);
 }
 
-/* ---- 발견한 순환 ---- */
+/* ---- 발견한 순환 : 보석함 ---- */
 
-.ex-badges { list-style: none; margin: 0; padding: 0; }
-
-.ex-badge {
-  display: flex; align-items: center; gap: 16px;
-  padding: 16px 2px;
-  border-bottom: 1px solid var(--ex-line-2);
-  cursor: pointer;
+.ex-jembox {
+  position: relative;
+  margin: 2px 0 0;
+  line-height: 0;
 }
-.ex-badge:last-child { border-bottom: 0; }
-
-.ex-badge-art {
-  flex: 0 0 62px;
-  display: flex; align-items: center; justify-content: center;
-}
-.ex-badge-art .cyc-badge-img { width: 100%; height: auto; display: block; }
-.ex-badge-art .mark { width: 100%; height: auto; display: block; }
-
-.ex-badge-text { flex: 1 1 auto; min-width: 0; }
-.ex-badge-name {
+.ex-jembox-img {
   display: block;
-  font-size: 1rem; font-weight: 700; letter-spacing: -.02em;
-  color: var(--ex-ink);
+  width: 100%; height: auto;
 }
-.ex-badge-en {
-  display: block; margin-top: 4px;
-  font-size: .72rem; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--ex-ink-3);
+
+/* 한 바퀴를 닫으면 제 자리에 놓인다 */
+.ex-jem {
+  position: absolute;
+  padding: 0; border: 0; background: none;
+  line-height: 0;
+  cursor: pointer;
+  animation: jem-settle calc(1.6s * var(--rate)) var(--ease-quiet) both;
 }
+.ex-jem img { display: block; width: 100%; height: auto; }
+.ex-jem:focus-visible { outline: 1px solid var(--ex-accent); outline-offset: 4px; }
+
+@keyframes jem-settle {
+  from { opacity: 0; transform: translateY(-6%) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+.ex-jembox-names {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: .82rem; letter-spacing: .02em;
+  color: var(--ex-ink-2);
+}
+.ex-jembox-names.is-empty { color: var(--ex-ink-3); }
 
 .ex-hero--badge {
   display: flex; align-items: center; justify-content: center;
   padding: 22px 14px;
 }
-.ex-hero--badge .cyc-badge-img { width: 56%; height: auto; }
+.ex-hero--badge .cyc-badge-img { width: 42%; height: auto; }
 .ex-hero--badge .mark { width: 72%; height: auto; }
 
 .ex-ring { margin: 4px 0 10px; }
@@ -380,77 +385,6 @@
   text-align: center;
   font-size: .8rem; letter-spacing: .04em;
   color: var(--ex-ink-3);
-}
-
-/* ---- 글 ---- */
-
-.ex-article .article-title { margin-top: 0; }
-
-/* ==================================================================
-   글 — 백과사전 안에서도, 문제를 푼 직후에도 같은 조판을 쓴다
-   ================================================================== */
-
-.article-rel {
-  display: flex; align-items: baseline; justify-content: flex-end;
-  flex-wrap: wrap; gap: 8px;
-  margin: 0 0 14px;
-  font-size: .8rem; line-height: 1.5;
-  color: var(--ex-ink-2);
-  text-align: right;
-}
-.article-rel b { font-weight: 700; color: var(--ex-accent); }
-.article-rel span { color: var(--ex-line); }
-
-.article-plate {
-  margin: 0 0 30px;
-  padding: 16px 14px;
-  border: 1px solid var(--ex-line);
-  background: var(--ex-bg-soft);
-}
-.article-plate svg { display: block; width: 100%; height: auto; filter: saturate(.2) contrast(1.02); }
-
-.article-title {
-  margin: 0 0 18px;
-  font-family: var(--font-ui);
-  font-size: clamp(1.52rem, 6.6vw, 2rem);
-  font-weight: 700; line-height: 1.38; letter-spacing: -.025em;
-  color: var(--ex-ink);
-}
-
-.article-concept {
-  margin: 0;
-  font-size: 1rem; font-weight: 500; letter-spacing: -.01em;
-  color: var(--ex-ink-2);
-}
-.article-concept-en {
-  margin: 5px 0 16px;
-  font-size: .76rem; letter-spacing: .2em;
-  text-transform: uppercase; color: var(--ex-ink-3);
-}
-
-.article-rule {
-  height: 1px; background: var(--ex-line);
-  margin: 26px 0 32px;
-}
-
-.article-h {
-  margin: 2.7rem 0 1.15rem;
-  font-family: var(--font-ui);
-  font-size: 1.08rem; font-weight: 700;
-  line-height: 1.5; letter-spacing: -.02em;
-  color: var(--ex-ink);
-}
-.article-body > .article-h:first-child { margin-top: 0; }
-.article-body strong { font-weight: 700; color: #121310; }
-
-.article-body p {
-  margin: 0 0 1.55rem;
-  font-family: var(--font-ui);
-  font-size: clamp(1rem, 4.2vw, 1.06rem);
-  line-height: 1.92;
-  letter-spacing: -.005em;
-  color: #262723;
-  user-select: text; -webkit-user-select: text;
 }
 
 /* ---- 손잡이 (소리 · 진행) ---- */
