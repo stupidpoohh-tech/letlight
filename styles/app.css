@@ -40,11 +40,96 @@ body {
   mask-image: radial-gradient(circle var(--mr) at var(--mx) var(--my), var(--falloff));
 }
 
-#world-art, #sky-fx { position: absolute; inset: 0; pointer-events: none; }
-#world-art svg, #sky-fx svg {
+#world-art, #sky-fx, #wet {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+
+/* 세계는 그림 한 장이다 */
+#world-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
+}
+
+/* 비가 온 뒤의 땅 */
+#wet {
+  top: 58%;                       /* 지평선 언저리부터 */
+  opacity: 0;
+  mix-blend-mode: multiply;
+  background: linear-gradient(to bottom,
+      rgba(150,164,150,0)    0%,
+      rgba(110,128,118,.34) 22%,
+      rgba(86,106,96,.52)   65%,
+      rgba(74,94,84,.60)   100%);
+}
+
+/* ---- 구름 ---- */
+
+.cloud-anchor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  will-change: opacity;
+}
+.cloud-drift { position: relative; display: block; }
+.cloud-drift img {
+  display: block;
+  width: 100%; height: auto;
+}
+.cloud-body  { position: relative; z-index: 1; }
+.cloud-puff  { position: absolute; left: 0; top: 0; z-index: 0; opacity: 0; }
+.cloud-dense {
+  position: absolute; left: 0; top: 0; z-index: 2;
+  opacity: 0;
+  filter: saturate(.72) brightness(.84) contrast(1.06);
+}
+.cloud-stir  {
+  position: absolute; left: 0; top: 0; z-index: 3;
+  opacity: 0;
+  filter: brightness(1.07) contrast(1.06);
+}
+
+/* 구름이 생기기 직전, 하늘 한 조각이 옅어진다 */
+.sky-hush {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 82%; aspect-ratio: 16 / 9;
+  opacity: 0;
+  background: radial-gradient(ellipse at center,
+      rgba(253,248,236,.85) 0%, rgba(253,248,236,0) 68%);
+}
+
+/* ---- 비 ---- */
+
+.rain {
+  position: absolute;
+  left: 8%; right: 8%;
+  top: 76%;
+  height: 0;
+  z-index: 0;
+}
+.raindrop {
+  position: absolute; top: 0;
+  width: 1.8px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom,
+      rgba(118,144,156,0), rgba(104,132,146,.92) 45%, rgba(118,144,156,0));
+  opacity: 0;
+  animation-name: rainfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+}
+.raindrop.is-once { animation-iteration-count: 1; }
+
+@keyframes rainfall {
+  0%   { transform: translate3d(0, 0, 0);      opacity: 0; }
+  8%   { opacity: var(--o, .5); }
+  86%  { opacity: var(--o, .5); }
+  100% { transform: translate3d(-2.2vh, 37vh, 0); opacity: 0; }
 }
 
 #veil {
@@ -75,21 +160,6 @@ body {
       rgba(244,221,160,.018) 80%,
       rgba(244,221,160,0)   100%);
 }
-
-/* 비 — 한 방울에서 시작한다 */
-@keyframes rainfall {
-  0%   { transform: translate(0, 0);                       opacity: 0; }
-  7%   { opacity: var(--o, .34); }
-  84%  { opacity: var(--o, .34); }
-  100% { transform: translate(-16px, var(--fall, 780px));   opacity: 0; }
-}
-.raindrop {
-  animation-name: rainfall;
-  animation-fill-mode: backwards;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-.raindrop.is-once { animation-iteration-count: 1; }
 
 /* ------------------------------------------------------------------
    2. 오프닝 문장
@@ -147,14 +217,12 @@ body {
 
 #nodes { position: absolute; inset: 0; pointer-events: none; }
 
-/* 인쇄 질감 + 비네트. 빛이 닿은 곳에만 얹힌다. */
+/* 가장자리만 아주 살짝 눌러 준다. 종이 결은 그림에 이미 들어 있다. */
 #paper-fx {
   position: absolute; inset: 0;
   pointer-events: none;
   opacity: .34;
-  mix-blend-mode: multiply;
-  box-shadow: inset 0 0 130px 44px rgba(47,46,39,.16);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
+  box-shadow: inset 0 0 120px 40px rgba(47,46,39,.18);
 }
 
 .qnode {

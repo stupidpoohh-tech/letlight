@@ -3,7 +3,6 @@
 
    알수록 보이ㄷㅏ */
 
-import { installDefs } from './art/defs.js';
 import { wait } from './core/anim.js';
 import { state, solvedIds } from './core/state.js';
 import { runOpening } from './scenes/opening.js';
@@ -40,8 +39,6 @@ nav.addEventListener('click', (e) => {
 });
 
 async function start() {
-  installDefs();
-
   /* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */
   mountWorld({ onStateChange: () => {
     if (solvedIds().length) codexBtn.classList.add('is-fresh');

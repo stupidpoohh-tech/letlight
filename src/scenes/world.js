@@ -2,19 +2,18 @@
    화면을 처음 봤을 때 버튼보다 세계가 먼저 보여야 한다. */
 
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
-import { buildLandscape, VB } from '../art/landscape.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
-import { buildRainLayer, addDrops, buildWetGround } from '../art/rain.js';
+import { buildRainLayer, addDrops } from '../art/rain.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved } from '../core/state.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 
 const NODE_REST = 0.32;          // 평소의 희미함
-const CLOUD_AT  = { x: 288, y: 402, scale: 1.22 };
+const CLOUD_AT  = { left: 50, top: 26, width: 58 };
 
 const el = {};
-const cloud = { group: null, parts: null };
+let cloud = null;
 let busy = false;
 let onChange = null;
 
@@ -22,18 +21,17 @@ export function mountWorld({ onStateChange } = {}) {
   onChange = onStateChange;
   el.art   = document.getElementById('world-art');
   el.fx    = document.getElementById('sky-fx');
+  el.wet   = document.getElementById('wet');
   el.nodes = document.getElementById('nodes');
   el.layer = document.getElementById('world-layer');
-
-  el.art.innerHTML = buildLandscape();
-  el.fx.innerHTML  = `<svg viewBox="0 0 ${VB.w} ${VB.h}"
-                           preserveAspectRatio="xMidYMid slice"
-                           xmlns="http://www.w3.org/2000/svg"></svg>`;
-  el.fxSvg = el.fx.querySelector('svg');
 
   const grain = document.createElement('div');
   grain.id = 'paper-fx';
   el.layer.insertBefore(grain, el.nodes);
+
+  /* 구름은 첫 문제를 푼 뒤에 필요하다. 그때 기다리지 않도록 미리 받아 둔다. */
+  const warm = new Image();
+  warm.src = 'assets/cloud-1.webp';
 }
 
 /* ------------------------------------------------------------------
@@ -81,7 +79,7 @@ export async function showNode(id, { delay = 0 } = {}) {
   await wait(delay);
   const n = addNode(node);
   await nextFrame();
-  n.style.opacity = String(node.disabled ? 0.13 : NODE_REST);
+  n.style.opacity = String(node.disabled ? 0.2 : NODE_REST);
   await wait(1400);
 }
 
@@ -100,34 +98,31 @@ function restoreNodes() {
 
 async function revealCloud() {
   /* 하늘의 한 부분이 아주 옅어진다 */
-  const hush = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-  hush.setAttribute('cx', String(CLOUD_AT.x + 208));
-  hush.setAttribute('cy', String(CLOUD_AT.y + 84));
-  hush.setAttribute('rx', '330');
-  hush.setAttribute('ry', '190');
-  hush.setAttribute('fill', '#fdf8ec');
-  hush.setAttribute('opacity', '0');
-  el.fxSvg.appendChild(hush);
+  const hush = document.createElement('div');
+  hush.className = 'sky-hush';
+  hush.style.left = `${CLOUD_AT.left}%`;
+  hush.style.top = `${CLOUD_AT.top}%`;
+  el.fx.appendChild(hush);
 
   await tween({
-    from: 0, to: 0.4, duration: 1900, easing: ease.inOut,
-    onUpdate: (v) => hush.setAttribute('opacity', v.toFixed(3)),
+    from: 0, to: 0.5, duration: 1900, easing: ease.inOut,
+    onUpdate: (v) => { hush.style.opacity = v.toFixed(3); },
   });
   tween({
-    from: 0.4, to: 0, duration: 5200, easing: ease.inOut,
-    onUpdate: (v) => hush.setAttribute('opacity', v.toFixed(3)),
+    from: 0.5, to: 0, duration: 5200, easing: ease.inOut,
+    onUpdate: (v) => { hush.style.opacity = v.toFixed(3); },
+    onDone: () => hush.remove(),
   });
   await wait(450);
 
   /* 안개 같은 작은 형태들이 모여 하나의 구름이 된다 */
-  const built = buildCloud({ ...CLOUD_AT, scattered: true, seed: 5150 });
-  el.fxSvg.insertAdjacentHTML('beforeend', built.markup);
-  cloud.group = el.fxSvg.querySelector(`[data-cloud="${built.id}"]`);
-  cloud.parts = built.parts;
+  cloud = buildCloud(CLOUD_AT);
+  el.fx.appendChild(cloud.anchor);
+  await nextFrame();
 
-  await formCloud(cloud.group, cloud.parts, { duration: 4600 });
+  await formCloud(cloud, { duration: 5000 });
   await wait(900);
-  driftCloud(cloud.group, { ...CLOUD_AT, speed: 0.45 });
+  driftCloud(cloud);
   state.cloudVisible = true;
 }
 
@@ -136,40 +131,36 @@ async function revealCloud() {
    ------------------------------------------------------------------ */
 
 async function revealRain() {
-  if (!cloud.group) return;
+  if (!cloud) return;
 
   /* 1. 구름 자체가 먼저 조금 변한다 */
-  await thickenCloud(cloud.group, { to: 0.26, duration: 2400 });
+  await thickenCloud(cloud, { to: 0.52, duration: 2400 });
 
   /* 2. 내부에 미세한 움직임 */
-  stirCloud(cloud.group, cloud.parts, { duration: 7000 });
-  await wait(1100);
+  stirCloud(cloud, { duration: 8000 });
+  await wait(1200);
 
-  const rain = buildRainLayer();
-  cloud.group.appendChild(rain);
+  const rain = buildRainLayer(cloud.drift);
 
   /* 3. 첫 물방울 하나 */
-  addDrops(rain, 1, { once: true, delays: [0], opacity: 0.4 });
-  await wait(2200);
+  addDrops(rain, 1, { once: true, delays: [0], opacity: 0.6 });
+  await wait(2300);
 
   /* 4. 아주 드문 간격으로 몇 방울 */
-  addDrops(rain, 4, { once: true, delays: [0, 0.7, 1.6, 2.4], opacity: 0.36 });
-  await wait(3000);
+  addDrops(rain, 4, { once: true, delays: [0, 0.8, 1.7, 2.5], opacity: 0.55 });
+  await wait(3100);
 
   /* 5. 점차 일정한 비가 된다 */
-  addDrops(rain, 46);
-  rain.style.opacity = '0';
+  addDrops(rain, 58);
   tween({
     duration: 4200, easing: ease.inOut,
     onUpdate: (v) => { rain.style.opacity = v.toFixed(3); },
   });
 
   /* 6. 땅이 젖는다 */
-  el.fxSvg.insertAdjacentHTML('afterbegin', buildWetGround());
-  const wet = el.fxSvg.querySelector('.wet');
   await tween({
     duration: 6500, delay: 900, easing: ease.inOut,
-    onUpdate: (v) => wet.setAttribute('opacity', v.toFixed(3)),
+    onUpdate: (v) => { el.wet.style.opacity = v.toFixed(3); },
   });
   state.rainVisible = true;
 }
@@ -204,9 +195,9 @@ async function choose(nodeEl, node) {
   if (effect) await effect();
 
   await wait(2000);
-  await showNode(node.next || 'plantWater');
-
+  /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
   busy = false;
+  await showNode(node.next || 'plantWater');
 }
 
 export function wireNodes() {

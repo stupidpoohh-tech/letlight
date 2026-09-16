@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000a14">
 <title>보이ㄷㅏ — Let There Be Light</title>
+<link rel="preload" href="assets/world.webp" as="image" fetchpriority="high">
 <link rel="preload" href="fonts/gowun-batang-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/gowun-batang-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles/tokens.css">
@@ -15,7 +16,10 @@
 
     <!-- 세계: 오프닝의 빛에 의해 점진적으로 드러난다 -->
     <div id="world-layer">
-      <div id="world-art"></div>
+      <div id="world-art">
+        <img id="world-img" src="assets/world.webp" alt="" decoding="async" fetchpriority="high">
+      </div>
+      <div id="wet"></div>
       <div id="sky-fx"></div>
       <div id="nodes"></div>
     </div>
