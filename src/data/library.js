@@ -62,7 +62,7 @@ export const CONCEPT_META = {
   imbibition: {
     first: 'seedWater', worlds: ['plant'], ahead: '뿌리',
     lead: '마른 조직이 물을 머금으면서\n멈춰 있던 활동이 다시 가능해지는 과정.',
-    siblings: ['대사', '효소', '세포호흡', '휴면'],
+    siblings: ['발아', '대사', '효소', '세포호흡', '휴면', '앱시스산', '지베렐린', '배근'],
   },
   photosynthesis: {
     first: 'plantGrowth', worlds: ['plant'], ahead: '숲',
@@ -72,7 +72,7 @@ export const CONCEPT_META = {
   carbonFixation: {
     first: 'plantGrowth', worlds: ['plant'], ahead: '탄소 순환',
     lead: '공기 중에 흩어져 있던 탄소가\n유기물 안으로 들어오는 단계.',
-    siblings: ['캘빈 회로', '루비스코', '독립영양생물'],
+    siblings: ['캘빈 회로', '루비스코', '무기질 영양소', '독립영양생물'],
   },
 };
 

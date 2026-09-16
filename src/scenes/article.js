@@ -8,6 +8,13 @@ import { plate } from '../art/plates.js';
 
 const sheet = () => document.getElementById('article');
 
+/* 승인본의 소제목(### )과 강조(**…**)를 그대로 살린다 */
+const fmt = (t) => br(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+const block = (t) => (t.startsWith('### ')
+  ? `<h3 class="article-h">${fmt(t.slice(4))}</h3>`
+  : `<p>${fmt(t)}</p>`);
+
 export function renderArticle(node) {
   const ids = [].concat(node.concept || []);
   const found = ids.map((id) => CONCEPTS[id]).filter(Boolean);
@@ -31,7 +38,7 @@ export function renderArticle(node) {
     <div class="article-rule"></div>
 
     <div class="article-body">
-      ${node.article.body.map((t) => `<p>${br(t)}</p>`).join('')}
+      ${node.article.body.map(block).join('')}
     </div>`;
 }
 
