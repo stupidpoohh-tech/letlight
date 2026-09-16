@@ -10,6 +10,7 @@ import { GROWTH_STAGES, WATER_LAYERS, preload, isReady } from '../art/assets.js'
 import { NODES } from '../data/nodes.js';
 import { state, markSolved, opensOf, isSolved } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
+import { ambience, cue } from '../core/sound.js';
 import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 import { openCycle } from './cycle.js';
@@ -204,6 +205,7 @@ async function revealRain() {
 
   /* 5. 점차 일정한 비가 된다 */
   addDrops(rain, 58);
+  ambience('rain', true, 5000);
   tween({
     duration: 4200, easing: ease.inOut,
     onUpdate: (v) => { rain.style.opacity = v.toFixed(3); },
@@ -232,6 +234,7 @@ async function plantGround() {
 async function stopRain() {
   const layer = cloud && cloud.drift.querySelector('.rain');
   if (!layer) return;
+  ambience('rain', false, 3600);
   await tween({
     from: 1, to: 0, duration: 3000, easing: ease.inOut,
     onUpdate: (v) => { layer.style.opacity = v.toFixed(3); },
@@ -460,6 +463,7 @@ export function animateCycles() {
   if (live.has('cloud') && cloud) cloud.anchor.classList.add('is-alive');
 
   if (live.has('river')) {
+    ambience('river', true, 5000);
     const anchor = el.fx.querySelector('.river-anchor');
     const img = anchor && anchor.querySelector('.river-img');
     if (anchor && img && !img.dataset.missing && !anchor.querySelector('.river-flow')) {
@@ -511,7 +515,7 @@ async function choose(nodeEl, node) {
 
   await wait(300);
   const effect = EFFECTS[node.effect];
-  if (effect) await effect();
+  if (effect) { cue('reveal'); await effect(); }
 
   /* 이 질문으로 한 바퀴가 닫혔다면, 그것부터 알린다 */
   const closed = cycleClosedBy(node.id);
@@ -569,6 +573,7 @@ export async function restoreWorld() {
       const rain = buildRainLayer(cloud.drift);
       addDrops(rain, 58);
       rain.style.opacity = '1';
+      ambience('rain', true, 2000);
       state.rainVisible = true;
     } else if (cloud) {
       cloud.dense.style.opacity = '0.16';

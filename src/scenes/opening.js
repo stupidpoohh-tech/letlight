@@ -6,6 +6,7 @@
 
    플레이어의 터치가 최초의 관측이다. */
 
+import { unlock, cue } from '../core/sound.js';
 import { tween, ease, wait, slice } from '../core/anim.js';
 import { stageRect } from '../core/stage.js';
 
@@ -111,6 +112,10 @@ export function runOpening() {
     const advance = async () => {
       if (!armed) return;
       armed = false;
+
+      /* 사람이 처음 건드리는 순간. 여기서 소리도 열린다. */
+      Promise.resolve(unlock()).then(() => cue('spark'));
+
       el.law.removeEventListener('pointerdown', onTap);
       el.law.removeEventListener('keydown', onKey);
       el.law.classList.remove('is-breathing');

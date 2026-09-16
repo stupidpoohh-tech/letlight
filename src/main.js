@@ -10,6 +10,7 @@ import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
 import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
+import { unlock } from './core/sound.js';
 
 const nav = document.getElementById('nav');
 const navItems = [...nav.querySelectorAll('.nav-item')];
@@ -40,6 +41,10 @@ nav.addEventListener('click', (e) => {
   const b = e.target.closest('.nav-item');
   if (b) goto(b.dataset.view);
 });
+
+/* 오프닝을 건너뛰었으면 오프닝의 터치도 없다. 그때는 첫 손길이 소리를 연다. */
+addEventListener('pointerdown', unlock, { once: true });
+addEventListener('keydown', unlock, { once: true });
 
 /* 틀 안에서는 vh 가 맞지 않는다. 무대 높이를 따로 내보낸다. */
 syncStageUnits();

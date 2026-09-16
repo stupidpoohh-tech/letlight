@@ -453,6 +453,35 @@
   user-select: text; -webkit-user-select: text;
 }
 
+/* ---- 소리 ---- */
+
+.ex-sound-row {
+  margin-top: 46px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ex-line-2);
+}
+.ex-sound {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 6px 2px;
+  border: 0; background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ex-sound-name {
+  font-size: .82rem; letter-spacing: .04em;
+  color: var(--ex-ink-3);
+}
+.ex-sound-state {
+  font-size: .82rem; letter-spacing: .1em;
+  color: var(--ex-ink-2);
+  border-bottom: 1px solid var(--ex-line);
+  padding-bottom: 2px;
+}
+.ex-sound[aria-pressed="true"] .ex-sound-state {
+  color: var(--ex-accent);
+  border-bottom-color: var(--ex-accent);
+}
+
 /* ---- 만든 사람 ---- */
 
 .ex-made {

@@ -11,6 +11,7 @@
 
 import { wait } from '../core/anim.js';
 import { openSheet, closeSheet, chrome, br, revealIn } from '../core/sheet.js';
+import { cue } from '../core/sound.js';
 
 const sheet = () => document.getElementById('quiz');
 
@@ -62,6 +63,7 @@ export function mountChoices(root, q, { onRight } = {}) {
       if (n !== li) n.classList.add('is-hushed');
     });
     li.classList.add('is-right');
+    cue('right');
     if (choice.hint) say(choice.hint);
     onRight && onRight(choice);
   };

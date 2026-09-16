@@ -8,6 +8,7 @@ import { br } from '../core/sheet.js';
 import { CYCLES } from '../data/cycles.js';
 import { isReady } from '../art/assets.js';
 import { ring } from '../art/marks.js';
+import { cue } from '../core/sound.js';
 
 const sheet = () => document.getElementById('cycle');
 
@@ -43,6 +44,7 @@ export function openCycle(id) {
     el.setAttribute('aria-hidden', 'false');
     await nextFrame();
     el.classList.add('is-visible');
+    cue('cycle');
     await wait(900);
 
     const btn = el.querySelector('.cyc-ok');

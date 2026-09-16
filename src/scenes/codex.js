@@ -16,6 +16,7 @@ import { thumb } from '../art/plates.js';
 import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
 import { badgeArt, hasBadge } from './cycle.js';
+import { isMuted, setMuted, unlock } from '../core/sound.js';
 
 const sheet = () => document.getElementById('codex');
 
@@ -41,6 +42,14 @@ const ORBIT = `<svg class="ex-orbit" viewBox="0 0 120 100" fill="none" aria-hidd
   </svg>`;
 
 const two = (n) => String(n).padStart(2, '0');
+
+const soundRow = () => `
+  <div class="ex-sound-row">
+    <button class="ex-sound" type="button" aria-pressed="${!isMuted()}">
+      <span class="ex-sound-name">소리</span>
+      <span class="ex-sound-state">${isMuted() ? '끔' : '켬'}</span>
+    </button>
+  </div>`;
 
 const MADE = `
   <footer class="ex-made">
@@ -173,6 +182,8 @@ function renderHome() {
         </div>
         <ul class="ex-list">${locked.map((id) => questionRow(id, { locked: true })).join('')}</ul>
       </section>` : ''}
+
+    ${soundRow()}
 
     ${MADE}
   `);
@@ -394,6 +405,14 @@ function paint() {
   const pageEl = el.querySelector('.ex-page');
 
   pageEl.querySelector('.ex-back').addEventListener('click', back);
+
+  const snd = pageEl.querySelector('.ex-sound');
+  if (snd) snd.addEventListener('click', () => {
+    unlock();                       /* 누른 김에 소리를 연다 */
+    setMuted(!isMuted());
+    snd.setAttribute('aria-pressed', String(!isMuted()));
+    snd.querySelector('.ex-sound-state').textContent = isMuted() ? '끔' : '켬';
+  });
   pageEl.querySelectorAll('.ex-thumb-img').forEach((img) => {
     img.addEventListener('error', () => { img.style.visibility = 'hidden'; });
   });
