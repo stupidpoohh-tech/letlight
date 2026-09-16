@@ -7,7 +7,7 @@ import { tween, ease } from '../core/anim.js';
 import { GROWTH_STAGES } from './assets.js';
 
 /* 같은 자리에서 자란다 */
-const SCALE = { sprout: 0.58, youngTree: 1, matureTree: 1.3 };
+const SCALE = { sprout: 0.58, youngTree: 1, matureTree: 0.65 };
 
 function setScale(img, sx, sy) {
   img.dataset.sx = sx.toFixed(4);
