@@ -1,16 +1,19 @@
 /* 오프닝 — LET THERE BE LIGHT
 
-   플레이어는 시작 버튼을 누르는 것이 아니다.
-   자신의 손으로 빛을 만들고, 그 빛으로 세계를 처음 본다. */
+   빛이 있으라.            창조의 선언
+   빛은 입자이면서 파동이다.  인간이 알아낸 법칙
+   그러자 빛이 있었다.      지식이 세계의 존재로 바뀐다
 
-import { tween, ease, wait, clamp, slice } from '../core/anim.js';
+   누를 것은 없다. 문장이 끝나면 빛이 저절로 태어난다. */
+
+import { tween, ease, wait, slice } from '../core/anim.js';
 
 /* 어둠이 걷히는 단계.  [reveal, 어둠의 농도] */
 const VEIL_STOPS = [
   [0.00, 1.00],   // 완전한 검정
   [0.10, 0.965],  // 희미한 광원
   [0.26, 0.865],  // 하늘과 지평선 실루엣
-  [0.46, 0.570],  // 언덕과 지형
+  [0.46, 0.570],  // 지형
   [0.70, 0.235],  // 질감
   [1.00, 0.000],  // 색
 ];
@@ -63,49 +66,53 @@ export function runOpening() {
     const fx = `saturate(${sat.toFixed(2)}) brightness(${bright.toFixed(2)}) contrast(${cont.toFixed(2)})`;
     if (fx !== lastFilter) { el.art.style.filter = fx; lastFilter = fx; }
 
-    /* 질감은 늦게 온다 — 연출 순서이기도 하고, 그 전까지 합성 비용을 아낀다 */
+    /* 질감은 늦게 온다 */
     if (el.grain) el.grain.style.opacity = (0.34 * slice(r, 0.5, 0.9)).toFixed(3);
   };
 
-  /* 어두운 서곡 동안 세계를 미리 그려 둔다.
-     검은 장막이 덮고 있으므로 보이지는 않는다. */
+  /* 어두운 서곡 동안 세계를 미리 그려 둔다. 검은 장막이 덮고 있으므로 보이지 않는다. */
   el.layer.style.setProperty('--mr', '400vmax');
   setReveal(0);
   el.grain.style.opacity = '0';
+  el.art.style.willChange = 'filter';
 
   return new Promise((resolve) => {
     let armed = false;
 
     const overture = async () => {
-      await wait(1500);
+      await wait(1100);
 
       /* 빛이 있으라. */
       await tween({
-        duration: 2700, easing: ease.inOut,
+        duration: 2100, easing: ease.inOut,
         onUpdate: (v) => { el.fiat.style.opacity = v.toFixed(3); },
       });
 
-      await wait(1700);
+      await wait(1200);
 
-      /* 빛은 입자이면서 파동이다. — 텍스트 자체가 인터랙션이다 */
+      /* 빛은 입자이면서 파동이다. */
       await tween({
-        from: 0, to: 0.5, duration: 2500, easing: ease.inOut,
+        from: 0, to: 0.55, duration: 1900, easing: ease.inOut,
         onUpdate: (v) => { el.law.style.opacity = v.toFixed(3); },
       });
-      el.law.style.opacity = '';
-      el.law.classList.add('is-breathing');
+
       armed = true;
+      await wait(1100);     /* 문장이 가라앉을 만큼만 */
+      advance();
     };
 
-    const touch = async (ev) => {
+    /* 서두르고 싶으면 아무 데나 눌러도 된다. 누르지 않아도 넘어간다. */
+    const early = () => advance();
+
+    const advance = async () => {
       if (!armed) return;
       armed = false;
-      el.law.removeEventListener('pointerdown', touch);
-      el.law.removeEventListener('keydown', onKey);
+      el.opening.removeEventListener('pointerdown', early);
 
-      /* 최초의 관측 지점 */
-      const px = ev && ev.clientX ? ev.clientX : innerWidth / 2;
-      const py = ev && ev.clientY ? ev.clientY : innerHeight * 0.56;
+      /* 최초의 빛은 법칙이 적힌 자리에서 태어난다 */
+      const r = el.law.getBoundingClientRect();
+      const px = r.width ? r.left + r.width / 2 : innerWidth / 2;
+      const py = r.height ? r.top + r.height / 2 : innerHeight * 0.54;
       el.glow.style.left = `${px}px`;
       el.glow.style.top  = `${py}px`;
       el.layer.style.setProperty('--mx', `${px}px`);
@@ -119,20 +126,19 @@ export function runOpening() {
       el.glow.style.transform = 'scale(0.006)';
       el.glow.style.opacity = '1';
 
-      /* 터치한 문장은 조용히 물러난다 */
-      el.law.classList.remove('is-breathing');
+      /* 법칙은 조용히 물러난다 */
       tween({
-        from: 0.5, to: 0, duration: 1100, easing: ease.inOut,
+        from: 0.55, to: 0, duration: 900, easing: ease.inOut,
         onUpdate: (v) => { el.law.style.opacity = v.toFixed(3); },
       });
 
-      /* B. 빛이 천천히 퍼진다 */
+      /* B. 빛이 퍼진다 */
       tween({
-        from: 0.006, to: 1, duration: 2900, easing: ease.outQuint,
+        from: 0.006, to: 1, duration: 2300, easing: ease.outQuint,
         onUpdate: (v) => { el.glow.style.transform = `scale(${v.toFixed(4)})`; },
       });
       tween({
-        from: 1, to: 0.42, duration: 5200, delay: 1400, easing: ease.inOut,
+        from: 1, to: 0.42, duration: 3800, delay: 1100, easing: ease.inOut,
         onUpdate: (v) => { el.glow.style.opacity = v.toFixed(3); },
       });
 
@@ -140,25 +146,25 @@ export function runOpening() {
 
       /* D. 빛이 세계를 발견해 간다 */
       const reveal = tween({
-        duration: 9000, easing: ease.discover,
-        onUpdate: (r) => {
-          setReveal(r);
+        duration: 7200, easing: ease.discover,
+        onUpdate: (v) => {
+          setReveal(v);
 
           /* C. 선언이 사실로 바뀐다 */
-          if (r > 0.045 && !saidAfter) {
+          if (v > 0.045 && !saidAfter) {
             saidAfter = true;
             tween({
-              from: 1, to: 0, duration: 1500, easing: ease.inOut,
-              onUpdate: (v) => { el.fiat.style.opacity = v.toFixed(3); },
+              from: 1, to: 0, duration: 1100, easing: ease.inOut,
+              onUpdate: (o) => { el.fiat.style.opacity = o.toFixed(3); },
             });
             tween({
-              duration: 2400, delay: 1300, easing: ease.inOut,
-              onUpdate: (v) => { el.after.style.opacity = v.toFixed(3); },
+              duration: 1700, delay: 900, easing: ease.inOut,
+              onUpdate: (o) => { el.after.style.opacity = o.toFixed(3); },
             });
             /* E. 그 문장도 결국 사라지고, 세계만 남는다 */
             tween({
-              from: 1, to: 0, duration: 3400, delay: 6000, easing: ease.inOut,
-              onUpdate: (v) => { el.after.style.opacity = v.toFixed(3); },
+              from: 1, to: 0, duration: 2400, delay: 4400, easing: ease.inOut,
+              onUpdate: (o) => { el.after.style.opacity = o.toFixed(3); },
             });
           }
         },
@@ -166,7 +172,7 @@ export function runOpening() {
 
       /* 빛의 잔상은 마지막에 세계에 스며든다 */
       tween({
-        from: 0.42, to: 0, duration: 3800, delay: 5400, easing: ease.inOut,
+        from: 0.42, to: 0, duration: 2800, delay: 4200, easing: ease.inOut,
         onUpdate: (v) => { el.glow.style.opacity = v.toFixed(3); },
       });
 
@@ -176,18 +182,12 @@ export function runOpening() {
       el.grain.style.opacity = '';
       el.layer.style.webkitMaskImage = 'none';
       el.layer.style.maskImage = 'none';
-      await wait(900);
+      await wait(600);
       el.opening.remove();
       resolve();
     };
 
-    const onKey = (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); touch(null); }
-    };
-
-    el.art.style.willChange = 'filter';
-    el.law.addEventListener('pointerdown', touch);
-    el.law.addEventListener('keydown', onKey);
+    el.opening.addEventListener('pointerdown', early);
     overture();
   });
 }

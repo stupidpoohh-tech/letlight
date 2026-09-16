@@ -1,6 +1,6 @@
 /* 도감 도판 — 그린 구름에 설명을 얹는다. */
 
-const CLOUD = { src: 'assets/cloud-1.webp', w: 760, h: 584 };
+const CLOUD = { src: 'assets/cloud-3.webp', w: 760, h: 540 };
 const RAIN  = { src: 'assets/cloud-4.webp', w: 760, h: 571 };
 
 /** 구름 — 비스듬히 들어온 햇빛이 여러 방향으로 흩어진다 */

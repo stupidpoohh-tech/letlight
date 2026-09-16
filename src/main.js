@@ -63,7 +63,7 @@ async function start() {
   wireNodes();
 
   /* 세계가 완전히 드러난 뒤 잠시 아무 일도 일어나지 않는다 */
-  await showNode('cloudWhite', { delay: skip ? 600 : 2600 });
+  await showNode('cloudWhite', { delay: skip ? 500 : 1900 });
 }
 
 start();

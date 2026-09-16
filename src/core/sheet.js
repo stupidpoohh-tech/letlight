@@ -25,6 +25,6 @@ export function chrome(on) {
   const nav = document.getElementById('nav');
   const nodes = document.getElementById('nodes');
   if (nav.getAttribute('aria-hidden') !== 'true') nav.classList.toggle('is-on', on);
-  nodes.style.transition = 'opacity .8s var(--ease-quiet)';
+  nodes.style.transition = 'opacity calc(.8s * var(--rate)) var(--ease-quiet)';
   nodes.style.opacity = on ? '1' : '0';
 }

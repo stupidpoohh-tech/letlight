@@ -1,5 +1,11 @@
 /* 모든 움직임은 slow / quiet / deliberate.
-   튕김 없음. 폭발 없음. */
+   튕김 없음. 폭발 없음.
+
+   RATE 는 전체 속도를 한 번에 조절하는 손잡이다.
+   1 이 원래 속도, 작을수록 빠르다.
+   CSS 쪽은 tokens.css 의 --rate 가 같은 값을 들고 있으니 함께 고쳐야 한다. */
+
+export const RATE = 0.48;
 
 export const ease = {
   linear:  (t) => t,
@@ -17,7 +23,7 @@ export const ease = {
   },
 };
 
-export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+export const wait = (ms) => new Promise((r) => setTimeout(r, ms * RATE));
 
 /**
  * 값 하나를 시간에 따라 옮긴다.
@@ -25,6 +31,8 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 export function tween({ from = 0, to = 1, duration = 1000, delay = 0,
                         easing = ease.inOut, onUpdate, onDone }) {
+  duration *= RATE;
+  delay *= RATE;
   let raf = 0, timer = 0, killed = false;
   const p = new Promise((resolve) => {
     const start = () => {

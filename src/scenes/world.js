@@ -10,7 +10,7 @@ import { openQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 
 const NODE_REST = 0.32;          // 평소의 희미함
-const CLOUD_AT  = { left: 50, top: 26, width: 58 };
+const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
 
 const el = {};
 let cloud = null;
@@ -31,7 +31,7 @@ export function mountWorld({ onStateChange } = {}) {
 
   /* 구름은 첫 문제를 푼 뒤에 필요하다. 그때 기다리지 않도록 미리 받아 둔다. */
   const warm = new Image();
-  warm.src = 'assets/cloud-1.webp';
+  warm.src = CLOUD_AT.src;
 }
 
 /* ------------------------------------------------------------------
@@ -215,6 +215,6 @@ export function wireNodes() {
 
 /** 도감을 볼 때는 세계 위의 질문을 잠시 물린다 */
 export function hideNodes(on) {
-  el.nodes.style.transition = 'opacity .7s var(--ease-quiet)';
+  el.nodes.style.transition = 'opacity calc(.7s * var(--rate)) var(--ease-quiet)';
   el.nodes.style.opacity = on ? '0' : '1';
 }
