@@ -5,7 +5,7 @@
    1 이 원래 속도, 작을수록 빠르다.
    CSS 쪽은 tokens.css 의 --rate 가 같은 값을 들고 있으니 함께 고쳐야 한다. */
 
-export const RATE = 0.48;
+export const RATE = 0.74;
 
 export const ease = {
   linear:  (t) => t,

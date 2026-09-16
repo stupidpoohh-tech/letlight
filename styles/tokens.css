@@ -63,7 +63,7 @@
                 "Apple SD Gothic Neo", Georgia, serif;
 
   /* 리듬 — --rate 는 전체 속도. src/core/anim.js 의 RATE 와 같은 값이어야 한다. */
-  --rate: .48;
+  --rate: .74;
   --ease-quiet: cubic-bezier(.32, .06, .22, 1);
   --ease-soft:  cubic-bezier(.4, 0, .2, 1);
 

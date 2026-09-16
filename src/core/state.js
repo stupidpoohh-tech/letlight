@@ -10,6 +10,8 @@ export const state = {
   ),
   cloudVisible: false,
   rainVisible: false,
+  sproutVisible: false,
+  plantVisible: false,
 };
 
 export const statusOf  = (id) => state.nodes[id];

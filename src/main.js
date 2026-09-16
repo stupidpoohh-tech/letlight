@@ -4,9 +4,10 @@
    알수록 보이ㄷㅏ */
 
 import { wait } from './core/anim.js';
-import { state, solvedIds } from './core/state.js';
+import { state, solvedIds, markSolved } from './core/state.js';
+import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
-import { mountWorld, showNode, wireNodes, hideNodes } from './scenes/world.js';
+import { mountWorld, showNode, wireNodes, hideNodes, devPrepare } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
 
 const nav = document.getElementById('nav');
@@ -61,6 +62,16 @@ async function start() {
   nav.setAttribute('aria-hidden', 'false');
 
   wireNodes();
+
+  /* 확인용 지름길: #from=seedWater 처럼 중간 노드부터 볼 수 있다.
+     앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
+  const from = (location.hash.match(/from=([A-Za-z]+)/) || [])[1];
+  if (from && NODES[from]) {
+    NODE_ORDER.slice(0, NODE_ORDER.indexOf(from)).forEach(markSolved);
+    await devPrepare(from);
+    await showNode(from, { delay: 400 });
+    return;
+  }
 
   /* 세계가 완전히 드러난 뒤 잠시 아무 일도 일어나지 않는다 */
   await showNode('cloudWhite', { delay: skip ? 500 : 1900 });

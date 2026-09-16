@@ -24,6 +24,13 @@ NAV_TOP = 1462      # 이 아래로는 시안의 하단바
 WORLD_WIDTH = 1180
 CLOUD_WIDTH = 760
 
+# 씨앗에서 첫 잎까지. 루트에 원본 PNG 를 올리면 여기서 함께 변환된다.
+GROWTH = [
+    "seed-dry", "seed-swollen", "seed-cracked",
+    "seed-radicle", "sprout", "plant-first-leaves",
+]
+GROWTH_WIDTH = 520
+
 
 def build_world(src: Path, dst: Path):
     im = Image.open(src).convert("RGB")
@@ -45,13 +52,14 @@ def build_world(src: Path, dst: Path):
     return im.size
 
 
-def build_cloud(src: Path, dst: Path):
+def build_cutout(src: Path, dst: Path, max_width: int):
+    """투명 여백을 잘라 내고 줄인다. 구름 · 씨앗 · 식물 모두 같은 방식이다."""
     im = Image.open(src).convert("RGBA")
-    box = im.getchannel("A").getbbox()      # 투명 여백을 잘라 낸다
+    box = im.getchannel("A").getbbox()
     if box:
         im = im.crop(box)
-    if im.width > CLOUD_WIDTH:
-        im = im.resize((CLOUD_WIDTH, round(im.height * CLOUD_WIDTH / im.width)), Image.LANCZOS)
+    if im.width > max_width:
+        im = im.resize((max_width, round(im.height * max_width / im.width)), Image.LANCZOS)
     im.save(dst, "WEBP", quality=84, method=6)
     return im.size
 
@@ -69,18 +77,23 @@ def main():
         print(f"  {dst.name:16s} {size[0]}x{size[1]}  {kb:6.1f} KB"
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
 
-    for i in range(1, 6):
-        src = ROOT / f"cloud{i}.png"
+    jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
+    jobs += [(ROOT / f"{n}.png", OUT / f"{n}.webp", GROWTH_WIDTH) for n in GROWTH]
+
+    missing = []
+    for src, dst, width in jobs:
         if not src.exists():
+            missing.append(src.name)
             continue
-        dst = OUT / f"cloud-{i}.webp"
-        size = build_cloud(src, dst)
+        size = build_cutout(src, dst, width)
         kb = dst.stat().st_size / 1024
         total += kb
-        print(f"  {dst.name:16s} {size[0]}x{size[1]}  {kb:6.1f} KB"
+        print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
 
     print(f"합계 {total:.1f} KB")
+    if missing:
+        print("아직 없는 원본:", ", ".join(missing))
 
 
 if __name__ == "__main__":

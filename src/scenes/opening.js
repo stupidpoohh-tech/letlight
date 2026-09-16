@@ -1,10 +1,10 @@
 /* 오프닝 — LET THERE BE LIGHT
 
    빛이 있으라.            창조의 선언
-   빛은 입자이면서 파동이다.  인간이 알아낸 법칙
+   빛은 입자이면서 파동이다.  인간이 알아낸 법칙 — 여기를 누른다
    그러자 빛이 있었다.      지식이 세계의 존재로 바뀐다
 
-   누를 것은 없다. 문장이 끝나면 빛이 저절로 태어난다. */
+   플레이어의 터치가 최초의 관측이다. */
 
 import { tween, ease, wait, slice } from '../core/anim.js';
 
@@ -96,20 +96,23 @@ export function runOpening() {
         onUpdate: (v) => { el.law.style.opacity = v.toFixed(3); },
       });
 
+      el.law.classList.add('is-breathing');
       armed = true;
-      await wait(1100);     /* 문장이 가라앉을 만큼만 */
-      advance();
     };
 
-    /* 서두르고 싶으면 아무 데나 눌러도 된다. 누르지 않아도 넘어간다. */
-    const early = () => advance();
+    const onTap = () => advance();
+    const onKey = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); advance(); }
+    };
 
     const advance = async () => {
       if (!armed) return;
       armed = false;
-      el.opening.removeEventListener('pointerdown', early);
+      el.law.removeEventListener('pointerdown', onTap);
+      el.law.removeEventListener('keydown', onKey);
+      el.law.classList.remove('is-breathing');
 
-      /* 최초의 빛은 법칙이 적힌 자리에서 태어난다 */
+      /* 최초의 빛은 누른 자리에서 태어난다 */
       const r = el.law.getBoundingClientRect();
       const px = r.width ? r.left + r.width / 2 : innerWidth / 2;
       const py = r.height ? r.top + r.height / 2 : innerHeight * 0.54;
@@ -187,7 +190,8 @@ export function runOpening() {
       resolve();
     };
 
-    el.opening.addEventListener('pointerdown', early);
+    el.law.addEventListener('pointerdown', onTap);
+    el.law.addEventListener('keydown', onKey);
     overture();
   });
 }

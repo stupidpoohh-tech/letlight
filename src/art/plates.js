@@ -1,5 +1,7 @@
 /* 도감 도판 — 그린 구름에 설명을 얹는다. */
 
+import { GROWTH_STAGES, isReady } from './assets.js';
+
 const CLOUD = { src: 'assets/cloud-3.webp', w: 760, h: 540 };
 const RAIN  = { src: 'assets/cloud-4.webp', w: 760, h: 571 };
 
@@ -47,6 +49,15 @@ function rainPlate() {
     </svg>`;
 }
 
+/* 씨앗·식물 도판. 그림의 실제 비율을 모르므로 틀에 맞춰 넣는다. */
+function growthPlate(src) {
+  return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+      <image href="${src}" x="70" y="12" width="260" height="262"
+             preserveAspectRatio="xMidYMax meet"/>
+      <line x1="28" y1="286" x2="372" y2="286" stroke="#2f2e27" stroke-width="1" opacity="0.18"/>
+    </svg>`;
+}
+
 function unknownPlate() {
   return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
       <rect x="28" y="20" width="344" height="250" fill="none"
@@ -57,5 +68,14 @@ function unknownPlate() {
 export function plate(kind) {
   if (kind === 'cloud') return cloudPlate();
   if (kind === 'rain')  return rainPlate();
+
+  /* 그림이 아직 올라오지 않았으면 빈 틀을 둔다 */
+  if (kind === 'sprout') {
+    return isReady(GROWTH_STAGES.sprout) ? growthPlate(GROWTH_STAGES.sprout) : unknownPlate();
+  }
+  if (kind === 'plant') {
+    return isReady(GROWTH_STAGES.firstLeaves)
+      ? growthPlate(GROWTH_STAGES.firstLeaves) : unknownPlate();
+  }
   return unknownPlate();
 }

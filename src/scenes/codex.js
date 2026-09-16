@@ -21,12 +21,13 @@ function renderIndex() {
           </div>
         </li>`;
     }
-    const c = CONCEPTS[node.concept];
+    const names = [].concat(node.concept || [])
+      .map((cid) => CONCEPTS[cid] && CONCEPTS[cid].name).filter(Boolean).join(' · ');
     return `<li class="codex-row" data-node="${id}" role="button" tabindex="0">
         <div class="codex-thumb">${plate(node.article.plate)}</div>
         <div>
           <p class="codex-row-name">${node.label.split('\n').join(' ')}</p>
-          <p class="codex-row-en">${c ? c.name : ''}</p>
+          <p class="codex-row-en">${names}</p>
         </div>
       </li>`;
   }).join('');

@@ -6,11 +6,12 @@ import { CONCEPTS } from '../data/nodes.js';
 
 const sheet = () => document.getElementById('article');
 
-export function renderArticle(node, { concept = true } = {}) {
-  const c = CONCEPTS[node.concept];
+export function renderArticle(node) {
+  /* 한 노드가 개념을 둘 이상 열기도 한다 */
+  const found = [].concat(node.concept || []).map((id) => CONCEPTS[id]).filter(Boolean);
   return `
     <h2 class="article-title">${br(node.article.title)}</h2>
-    ${c ? `<p class="article-concept">${c.name}<span>${c.en}</span></p>` : ''}
+    ${found.map((c) => `<p class="article-concept">${c.name}<span>${c.en}</span></p>`).join('')}
     <div class="article-body">
       ${node.article.body.map((t) => `<p>${br(t)}</p>`).join('')}
     </div>`;

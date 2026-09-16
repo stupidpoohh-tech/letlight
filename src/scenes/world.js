@@ -4,6 +4,8 @@
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
 import { buildRainLayer, addDrops } from '../art/rain.js';
+import { buildGrowth, setStage } from '../art/growth.js';
+import { GROWTH_STAGES, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved } from '../core/state.js';
 import { openQuiz } from './quiz.js';
@@ -11,9 +13,11 @@ import { openArticle } from './article.js';
 
 const NODE_REST = 0.32;          // 평소의 희미함
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
+const GROWTH_AT = { left: 40, top: 82, width: 17 };
 
 const el = {};
 let cloud = null;
+let growth = null;
 let busy = false;
 let onChange = null;
 
@@ -29,9 +33,9 @@ export function mountWorld({ onStateChange } = {}) {
   grain.id = 'paper-fx';
   el.layer.insertBefore(grain, el.nodes);
 
-  /* 구름은 첫 문제를 푼 뒤에 필요하다. 그때 기다리지 않도록 미리 받아 둔다. */
-  const warm = new Image();
-  warm.src = CLOUD_AT.src;
+  /* 세계가 바뀔 때 기다리지 않도록 미리 받아 둔다.
+     아직 올라오지 않은 그림은 그냥 준비되지 않은 채로 남는다. */
+  preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES)]);
 }
 
 /* ------------------------------------------------------------------
@@ -163,9 +167,81 @@ async function revealRain() {
     onUpdate: (v) => { el.wet.style.opacity = v.toFixed(3); },
   });
   state.rainVisible = true;
+
+  /* 젖은 땅 위에 마른 씨앗 하나. 아직 아무 일도 일어나지 않았다. */
+  await wait(900);
+  await plantSeed();
 }
 
-const EFFECTS = { cloud: revealCloud, rain: revealRain };
+/* ------------------------------------------------------------------
+   세계의 변화 3 — 씨앗이 깨어난다
+   ------------------------------------------------------------------ */
+
+/** 마른 씨앗을 땅에 둔다. 아직 변화는 없다. */
+async function plantSeed() {
+  if (growth) return;
+  growth = buildGrowth(GROWTH_AT);
+  el.fx.appendChild(growth.anchor);
+  await nextFrame();
+  await setStage(growth, 'seedDry', { duration: 1800 });
+}
+
+async function revealSprout() {
+  await plantSeed();
+
+  await setStage(growth, 'seedSwollen', { duration: 1700 });  // 물을 흡수해 부푼다
+  await wait(600);
+  await setStage(growth, 'seedCracked', { duration: 1300 });  // 씨껍질이 갈라진다
+  await wait(500);
+  await setStage(growth, 'seedRadicle', { duration: 1500 });  // 배근이 아래로 나온다
+  await wait(600);
+  await setStage(growth, 'sprout',      { duration: 2100 });  // 싹이 지면 위로 올라온다
+  state.sproutVisible = true;
+}
+
+/* ------------------------------------------------------------------
+   세계의 변화 4 — 첫 잎
+   ------------------------------------------------------------------ */
+
+async function revealFirstLeaves() {
+  await plantSeed();
+
+  /* 씨앗 안에 저장돼 있던 것에 기대던 생명이,
+     이제 바깥의 빛을 쓰기 시작한다.
+     식물 그림이 아직 없으면 빛만 남아 떠 있게 되므로 함께 생략한다. */
+  if (!isReady(GROWTH_STAGES.firstLeaves)) {
+    await setStage(growth, 'firstLeaves', { duration: 2400 });
+    state.plantVisible = true;
+    return;
+  }
+
+  const light = document.createElement('div');
+  light.className = 'sun-touch';
+  light.style.left = `${GROWTH_AT.left}%`;
+  light.style.top = `${GROWTH_AT.top - 7}%`;
+  el.fx.appendChild(light);
+
+  await tween({
+    from: 0, to: 0.6, duration: 1900, easing: ease.inOut,
+    onUpdate: (v) => { light.style.opacity = v.toFixed(3); },
+  });
+
+  await setStage(growth, 'firstLeaves', { duration: 2400 });  // 줄기가 자라고 첫 잎이 펼쳐진다
+
+  /* 빛은 완전히 사라지지 않는다. 이제 이 식물이 쓰는 것이다. */
+  await tween({
+    from: 0.6, to: 0.14, duration: 2600, easing: ease.inOut,
+    onUpdate: (v) => { light.style.opacity = v.toFixed(3); },
+  });
+  state.plantVisible = true;
+}
+
+const EFFECTS = {
+  cloud: revealCloud,
+  rain:  revealRain,
+  seed:  revealSprout,
+  plant: revealFirstLeaves,
+};
 
 /* ------------------------------------------------------------------
    노드 하나의 전체 흐름
@@ -197,7 +273,7 @@ async function choose(nodeEl, node) {
   await wait(2000);
   /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
   busy = false;
-  await showNode(node.next || 'plantWater');
+  if (node.next) await showNode(node.next);
 }
 
 export function wireNodes() {
@@ -217,4 +293,12 @@ export function wireNodes() {
 export function hideNodes(on) {
   el.nodes.style.transition = 'opacity calc(.7s * var(--rate)) var(--ease-quiet)';
   el.nodes.style.opacity = on ? '0' : '1';
+}
+
+/* 확인용 지름길. #from=seedWater 처럼 중간부터 볼 때 세계를 맞춰 둔다.
+   앞선 세계 변화(구름 · 비)는 재생하지 않는다. */
+export async function devPrepare(id) {
+  if (id !== 'seedWater' && id !== 'plantGrowth') return;
+  await plantSeed();
+  if (id === 'plantGrowth') await setStage(growth, 'sprout', { duration: 400 });
 }
