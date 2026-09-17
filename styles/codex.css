@@ -25,9 +25,10 @@
 #codex::after { content: none; }   /* 종이 결 제거 */
 
 .ex-page {
+  --ex-pad: 26px;
   max-width: 620px;
   margin: 0 auto;
-  padding: calc(var(--safe-top) + 26px) 26px calc(var(--safe-bottom) + 108px);
+  padding: calc(var(--safe-top) + 26px) var(--ex-pad) calc(var(--safe-bottom) + 108px);
   opacity: 0;
   transform: translateY(6px);
   transition: opacity .32s ease, transform .32s ease;
@@ -37,6 +38,7 @@
 /* ---- 상단 뒤로 ---- */
 
 .ex-back {
+  position: relative;
   display: flex; align-items: center; gap: 14px;
   margin: 0 0 30px; padding: 6px 2px;
   border: 0; background: none;
@@ -46,6 +48,11 @@
   cursor: pointer;
 }
 .ex-back svg { width: 20px; height: 14px; flex: none; }
+/* 조판은 그대로 두고 손가락이 닿는 자리만 넓힌다 */
+.ex-back::after {
+  content: ""; position: absolute;
+  left: -8px; right: -8px; top: -7px; bottom: -7px;
+}
 
 /* ---- 제목 ---- */
 
@@ -335,6 +342,20 @@
   font-size: .72rem; letter-spacing: .2em; color: var(--ex-ink-3);
 }
 
+/* ---- 좁은 화면 ----
+
+   목록 한 줄이 `그림 | 글 | 화살표` 세 칸인데, 360px 에서는 글 칸이
+   140px 밖에 남지 않아 설명이 다섯 줄로 흩어졌다.
+   그림 칸과 여백을 줄여 글에 자리를 준다. */
+
+@media (max-width: 380px) {
+  .ex-page { --ex-pad: 20px; }
+  .ex-entry { grid-template-columns: 84px 1fr 20px; gap: 13px; padding: 18px 2px; }
+  .ex-entry-art { height: 66px; }
+  .ex-row { grid-template-columns: 50px 1fr 20px; gap: 12px; }
+  .ex-thumb { height: 38px; }
+}
+
 /* ---- 홈은 한 화면에 들어온다 ----
 
    실기기 브라우저는 주소창과 하단바가 높이를 가져가서, 무대가 660px 안팎이 된다.
@@ -380,9 +401,9 @@
 
 /* 보석함은 무대 끝까지 펼친다 */
 .ex-page--home .ex-jembox {
-  width: calc(100% + 52px);
-  margin-left: -26px;
-  margin-right: -26px;
+  width: calc(100% + var(--ex-pad) * 2);
+  margin-left: calc(var(--ex-pad) * -1);
+  margin-right: calc(var(--ex-pad) * -1);
 }
 .ex-page--home .ex-jembox-names { margin-top: 9px; }
 
@@ -419,8 +440,13 @@
   animation: jem-settle calc(1.6s * var(--rate)) var(--ease-quiet) both;
 }
 .ex-jem img { display: block; width: 100%; height: auto; }
-/* 작은 화면에서도 손가락이 닿게. 보이는 크기는 그대로 둔다. */
-.ex-jem::after { content: ""; position: absolute; inset: -9px; }
+/* 보석은 작다. 보이는 크기는 그대로, 누르는 자리만 44px 로 넓힌다. */
+.ex-jem::after {
+  content: ""; position: absolute;
+  left: 50%; top: 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
 .ex-jem:focus-visible { outline: 1px solid var(--ex-accent); outline-offset: 4px; }
 
 @keyframes jem-settle {
@@ -541,7 +567,8 @@
 
 .ex-set {
   display: flex; align-items: baseline; gap: 12px;
-  padding: 6px 2px;
+  min-height: 44px;
+  padding: 11px 2px;
   border: 0; background: none;
   font-family: inherit;
   cursor: pointer;

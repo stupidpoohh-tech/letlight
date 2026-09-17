@@ -49,6 +49,11 @@ JEMS = {
 }
 JEM_WIDTH = 300
 
+# 링크로 나눌 때 보이는 그림과 홈 화면 아이콘
+OG_SRC = "OG.png"
+OG_SIZE = (1200, 630)
+ICON_BG = (250, 246, 234)   # 종이색
+
 
 def build_world(src: Path, dst: Path):
     im = Image.open(src).convert("RGB")
@@ -109,6 +114,29 @@ def build_gem(src: Path, dst: Path, max_width: int):
     return out.size
 
 
+def build_og(src: Path, dst: Path, _w=None):
+    """링크 미리보기용. 1200x630 에 맞춰 가운데를 딴다."""
+    im = Image.open(src).convert("RGB")
+    tw, th = OG_SIZE
+    k = max(tw / im.width, th / im.height)
+    im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
+    x = (im.width - tw) // 2
+    y = (im.height - th) // 2
+    im.crop((x, y, x + tw, y + th)).save(dst, "JPEG", quality=82, optimize=True)
+    return OG_SIZE
+
+
+def build_icon(src: Path, dst: Path, size: int):
+    """홈 화면 아이콘. 물방울 보석을 종이색 바탕 가운데 놓는다."""
+    gem = Image.open(src).convert("RGBA")
+    k = (size * 0.74) / max(gem.size)
+    gem = gem.resize((round(gem.width * k), round(gem.height * k)), Image.LANCZOS)
+    out = Image.new("RGB", (size, size), ICON_BG)
+    out.paste(gem, ((size - gem.width) // 2, (size - gem.height) // 2), gem)
+    out.save(dst, "PNG", optimize=True)
+    return (size, size)
+
+
 def build_flat(src: Path, dst: Path, max_width: int):
     """바탕이 있는 그대로 줄이기만 한다. 보석함처럼 종이째 쓰는 그림."""
     im = Image.open(src).convert("RGB")
@@ -163,6 +191,7 @@ def main():
     extra = [(ROOT / JEM_BOX, OUT / "jem-box.webp", JEM_BOX_WIDTH, build_flat)]
     extra += [(ROOT / src, OUT / f"{name}.webp", JEM_WIDTH, build_gem)
               for name, src in JEMS.items()]
+    extra += [(ROOT / OG_SRC, OUT / "og.jpg", None, build_og)]
     for src, dst, width, fn in extra:
         if not src.exists():
             missing.append(src.name)
@@ -172,6 +201,16 @@ def main():
         total += kb
         print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
+
+    # 아이콘은 방금 만든 물방울 보석에서 뜬다
+    gem = OUT / "jem-drop.webp"
+    if gem.exists():
+        for size, name in ((180, "icon-180.png"), (32, "icon-32.png")):
+            dst = OUT / name
+            build_icon(gem, dst, size)
+            kb = dst.stat().st_size / 1024
+            total += kb
+            print(f"  {dst.name:24s} {size}x{size}  {kb:6.1f} KB")
 
     print(f"합계 {total:.1f} KB")
     if missing:
