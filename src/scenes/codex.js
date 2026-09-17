@@ -91,8 +91,8 @@ const back = () => { stack.pop(); stack.length ? paint() : onExit && onExit(); }
    공통 조각
    ------------------------------------------------------------------ */
 
-const page = (backLabel, inner) => `
-  <div class="ex-page">
+const page = (backLabel, inner, mod = '') => `
+  <div class="ex-page ${mod}">
     <button class="ex-back" type="button">
       <svg viewBox="0 0 20 14" aria-hidden="true"><path d="M19 7H1M7 1 1 7l6 6"
         fill="none" stroke="currentColor" stroke-width="1.4"
@@ -200,7 +200,7 @@ function renderHome() {
     ${settings()}
 
     ${MADE}
-  `);
+  `, 'ex-page--home');
 }
 
 /* ------------------------------------------------------------------
