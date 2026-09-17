@@ -211,11 +211,13 @@ async function revealRain() {
     onUpdate: (v) => { rain.style.opacity = v.toFixed(3); },
   });
 
-  /* 6. 땅이 젖는다 */
-  await tween({
+  /* 6. 땅이 젖는다.
+     끝까지 기다리지 않는다. 땅이 마저 젖는 동안 다음 질문이 떠올라도 된다. */
+  tween({
     duration: 6500, delay: 900, easing: ease.inOut,
     onUpdate: (v) => { el.wet.style.opacity = v.toFixed(3); },
   });
+  await wait(2800);
   state.rainVisible = true;
 }
 

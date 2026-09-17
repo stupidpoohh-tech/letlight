@@ -28,14 +28,16 @@ export function renderArticle(node) {
 
   return `
     ${linked.length ? `<p class="article-rel">
-        <b>연결 원리</b><span>|</span>${linked.join(' · ')}</p>` : ''}
+        <b>연결 원리</b><span class="article-rel-sep">|</span
+        ><span class="article-rel-list">${linked.join(' · ')}</span></p>` : ''}
 
     ${art ? `<div class="article-plate">${art}</div>` : ''}
 
     <h2 class="article-title">${br(node.article.title)}</h2>
-    ${found.map((c) => `
-      <p class="article-concept">${c.name}</p>
-      <p class="article-concept-en">${c.en}</p>`).join('')}
+    ${found.length ? `<ul class="article-concepts">
+      ${found.map((c) => `<li class="article-concept">${c.name}
+        <span class="article-concept-en">${c.en}</span></li>`).join('')}
+    </ul>` : ''}
 
     <div class="article-rule"></div>
 

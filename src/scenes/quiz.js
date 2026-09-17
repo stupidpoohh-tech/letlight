@@ -96,7 +96,9 @@ export function openQuiz(node) {
 
     mountChoices(el.querySelector('.quiz-body'), q, {
       onRight: async (choice) => {
-        await wait(choice.hint ? 2600 : 1500);
+        /* 한마디가 길면 읽을 틈도 길어야 한다. 짧으면 붙잡아 두지 않는다. */
+        const say = choice.hint ? choice.hint.length : 0;
+        await wait(say ? Math.min(4400, 1500 + say * 24) : 1500);
         el.querySelector('.quiz-inner').classList.add('is-leaving');
         await wait(850);
         await closeSheet(el);

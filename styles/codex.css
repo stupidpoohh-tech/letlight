@@ -419,6 +419,8 @@
   animation: jem-settle calc(1.6s * var(--rate)) var(--ease-quiet) both;
 }
 .ex-jem img { display: block; width: 100%; height: auto; }
+/* 작은 화면에서도 손가락이 닿게. 보이는 크기는 그대로 둔다. */
+.ex-jem::after { content: ""; position: absolute; inset: -9px; }
 .ex-jem:focus-visible { outline: 1px solid var(--ex-accent); outline-offset: 4px; }
 
 @keyframes jem-settle {
@@ -448,6 +450,85 @@
   text-align: center;
   font-size: .8rem; letter-spacing: .04em;
   color: var(--ex-ink-3);
+}
+
+/* ---- 글 ---- */
+
+.ex-article .article-title { margin-top: 0; }
+
+/* ==================================================================
+   글 — 백과사전 안에서도, 문제를 푼 직후에도 같은 조판을 쓴다
+   ================================================================== */
+
+.article-rel {
+  display: flex; align-items: baseline; justify-content: flex-end;
+  flex-wrap: wrap; gap: 8px;
+  margin: 0 0 14px;
+  font-size: .8rem; line-height: 1.5;
+  color: var(--ex-ink-2);
+  text-align: right;
+}
+.article-rel b { font-weight: 700; color: var(--ex-accent); }
+.article-rel-sep { color: var(--ex-line); }
+.article-rel-list { color: inherit; }
+
+.article-plate {
+  margin: 0 0 30px;
+  padding: 16px 14px;
+  border: 1px solid var(--ex-line);
+  background: var(--ex-bg-soft);
+}
+.article-plate svg { display: block; width: 100%; height: auto; filter: saturate(.2) contrast(1.02); }
+
+.article-title {
+  margin: 0 0 18px;
+  font-family: var(--font-ui);
+  font-size: clamp(1.52rem, 6.6vw, 2rem);
+  font-weight: 700; line-height: 1.38; letter-spacing: -.025em;
+  color: var(--ex-ink);
+}
+
+.article-concepts {
+  display: flex; flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.article-concept {
+  display: flex; align-items: baseline; gap: 7px;
+  margin: 0;
+  font-size: 1rem; font-weight: 500; letter-spacing: -.01em;
+  color: var(--ex-ink-2);
+}
+.article-concept-en {
+  font-size: .72rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ex-ink-3);
+}
+
+.article-rule {
+  height: 1px; background: var(--ex-line);
+  margin: 26px 0 32px;
+}
+
+.article-h {
+  margin: 2.7rem 0 1.15rem;
+  font-family: var(--font-ui);
+  font-size: 1.08rem; font-weight: 700;
+  line-height: 1.5; letter-spacing: -.02em;
+  color: var(--ex-ink);
+}
+.article-body > .article-h:first-child { margin-top: 0; }
+.article-body strong { font-weight: 700; color: #121310; }
+
+.article-body p {
+  margin: 0 0 1.55rem;
+  font-family: var(--font-ui);
+  font-size: clamp(1rem, 4.2vw, 1.06rem);
+  line-height: 1.92;
+  letter-spacing: -.005em;
+  color: #262723;
+  user-select: text; -webkit-user-select: text;
 }
 
 /* ---- 손잡이 (소리 · 진행) ---- */
