@@ -338,31 +338,53 @@
 /* ---- 홈은 한 화면에 들어온다 ----
 
    실기기 브라우저는 주소창과 하단바가 높이를 가져가서, 무대가 660px 안팎이 된다.
-   홈에서만 조판을 한 단계 좁힌다. 다른 화면은 그대로 넉넉하게 둔다. */
+   홈에서만 조판을 좁힌다. 다른 화면은 그대로 넉넉하게 둔다. */
 
 .ex-page--home { padding-top: calc(var(--safe-top) + 13px); }
 .ex-page--home .ex-back { margin-bottom: 13px; }
-.ex-page--home .ex-head { margin-bottom: 13px; }
+.ex-page--home .ex-head { margin-bottom: 14px; }
 .ex-page--home .ex-rule { margin-bottom: 11px; }
 .ex-page--home .ex-title { font-size: clamp(1.24rem, 5.2vw, 1.5rem); line-height: 1.3; }
 .ex-page--home .ex-sub { margin-top: 7px; font-size: .84rem; }
 
-.ex-page--home .ex-blocks { gap: 9px; margin-bottom: 19px; }
-.ex-page--home .ex-block {
-  grid-template-columns: 78px 1fr auto;
-  gap: 11px;
-  padding: 12px 14px;
+/* 세계와 원리는 나란히 선다 */
+.ex-page--home .ex-blocks {
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 18px;
 }
-.ex-page--home .ex-block-no { top: 9px; right: 12px; font-size: .68rem; }
-.ex-page--home .ex-block-art { height: 46px; }
-.ex-page--home .ex-block-text { padding-left: 13px; }
-.ex-page--home .ex-block-kicker { margin-bottom: 3px; font-size: .7rem; }
-.ex-page--home .ex-block-name { font-size: 1.12rem; }
-.ex-page--home .ex-block-count { margin-top: 3px; font-size: .82rem; }
+.ex-page--home .ex-block {
+  grid-template-columns: 1fr;
+  gap: 0;
+  align-items: stretch;
+  padding: 11px 12px 10px;
+}
+.ex-page--home .ex-block-no { top: 8px; right: 11px; font-size: .66rem; }
+.ex-page--home .ex-block-art { height: 44px; margin-bottom: 9px; }
+.ex-page--home .ex-block-text {
+  padding-left: 0; padding-top: 9px;
+  border-left: 0; border-top: 1px solid var(--ex-line);
+}
+.ex-page--home .ex-block-kicker {
+  margin-bottom: 2px;
+  font-size: .66rem; letter-spacing: .08em;
+}
+.ex-page--home .ex-block-name { font-size: 1.06rem; }
+.ex-page--home .ex-block-count { margin-top: 2px; font-size: .78rem; }
+.ex-page--home .ex-block .ex-arrow {
+  position: absolute; right: 11px; bottom: 11px;
+  width: 19px; height: 10px;
+}
 
-.ex-page--home .ex-section { margin-bottom: 26px; }
-.ex-page--home .ex-jembox { margin-left: auto; margin-right: auto; width: 86%; }
-.ex-page--home .ex-jembox-names { margin-top: 7px; }
+.ex-page--home .ex-section { margin-bottom: 22px; }
+
+/* 보석함은 무대 끝까지 펼친다 */
+.ex-page--home .ex-jembox {
+  width: calc(100% + 52px);
+  margin-left: -26px;
+  margin-right: -26px;
+}
+.ex-page--home .ex-jembox-names { margin-top: 9px; }
 
 /* 더 낮은 화면에서는 한 단계 더 좁힌다. 부제는 접는다. */
 @media (max-height: 645px) {
@@ -370,11 +392,10 @@
   .ex-page--home .ex-back { margin-bottom: 10px; }
   .ex-page--home .ex-head { margin-bottom: 10px; }
   .ex-page--home .ex-sub  { display: none; }
-  .ex-page--home .ex-blocks { gap: 7px; margin-bottom: 15px; }
-  .ex-page--home .ex-block { padding: 10px 12px; }
-  .ex-page--home .ex-block-art { height: 38px; }
-  .ex-page--home .ex-section { margin-bottom: 18px; }
-  .ex-page--home .ex-jembox { width: 76%; }
+  .ex-page--home .ex-blocks { gap: 7px; margin-bottom: 13px; }
+  .ex-page--home .ex-block { padding: 9px 11px 9px; }
+  .ex-page--home .ex-block-art { height: 36px; margin-bottom: 7px; }
+  .ex-page--home .ex-section { margin-bottom: 15px; }
 }
 
 /* ---- 발견한 순환 : 보석함 ---- */

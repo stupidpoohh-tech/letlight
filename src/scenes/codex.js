@@ -152,7 +152,6 @@ function jemBox() {
    ------------------------------------------------------------------ */
 
 function renderHome() {
-  const locked = Object.keys(NODES).filter((id) => !isSolved(id));
   const cycles = closedCycles();
 
   const block = (n, kicker, name, found, total, art, target) => `
@@ -187,15 +186,6 @@ function renderHome() {
         ? `<p class="ex-jembox-names">${cycles.map((id) => CYCLES[id].title).join(' · ')}</p>`
         : '<p class="ex-jembox-names is-empty">아직 닫힌 고리가 없습니다</p>'}
     </section>
-
-    ${locked.length ? `
-      <section class="ex-section">
-        <div class="ex-section-head">
-          <h3 class="ex-section-title">더 알아볼 것</h3>
-          <span class="ex-section-note">아직 발견하지 못한 주제</span>
-        </div>
-        <ul class="ex-list">${locked.map((id) => questionRow(id, { locked: true })).join('')}</ul>
-      </section>` : ''}
 
     ${settings()}
 
