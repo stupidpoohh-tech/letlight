@@ -652,6 +652,122 @@ button.ex-rel { cursor: pointer; }
 }
 .article-body > .article-h:first-child { margin-top: 0; }
 
+/* ---- 설명 도식 ----
+
+   글로 따라가기 어려운 관계 하나만 그림으로 보여 주는 자리다.
+   기존 도판과 같은 가는 선, 같은 연한 바탕을 쓴다. 그림자도 입체도 없다.
+
+   제목과 설명은 SVG 밖의 진짜 글자다. 그림이 줄어들어도 글자는 줄지 않는다.
+   그래서 좁은 화면에서는 두 칸을 위아래로 세운다. 그림을 통째로 줄여
+   글자까지 작아지게 하지 않는다. */
+
+.article-fig {
+  margin: 2.6rem 0 2.8rem;
+  padding: 16px 14px 14px;
+  border: 1px solid var(--ex-line);
+  background: var(--ex-bg-soft);
+}
+
+.fig-cap {
+  display: block;
+  margin: 0 0 18px;
+  font-family: var(--font-ui);
+  word-break: keep-all;
+}
+.fig-tag {
+  display: block;
+  font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+  color: var(--ex-accent);
+  margin-bottom: 8px;
+}
+.fig-cap-t {
+  display: block;
+  font-size: .96rem; line-height: 1.7;
+  color: var(--ex-ink);
+}
+
+.fig-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+@media (min-width: 560px) {
+  .fig-pair { grid-template-columns: 1fr 1fr; gap: 18px; }
+}
+
+/* 두 칸을 같은 자리에서 견주려면 그림의 높이가 같아야 한다 */
+.fig-art {
+  border-top: 1px solid var(--ex-line);
+  border-bottom: 1px solid var(--ex-line);
+  padding: 8px 0;
+  margin: 8px 0 10px;
+}
+.fig-art svg {
+  display: block;
+  width: 100%; height: auto;
+  max-height: 210px;
+  margin: 0 auto;
+}
+
+.fig-panel-t {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: .98rem; font-weight: 700;
+  line-height: 1.45; letter-spacing: -.01em;
+  color: var(--ex-ink);
+  word-break: keep-all;
+}
+.fig-panel-n {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: .87rem; line-height: 1.7;
+  color: var(--ex-ink-2);
+  word-break: keep-all;
+}
+
+.fig-key, .fig-fine {
+  font-family: var(--font-ui);
+  word-break: keep-all;
+}
+.fig-key {
+  margin: 20px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--ex-line);
+  font-size: .84rem; line-height: 1.66;
+  color: var(--ex-ink-2);
+}
+.fig-fine {
+  margin: .5rem 0 0;
+  font-size: .78rem; line-height: 1.62;
+  color: var(--ex-ink-3);
+}
+
+/* 그림의 선 — 뜻은 라벨과 화살표의 방향이 나른다. 색은 거들기만 한다.
+   모두 흰 바탕에서 3:1 을 넘긴다. */
+
+.fig-art .ray, .fig-art .flow {
+  fill: none; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.fig-art .ray      { stroke: #8a6d1f; }   /* 빛이 지나간 길 */
+.fig-art .flow     { stroke: #4f7080; }   /* 물이 지나간 길 */
+.fig-art .thin     { stroke-width: 1.2; }
+.fig-art .dash     { stroke-dasharray: 3.5 3; }
+.fig-art .dash.head{ stroke-dasharray: none; }
+
+.fig-art .vessel   { stroke: #4f7080; stroke-width: 1.6; fill: none; }
+.fig-art .surface  { stroke: #4f7080; stroke-width: 1.2; fill: none; }
+.fig-art .waterfill{ fill: #cfe0e8; stroke: none; }
+.fig-art .wateredge{ stroke: #4f7080; stroke-width: 1.2; fill: none; }
+.fig-art .drop     { stroke: #4f7080; stroke-width: 1.2; fill: #eef4f7; }
+
+.fig-art .rain     { stroke: #4f7080; stroke-width: 1.5; fill: none; stroke-linecap: round; }
+.fig-art .ground   { stroke: #55574f; stroke-width: 1.8; fill: none; }
+.fig-art .grain    { stroke: #7d7566; stroke-width: 1; fill: #f3f1ec; }
+.fig-art .pore     { stroke: #7d7566; stroke-width: 1; fill: #ffffff; }
+.fig-art .squashed { fill: #ece9e2; }
+.fig-art .pipe     { stroke: #8f8674; stroke-width: 3.4; fill: none; stroke-linecap: round; }
+
 /* ---- 접어 둔 대목 ----
 
    핵심 설명은 바깥에 있다. 여기 들어간 것은 더 읽고 싶을 때 여는 것이다.

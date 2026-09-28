@@ -9,6 +9,7 @@ import { openSheet, closeSheet, chrome, br, revealIn, leaveBar } from '../core/s
 import { CONCEPTS } from '../data/nodes.js';
 import { CONCEPT_META } from '../data/library.js';
 import { plate } from '../art/plates.js';
+import { diagram } from '../art/diagrams.js';
 import { mountChoices, DONE, LEFT } from './quiz.js';
 
 const sheet = () => document.getElementById('article');
@@ -34,9 +35,25 @@ const fold = (t, n) => `
     <div class="fold-body">${t.body.map(para).join('')}</div>
   </details>`;
 
-/** 본문 한 덩어리. 문단이거나, 소제목이거나, 접힌 대목이다. */
+/* 설명 도식.
+
+   본문이 이미 말한 관계 하나를 눈으로 잡게 한다. 그림 자체는 aria-hidden 이고,
+   제목 · 설명 · 캡션이 실제 글자로 그 옆에 있다. 선과 도형을 하나씩 읽어 주는
+   대신 그 글자만 읽으면 비교가 서는 구조다.
+   그릴 것이 없는 이름이면 figure 를 아예 만들지 않는다. 빈 자리는 남기지 않는다. */
+const fig = (t) => {
+  const drawn = diagram(t.figure);
+  if (!drawn) return '';
+  return `<figure class="article-fig">
+    <figcaption class="fig-cap">${drawn.head}${t.caption ? `<span class="fig-cap-t">${fmt(t.caption)}</span>` : ''}</figcaption>
+    ${drawn.body}
+  </figure>`;
+};
+
+/** 본문 한 덩어리. 문단이거나, 소제목이거나, 접힌 대목이거나, 도식이다. */
 function block(t, state) {
   if (t && typeof t === 'object' && t.more) return fold(t, state.folds++);
+  if (t && typeof t === 'object' && t.figure) return fig(t);
   return para(t);
 }
 

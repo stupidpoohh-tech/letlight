@@ -401,6 +401,7 @@ index.html              무대(stage) 뼈대
 _headers                Cloudflare Pages 캐시 설정
 docs/
   essay-structure.md    글 열한 편을 어떤 단위로 묶었는지의 편집표
+  essay-figures.md      설명 도식의 설계표와, 어느 글에 그림이 필요한지
 home.png, cloudN.png    올린 원본 그림
 assets/                 그것을 게임용으로 줄인 것 (webp)
 fonts/                  쓰는 글자만 남긴 본문 웹폰트
@@ -423,6 +424,7 @@ src/
     cloud.js            구름 — 형성 · 표류 · 밀도 · 뒤척임
     rain.js             비
     plates.js           백과사전 도판
+    diagrams.js         설명 도식 (두 글에만 붙는다)
   scenes/               presentation
     opening.js          오프닝 연출 전체
     world.js            노드 배치와 세계의 변화
@@ -629,6 +631,7 @@ article: {
     '### 구간 제목',                       // 소제목
     '문단',                                // 보통 문단
     { more: '접힘 제목', body: ['…'] },     // 접었다 펴는 심화
+    { figure: '도식 이름', caption: '…' },  // 설명 도식
   ],
 }
 ```
@@ -645,6 +648,29 @@ article: {
 
 열한 편을 각각 어떤 단위로 묶었는지, 어느 문단을 어디로 옮겼는지는
 [`docs/essay-structure.md`](docs/essay-structure.md) 에 있다.
+
+### 설명 도식
+
+글로 따라가기 어려운 관계 하나를 그림이 대신 잡아 준다. 지금은 두 글에만 있다.
+`{ figure, caption }` 을 본문 사이에 두면 그 자리에 선다. 노드 이름을 보고
+끼워 넣는 조건문은 없다.
+
+```
+src/art/diagrams.js   그리는 것 — 도형과 칸 제목 · 설명 · 범례
+src/data/nodes.js     읽는 문장 — 캡션과 들어갈 자리
+styles/codex.css      `.fig-*` — 선의 색과 굵기
+```
+
+인라인 SVG 하나다. 외부 파일도, 라이브러리도, 네트워크 요청도 없다.
+글자는 SVG 안에 굽지 않는다. 칸 제목도 설명도 범례도 HTML 글자라, 그림이
+줄어도 글자는 줄지 않는다. 좁은 화면에서는 두 칸이 위아래로 선다.
+
+SVG 는 `aria-hidden` 이다. 선과 도형을 하나씩 읽어 주는 대신, 그림을 빼고
+글자만 읽어도 비교가 서게 썼다. 정적인 그림이라 초점도 버튼 역할도 주지 않는다.
+
+무엇을 왜 그렸는지, 무엇을 일부러 그리지 않았는지는
+[`docs/essay-figures.md`](docs/essay-figures.md) 에 있다.
+어느 글에 그림이 필요한지도 거기에 정리해 두었다.
 
 ### 순서
 
