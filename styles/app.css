@@ -868,6 +868,45 @@ body {
 
 
 
+
+/* ---- 꽃이 하던 일을 바꾼다 ----
+
+   열매를 따로 얹지 않는다. 꽃빛이 안쪽으로 한 번 모였다가 물러나고,
+   그 흐름 위에서 그림이 이어진다. */
+
+/* 수정. 물결이 수관 안쪽으로 모이고 느려진다. */
+.bloom-flush.is-setting .bloom-wave {
+  animation-duration: 31s;
+  background: radial-gradient(ellipse at 50% 60%,
+      rgba(255,236,224,.62)  0%,
+      rgba(255,222,206,.26) 34%,
+      rgba(255,238,228,0)   66%);
+}
+
+/* 익어 가는 동안의 아주 느린 볕.
+   새 물체를 놓지 않는다. 수관 안에서만 따뜻한 결이 아주 천천히 지나간다. */
+.fruit-glow {
+  background-image: linear-gradient(to bottom,
+      rgba(255,238,206,0)   0%,
+      rgba(255,236,198,.26) 16%,
+      rgba(255,240,214,0)  36%);
+  background-repeat: no-repeat;
+  background-size: 100% 240%;
+  animation: fruit-ripen 47s ease-in-out infinite;
+}
+@keyframes fruit-ripen {
+  0%, 100% { background-position: 0 122%; }
+  50%      { background-position: 0 -18%; }
+}
+
+@keyframes fruit-breathe {
+  0%, 100% { filter: brightness(1)     saturate(1);    }
+  50%      { filter: brightness(1.022) saturate(1.06); }
+}
+.growth-anchor.is-fruiting .growth-stage {
+  animation: fruit-breathe 39s ease-in-out infinite;
+}
+
 /* ---- 꽃을 찾아온 것들 ----
 
    길은 하나의 고리다. 다가오고, 한 꽃에 내려앉아 머물고,
@@ -943,7 +982,8 @@ body {
    꽃 하나하나를 그리지 않는다. 지금 보이는 나무 그림을 그대로 틀로 써서,
    수관 안에서만 빛의 결이 몇 번 지나간다. 틀 밖으로는 번지지 않는다. */
 
-.bloom-flush {
+.bloom-flush,
+.fruit-glow {
   position: absolute;
   left: 50%; bottom: 0;
   width: 100%;
@@ -1048,6 +1088,7 @@ body {
   .river-anchor.is-living .river-img, .river-flow, .river-shimmer,
   .heat-wisp, .ex-jem,
   .bloom-wave, .growth-anchor.is-blooming .growth-stage,
+  .fruit-glow, .growth-anchor.is-fruiting .growth-stage,
   .flyer, .flyer img {
     animation: none !important;
   }

@@ -30,10 +30,11 @@ export const WORLDS = {
   plant: {
     title: '식물', en: 'Plant', plate: 'plant',
     lead: '햇빛과 물로 살아가는 생명의 세계',
-    questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom', 'flowerGuide'],
+    questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom',
+                'flowerGuide', 'treeFruit'],
     concepts: ['imbibition', 'photosynthesis', 'carbonFixation',
                'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
-               'floralGuide', 'pollination'],
+               'floralGuide', 'pollination', 'doubleFertilization', 'fruitSet'],
   },
   fog: {
     title: '안개', en: 'Fog',
@@ -121,13 +122,23 @@ export const CONCEPT_META = {
     lead: '움직이지 못하는 식물이\n움직이는 동물의 몸에 꽃가루를 실어 보내는 일.',
     siblings: ['수술', '암술머리', '꽃가루', '꿀', '수분자', '공진화'],
   },
+  doubleFertilization: {
+    first: 'treeFruit', worlds: ['plant'], ahead: '씨앗',
+    lead: '속씨식물에서 한 번의 수정으로\n배가 될 계통과 배젖이 될 계통이 함께 시작되는 일.',
+    siblings: ['꽃가루관', '밑씨', '난세포', '중앙세포', '배젖', '종자'],
+  },
+  fruitSet: {
+    first: 'treeFruit', worlds: ['plant'], ahead: '열매',
+    lead: '수정을 신호로 씨방의 억제가 풀리고\n본격적인 과실 성장이 시작되는 전환.',
+    siblings: ['씨방', '옥신', '지베렐린', '사이토키닌', '단위결실', '에틸렌'],
+  },
 };
 
 export const CONCEPT_ORDER = [
   'scattering', 'growth', 'infiltration', 'runoff', 'latentHeat',
   'imbibition', 'photosynthesis', 'carbonFixation',
   'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
-  'floralGuide', 'pollination',
+  'floralGuide', 'pollination', 'doubleFertilization', 'fruitSet',
 ];
 
 /* ------------------------------------------------------------------

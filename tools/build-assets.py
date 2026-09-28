@@ -30,6 +30,7 @@ GROWTH = {
     "young-tree": "tree2.png",   # 어린나무
     "mature-tree": "tree3.png",  # 큰 나무
     "bloom-tree": "tree-flower.png",  # 꽃이 핀 나무
+    "fruit-tree": "tree-fruit.png",   # 열매가 달린 나무
 }
 GROWTH_WIDTH = 520
 

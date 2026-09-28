@@ -6,6 +6,7 @@ export const GROWTH_STAGES = {
   youngTree:  'assets/young-tree.webp',  // 어린나무
   matureTree: 'assets/mature-tree.webp', // 큰 나무
   bloomTree:  'assets/bloom-tree.webp',  // 꽃이 핀 나무
+  fruitTree:  'assets/fruit-tree.webp',  // 열매가 달린 나무
 };
 
 /* 꽃에 찾아오는 것들 */

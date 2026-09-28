@@ -153,6 +153,9 @@ export function plate(kind) {
     return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
   }
   if (kind === 'bee') return beePlate();
+  if (kind === 'fruit') {
+    return isReady(GROWTH_STAGES.fruitTree) ? growthPlate(GROWTH_STAGES.fruitTree) : '';
+  }
   /* 꽃 그림이 아직이면 큰 나무로 대신한다 */
   if (kind === 'bloom') {
     if (isReady(GROWTH_STAGES.bloomTree)) return growthPlate(GROWTH_STAGES.bloomTree);
@@ -171,6 +174,7 @@ const THUMB_SRC = {
   tree:   GROWTH_STAGES.matureTree,
   bloom:  GROWTH_STAGES.bloomTree,
   bee:    FLYERS.bee,
+  fruit:  GROWTH_STAGES.fruitTree,
   river:  RIVER.src,
 };
 

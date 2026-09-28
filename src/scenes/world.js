@@ -578,17 +578,17 @@ function settleEnergyFlow() {
 
 /** 지금 보이는 나무 그림 그대로를 틀로 쓰는 한 겹.
     수관 바깥으로는 번지지 않는다. */
-function bloomLayer() {
+function crownLayer(cls, waves = 0) {
   if (!growth) return null;
   const img = growth.current;
   if (!img || img.dataset.missing || !img.naturalWidth) return null;
 
-  let layer = growth.anchor.querySelector('.bloom-flush');
+  let layer = growth.anchor.querySelector(`.${cls}`);
   if (!layer) {
     layer = document.createElement('div');
-    layer.className = 'bloom-flush';
-    /* 세 번의 물결. 정확히 같은 때가 아니라 며칠에 걸쳐 차례로 넘는다. */
-    layer.innerHTML = [0, 1, 2].map((i) =>
+    layer.className = cls;
+    /* 물결은 정확히 같은 때가 아니라 차례로 수관을 넘는다 */
+    layer.innerHTML = Array.from({ length: waves }, (_, i) =>
       `<div class="bloom-wave" style="animation-delay:${(-i * 5.7).toFixed(1)}s"></div>`).join('');
     growth.anchor.appendChild(layer);
   }
@@ -598,6 +598,8 @@ function bloomLayer() {
   layer.style.setProperty('--crown', `url("${new URL(img.currentSrc || img.src, document.baseURI).href}")`);
   return layer;
 }
+
+const bloomLayer = () => crownLayer('bloom-flush', 3);
 
 async function revealBloom() {
   await plantGround();
@@ -696,6 +698,65 @@ function settlePollinators() {
   state.pollinatorVisible = true;
 }
 
+
+/* ------------------------------------------------------------------
+   세계의 변화 10 — 아주 작은 일이 나무 전체의 일을 바꾼다
+
+   열매를 따로 얹지 않는다. 꽃빛이 안쪽으로 모였다가 물러나고,
+   같은 자리가 두 번 부풀고, 그 흐름 위에서 그림이 이어진다.
+   ------------------------------------------------------------------ */
+
+async function revealFruit() {
+  await plantGround();
+
+  /* 1. 아주 작은 자리에서 일이 벌어진다.
+     꽃빛이 수관 안쪽으로 한 번 모였다가 잦아든다. */
+  const flush = growth.anchor.querySelector('.bloom-flush');
+  if (flush) {
+    flush.classList.add('is-setting');
+    await wait(2200);
+  }
+
+  /* 2. 꽃잎이 할 일을 마친다. 꽃빛이 물러나고 다시 오지 않는다. */
+  growth.anchor.classList.remove('is-blooming');
+  if (flush) {
+    await tween({
+      from: parseFloat(flush.style.opacity || 1), to: 0,
+      duration: 3000, easing: ease.inOut,
+      onUpdate: (v) => { flush.style.opacity = v.toFixed(3); },
+      onDone: () => flush.remove(),
+    });
+  }
+
+  /* 3. 남은 씨방이 자란다. 같은 자리가 두 번 부푼다. */
+  await growPulse(growth, { x: 1.012, y: 1.022, duration: 1400 });
+  await wait(380);
+  await growPulse(growth, { x: 1.018, y: 1.012, duration: 1400 });
+
+  /* 4. 어린 열매. 갑자기 놓이는 것이 아니라 자라던 흐름 위에서 이어진다. */
+  carryScale(growth, 'fruitTree');
+  await setStage(growth, 'fruitTree', { duration: 3600 });
+
+  /* 5. 그 뒤로는 익어 가는 아주 느린 숨만 남는다 */
+  const glow = crownLayer('fruit-glow');
+  if (glow) {
+    await tween({
+      duration: 2600, easing: ease.inOut,
+      onUpdate: (t) => { glow.style.opacity = t.toFixed(3); },
+    });
+  }
+  growth.anchor.classList.add('is-fruiting');
+  state.fruitVisible = true;
+}
+
+/** 이미 알아낸 열매. 연출 없이 그냥 거기 있다. */
+function settleFruit() {
+  const glow = crownLayer('fruit-glow');
+  if (glow) glow.style.opacity = '1';
+  if (growth) growth.anchor.classList.add('is-fruiting');
+  state.fruitVisible = true;
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
@@ -706,6 +767,7 @@ const EFFECTS = {
   heat:  revealEnergyFlow,
   bloom: revealBloom,
   pollinator: revealPollinators,
+  fruit: revealFruit,
 };
 
 /* ------------------------------------------------------------------
@@ -821,13 +883,14 @@ export async function restoreWorld() {
   const stage = isSolved('treeForm')     ? 'matureTree'
               : isSolved('plantGrowth')  ? 'youngTree'
               : isSolved('seedWater')    ? 'sprout' : null;
+  /* 큰 나무 뒤로 이어지는 단계. 그림이 아직 없으면 앞 단계가 그대로 남는다. */
+  const after = isSolved('treeFruit') ? 'fruitTree'
+              : isSolved('treeBloom') ? 'bloomTree' : null;
   if (stage) {
     await plantGround();
     const grown = stage === 'matureTree' ? TREE_GROWN : {};
     settleStage(growth, stage, grown);
-    /* 꽃이 핀 나무는 큰 나무 위에 이어 둔다.
-       꽃 그림이 아직 없으면 큰 나무가 그대로 남는다. */
-    if (isSolved('treeBloom')) settleStage(growth, 'bloomTree', grown);
+    if (after) settleStage(growth, after, grown);
     state.sproutVisible = true;
     state.plantVisible = stage !== 'sprout';
     state.matureTreeVisible = stage === 'matureTree';
@@ -835,11 +898,14 @@ export async function restoreWorld() {
 
   if (isSolved('flowerGuide')) settlePollinators();
 
-  /* 그림이 다 올라온 뒤에 틀을 맞춘다. 늦게 와도 조용히 붙는다. */
-  if (isSolved('treeBloom')) {
+  /* 수관 위의 한 겹은 그림이 다 올라온 뒤에 틀을 맞춘다. 늦게 와도 조용히 붙는다.
+     열매를 알아냈으면 꽃빛은 이미 물러난 뒤다. */
+  const settleCrown = isSolved('treeFruit') ? settleFruit
+                    : isSolved('treeBloom') ? settleBloom : null;
+  if (settleCrown) {
     const tree = growth && growth.current;
-    if (tree && !tree.complete) tree.addEventListener('load', settleBloom, { once: true });
-    else settleBloom();
+    if (tree && !tree.complete) tree.addEventListener('load', settleCrown, { once: true });
+    else settleCrown();
   }
 
   /* 이미 닫아 둔 고리는 알림 없이 다시 움직인다 */
