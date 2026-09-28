@@ -317,6 +317,12 @@ waterCycle: {
 | `bee.png` | `assets/bee.webp` | 꽃을 찾아온 벌 |
 | `butterfly.png` | `assets/butterfly.webp` | 꽃을 찾아온 나비 |
 | `dear1~6.png` | `assets/deer-walk.webp` | 열매를 먹으러 온 사슴. 여섯 칸을 가로로 이은 한 장의 띠가 된다 |
+| `og-new.png` | `assets/og.jpg` | 링크로 나눌 때 보이는 그림 (1200×630 가운데를 딴다) |
+| `07_app_icon_light.png` | `assets/icon-180.png` · `icon-32.png` | 홈 화면과 탭의 아이콘. 둥근 타일 테두리는 버리고 마크만 뜬다 |
+
+브랜드 자산(`01_main_logo.png` · `02_symbol.png` · `09_logo_horizontal.png` …)은
+루트에 그대로 둔다. 화면 안에는 로고를 두지 않는다. 지금 로고가 쓰이는 자리는
+링크 미리보기와 홈 화면 아이콘 둘뿐이다.
 
 파일 이름이 다를 때는 `tools/build-assets.py` 의 `GROWTH` 에서
 `{ 만들어질 이름: 올린 원본 }` 으로 이어 주면 된다.

@@ -66,10 +66,12 @@ JEMS = {
 }
 JEM_WIDTH = 300
 
-# 링크로 나눌 때 보이는 그림과 홈 화면 아이콘
-OG_SRC = "OG.png"
+# 링크로 나눌 때 보이는 그림과 홈 화면 아이콘.
+# 둘 다 브랜드 자산에서 온다. OG.png 는 이전 그림이라 지우지 않고 남겨 둔다.
+OG_SRC = "og-new.png"
 OG_SIZE = (1200, 630)
-ICON_BG = (250, 246, 234)   # 종이색
+ICON_SRC = "07_app_icon_light.png"   # 마크만 떠서 쓴다
+ICON_BG = (243, 240, 233)            # 그 그림의 타일 안쪽 색
 
 
 def build_world(src: Path, dst: Path):
@@ -144,12 +146,25 @@ def build_og(src: Path, dst: Path, _w=None):
 
 
 def build_icon(src: Path, dst: Path, size: int):
-    """홈 화면 아이콘. 물방울 보석을 종이색 바탕 가운데 놓는다."""
-    gem = Image.open(src).convert("RGBA")
-    k = (size * 0.74) / max(gem.size)
-    gem = gem.resize((round(gem.width * k), round(gem.height * k)), Image.LANCZOS)
+    """홈 화면 아이콘.
+
+    올린 앱 아이콘에는 둥근 타일 테두리가 함께 그려져 있다. 그 테두리는
+    iOS 가 제 모양으로 다시 깎으면서 잘린다. 그래서 테두리는 버리고
+    마크만 떠서, 같은 바탕색의 정사각 종이 한가운데 놓는다."""
+    import numpy as np
+
+    im = Image.open(src).convert("RGB")
+    a = np.asarray(im).astype(int)
+    ink = np.abs(a - np.array(ICON_BG)).max(axis=2) > 24   # 마크가 있는 자리
+    ink[:, :4] = ink[:4, :] = ink[:, -4:] = ink[-4:, :] = False   # 타일 바깥 여백
+    ys, xs = np.where(ink)
+    mark = im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+
+    k = (size * 0.78) / max(mark.size)
+    mark = mark.resize((max(1, round(mark.width * k)),
+                        max(1, round(mark.height * k))), Image.LANCZOS)
     out = Image.new("RGB", (size, size), ICON_BG)
-    out.paste(gem, ((size - gem.width) // 2, (size - gem.height) // 2), gem)
+    out.paste(mark, ((size - mark.width) // 2, (size - mark.height) // 2))
     out.save(dst, "PNG", optimize=True)
     return (size, size)
 
@@ -251,12 +266,12 @@ def main():
         print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
 
-    # 아이콘은 방금 만든 물방울 보석에서 뜬다
-    gem = OUT / "jem-drop.webp"
-    if gem.exists():
+    # 아이콘은 브랜드 앱 아이콘에서 뜬다
+    brand = ROOT / ICON_SRC
+    if brand.exists():
         for size, name in ((180, "icon-180.png"), (32, "icon-32.png")):
             dst = OUT / name
-            build_icon(gem, dst, size)
+            build_icon(brand, dst, size)
             kb = dst.stat().st_size / 1024
             total += kb
             print(f"  {dst.name:24s} {size}x{size}  {kb:6.1f} KB")
