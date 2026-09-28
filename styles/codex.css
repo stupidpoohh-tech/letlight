@@ -567,76 +567,114 @@ button.ex-rel { cursor: pointer; }
    글 — 백과사전 안에서도, 문제를 푼 직후에도 같은 조판을 쓴다
    ================================================================== */
 
-.article-rel {
-  display: flex; align-items: baseline; justify-content: flex-end;
-  flex-wrap: wrap; gap: 8px;
-  margin: 0 0 14px;
-  font-size: .8rem; line-height: 1.5;
-  color: var(--ex-ink-2);
-  text-align: right;
+/* ---- 제목 ----
+   긴 제목도 좁은 화면에서 자연스럽게 접힌다.
+   keep-all 은 한글 어절이 한가운데서 갈리지 않게 한다. */
+
+.article-title {
+  margin: 0 0 1.7rem;
+  font-family: var(--font-ui);
+  font-size: clamp(1.44rem, 5.9vw, 1.86rem);
+  font-weight: 700;
+  line-height: 1.42;
+  letter-spacing: -.022em;
+  color: var(--ex-ink);
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
-.article-rel b { font-weight: 700; color: var(--ex-accent); }
-.article-rel-sep { color: var(--ex-line); }
-.article-rel-list { color: inherit; }
+
+/* ---- 도판 ----
+   쓰던 그림만 쓴다. 비율은 그대로 두고, 제목과 본문이 멀어지지 않게
+   높이만 화면에 맞춰 눌러 둔다. 모두 같은 높이에 맞추지는 않는다. */
 
 .article-plate {
-  margin: 0 0 30px;
-  padding: 16px 14px;
+  margin: 0 0 2.5rem;
+  padding: 14px 12px;
   border: 1px solid var(--ex-line);
   background: var(--ex-bg-soft);
 }
-.article-plate svg { display: block; width: 100%; height: auto; filter: saturate(.2) contrast(1.02); }
+.article-plate svg {
+  display: block;
+  width: 100%; height: auto;
+  max-height: min(40vh, 300px);
+  filter: saturate(.2) contrast(1.02);
+}
 
-.article-title {
-  margin: 0 0 18px;
+/* ---- 본문 ----
+   한 줄이 너무 길어지지 않게 자를 대되, 좁은 화면에서는 있는 폭을 다 쓴다. */
+
+.article-body { max-width: 31em; }
+
+.article-body p {
+  /* 글자 크기가 화면 폭을 따라가므로, 사이도 em 으로 따라가게 둔다 */
+  margin: 0 0 1.85em;
   font-family: var(--font-ui);
-  font-size: clamp(1.52rem, 6.6vw, 2rem);
-  font-weight: 700; line-height: 1.38; letter-spacing: -.025em;
+  font-size: clamp(1.02rem, 4.3vw, 1.1rem);
+  line-height: 1.84;
+  letter-spacing: -.004em;
+  color: #262723;
+  text-align: left;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  user-select: text; -webkit-user-select: text;
+}
+.article-body > p:last-child { margin-bottom: 0; }
+.article-body strong { font-weight: 700; color: #121310; }
+
+/* 소제목은 앞 문단보다 뒤 문단에 붙어 있어야 한다 */
+.article-h {
+  margin: 3.1rem 0 .95rem;
+  font-family: var(--font-ui);
+  font-size: 1.12rem; font-weight: 700;
+  line-height: 1.5; letter-spacing: -.02em;
   color: var(--ex-ink);
+  word-break: keep-all;
+}
+.article-body > .article-h:first-child { margin-top: 0; }
+
+/* ---- 글을 다 읽은 뒤 ----
+   무엇을 알게 되었는지 걸어 두는 자리. 본문보다 가볍게 둔다. */
+
+.article-more {
+  margin-top: 2.9rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--ex-line);
 }
 
 .article-concepts {
   display: flex; flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 0;
-  padding: 0;
+  gap: 8px 20px;
+  margin: 0; padding: 0;
   list-style: none;
 }
 .article-concept {
-  display: flex; align-items: baseline; gap: 7px;
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 9px;
   margin: 0;
-  font-size: 1rem; font-weight: 500; letter-spacing: -.01em;
-  color: var(--ex-ink-2);
-}
-.article-concept-en {
-  font-size: .72rem; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--ex-ink-3);
-}
-
-.article-rule {
-  height: 1px; background: var(--ex-line);
-  margin: 26px 0 32px;
-}
-
-.article-h {
-  margin: 2.7rem 0 1.15rem;
-  font-family: var(--font-ui);
-  font-size: 1.08rem; font-weight: 700;
-  line-height: 1.5; letter-spacing: -.02em;
+  font-size: 1.02rem; font-weight: 600; letter-spacing: -.012em;
   color: var(--ex-ink);
+  word-break: keep-all;
 }
-.article-body > .article-h:first-child { margin-top: 0; }
-.article-body strong { font-weight: 700; color: #121310; }
+/* 영문명은 보조지만, 읽을 수 없을 만큼 작거나 흐리지는 않다 */
+.article-concept-en {
+  font-size: .8rem; font-weight: 400;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ex-ink-2);
+  word-break: break-word;
+}
 
-.article-body p {
-  margin: 0 0 1.55rem;
-  font-family: var(--font-ui);
-  font-size: clamp(1rem, 4.2vw, 1.06rem);
-  line-height: 1.92;
-  letter-spacing: -.005em;
-  color: #262723;
-  user-select: text; -webkit-user-select: text;
+.article-rel {
+  display: flex; align-items: baseline; flex-wrap: wrap;
+  gap: 4px 9px;
+  margin: 14px 0 0;
+  font-size: .86rem; line-height: 1.65;
+  color: var(--ex-ink-2);
+  text-align: left;
+  word-break: keep-all;
 }
+.article-rel b { font-weight: 700; color: var(--ex-accent); }
+.article-rel-sep { color: var(--ex-line); }
+.article-rel-list { color: inherit; }
 
 /* ---- 손잡이 (소리 · 진행) ---- */
 

@@ -29,24 +29,31 @@ export function renderArticle(node) {
 
   const art = plate(node.article.plate);
 
+  /* 읽는 것이 먼저다.
+     제목 → (도판) → 본문 → 분류를 돕는 것 순으로 둔다.
+     개념명과 연결 원리는 글을 읽기 전에 외워야 할 것이 아니라,
+     읽고 난 뒤 어디에 걸어 둘지 알려 주는 표시다. 그래서 뒤로 보낸다.
+     둘 다 없으면 빈 자리를 남기지 않는다. */
+  const more = found.length || linked.length;
+
   return `
-    ${linked.length ? `<p class="article-rel">
-        <b>연결 원리</b><span class="article-rel-sep">|</span
-        ><span class="article-rel-list">${linked.join(' · ')}</span></p>` : ''}
-
-    ${art ? `<div class="article-plate">${art}</div>` : ''}
-
     <h2 class="article-title" data-focus tabindex="-1">${br(node.article.title)}</h2>
-    ${found.length ? `<ul class="article-concepts">
-      ${found.map((c) => `<li class="article-concept">${c.name}
-        <span class="article-concept-en">${c.en}</span></li>`).join('')}
-    </ul>` : ''}
 
-    <div class="article-rule"></div>
+    ${art ? `<figure class="article-plate">${art}</figure>` : ''}
 
     <div class="article-body">
       ${node.article.body.map(block).join('')}
-    </div>`;
+    </div>
+
+    ${more ? `<aside class="article-more">
+      ${found.length ? `<ul class="article-concepts">
+        ${found.map((c) => `<li class="article-concept">${c.name}
+          <span class="article-concept-en">${c.en}</span></li>`).join('')}
+      </ul>` : ''}
+      ${linked.length ? `<p class="article-rel">
+        <b>연결 원리</b><span class="article-rel-sep">|</span
+        ><span class="article-rel-list">${linked.join(' · ')}</span></p>` : ''}
+    </aside>` : ''}`;
 }
 
 /** 문제를 맞힌 뒤 읽는다.

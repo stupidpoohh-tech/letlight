@@ -496,7 +496,6 @@ body {
 
 /* 맨 위에 손잡이가 생겼으니 글은 그만큼 내려온다 */
 .quiz-inner { padding-top: 18px; }
-.article-inner { padding-top: 6px; }
 
 /* 처음 만나는 사람에게만, 조작에 대한 한 줄 */
 .quiz-tip {
@@ -586,14 +585,22 @@ body {
 
 .article-inner {
   max-width: 620px; margin: 0 auto;
-  padding: calc(var(--safe-top) + 58px) 26px calc(var(--safe-bottom) + 72px);
+  /* 위쪽 자리는 sticky 로 붙은 `세계로` 가 이미 차지한다.
+     여기서 또 밀면 제목이 화면 밖으로 내려간다. */
+  padding: 10px 26px calc(var(--safe-bottom) + 72px);
+}
+/* 좁은 화면에서는 좌우를 도감 목록과 같은 만큼 줄여 한 줄을 늘린다 */
+@media (max-width: 380px) {
+  .article-inner { padding-left: 20px; padding-right: 20px; }
 }
 
 /* ---- 글 맨 아래에서 한 번 더 ---- */
 
+/* 읽기가 끝나고 다시 생각하는 자리. 카드도 바탕색도 쓰지 않는다.
+   사이를 넉넉히 띄우고, 쓰던 선과 라벨로 단계가 바뀌었음을 알린다. */
 .article-exit {
-  margin-top: 3.4rem;
-  padding-top: 2.2rem;
+  margin-top: 4.2rem;
+  padding-top: 2.4rem;
   border-top: 1px solid #e7e8e3;
 }
 .exit-step {
@@ -632,15 +639,12 @@ body {
   color: var(--ex-ink-3, #8e9186);
 }
 
-.article-foot {
-  margin-top: 3.2rem;
-  padding-top: 1.9rem;
-  border-top: 1px solid #e7e8e3;
-}
-/* 아직 열리지 않은 문은 선조차 남기지 않는다 */
+/* 마지막 손잡이. 앞에 이미 선이 있으므로 선을 또 긋지 않는다. */
+.article-foot { margin-top: 2.8rem; }
+/* 아직 열리지 않은 문은 자리조차 차지하지 않는다 */
 .article-foot:empty { display: none; }
-/* 나오는 문제 바로 뒤라면 선이 겹친다 */
-.article-exit + .article-foot { margin-top: 2.4rem; padding-top: 1.7rem; }
+/* 나오는 문제 바로 뒤에서는 조금 더 붙는다 */
+.article-exit + .article-foot { margin-top: 2.4rem; }
 
 /* 조용한 진행 어포던스 */
 .quiet-action {
