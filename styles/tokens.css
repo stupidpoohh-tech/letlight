@@ -26,7 +26,7 @@
   --paper-deep:   #ddcda8;
   --ink:          #2f2e27;
   --ink-soft:     #55523f;
-  --ink-faint:    #7d7860;
+  --ink-faint:    #6f6b55;   /* 종이(#f4ecd9) 위에서 4.56:1 */
 
   /* 하늘 */
   --sky-top:      #bcd2dd;

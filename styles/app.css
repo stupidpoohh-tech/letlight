@@ -795,7 +795,9 @@ body {
   padding: 6px 4px 3px;
   border: 0; background: none;
   font-family: inherit; font-size: .72rem; letter-spacing: 0;
-  color: #9a9d93;
+  /* 흰 하단바 위에서 4.7:1 */
+  color: #74776d;
+  font-weight: 400;
   cursor: pointer;
   transition: color calc(.5s * var(--rate)) var(--ease-quiet);
 }
@@ -806,17 +808,25 @@ body {
 }
 .nav-item svg .snow { fill: #ffffff; stroke: none; }
 .nav-item[data-view="codex"] svg { fill: none; stroke-width: 1.4; }
-.nav-item.is-active { color: #7d8760; }
+/* 지금 보고 있는 곳. 색만으로는 알기 어렵다.
+   글자를 굵게 하고 선 하나를 더해 형태로도 갈린다. */
+.nav-item.is-active { color: #5d6746; font-weight: 700; }
+.nav-item.is-active svg { stroke-width: 1.7; }
+.nav-item[data-view="codex"].is-active svg { stroke-width: 1.8; }
 .nav-item.is-active::after {
-  content: ""; width: 3px; height: 3px; border-radius: 50%;
-  background: currentColor; margin-top: 1px;
+  content: ""; width: 16px; height: 2px; border-radius: 1px;
+  background: currentColor; margin-top: 2px;
+}
+.nav-item::after {
+  content: ""; width: 16px; height: 2px; margin-top: 2px;
+  background: none;
 }
 
 /* 도감에 새로 들어온 것이 있음을 아주 조용히 알린다 */
 .nav-item.is-fresh { animation: fresh 3.4s var(--ease-quiet) 3; }
 @keyframes fresh {
-  0%, 100% { color: #9a9d93; }
-  45%      { color: #7d8760; }
+  0%, 100% { color: #74776d; }
+  45%      { color: #5d6746; }
 }
 
 

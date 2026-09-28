@@ -3,7 +3,8 @@
    질문 → 세계 → 원리 세 축을 오가는 작은 아카이브.
    화면 하나를 갈아 끼우는 방식이고, 뒤로 가기는 스택으로 되돌린다. */
 
-import { openSheet, closeSheet, br, focusStart } from '../core/sheet.js';
+import { openSheet, closeSheet, br, focusStart, blockWorld } from '../core/sheet.js';
+import { pushRoute, backRoute } from '../core/route.js';
 import { NODES, CONCEPTS } from '../data/nodes.js';
 import {
   WORLDS, WORLD_ORDER, CONCEPT_META, CONCEPT_ORDER,
@@ -12,7 +13,7 @@ import {
   comingWorlds, comingConcepts,
   worldCount, conceptQuestions, conceptName,
 } from '../data/library.js';
-import { isSolved, clearProgress, allOpenSolved } from '../core/state.js';
+import { isSolved, clearProgress, allOpenSolved, recentSolved } from '../core/state.js';
 import { CYCLES, closedCycles, JEM_BOX, JEM_SLOTS, cycleInSlot } from '../data/cycles.js';
 import { thumb } from '../art/plates.js';
 import { mark, ring } from '../art/marks.js';
@@ -88,23 +89,105 @@ const MADE = `
    화면 스택
    ------------------------------------------------------------------ */
 
-let stack = [];
+/* 지나온 길. 한 칸은 { screen, arg } 이고, 보던 자리(scroll·focus)를 함께 든다.
+   기록(route.js)에는 screen·arg 만 넘긴다. 보던 자리는 이번 방문에서만 쓴다. */
+let stack = [{ screen: 'home' }];
 let onExit = null;
 
-const go   = (screen, arg) => { stack.push({ screen, arg }); paint(); };
-const back = () => { stack.pop(); stack.length ? paint() : onExit && onExit(); };
+/* 그리는 순번. 늦게 끝난 옛 렌더가 새 화면을 덮지 않게 한다. */
+let painting = 0;
+
+const topOf = () => stack[stack.length - 1];
+
+/** 지금 화면에서 보던 자리를 적어 둔다 */
+function remember() {
+  const t = topOf();
+  if (!t) return;
+  const el = sheet();
+  t.scroll = el.scrollTop;
+  const a = document.activeElement;
+  const g = a && el.contains(a) ? a.closest('[data-go]') : null;
+  t.focus = g
+    ? `[data-go="${g.dataset.go}"]${g.dataset.arg ? `[data-arg="${g.dataset.arg}"]` : ''}`
+    : null;
+}
+
+/** 기록에 넘길 만큼만 남긴 길 */
+export const codexTrail = () => stack.map(({ screen, arg }) => ({ screen, arg }));
+
+const sameTrail = (a, b) => a.length === b.length
+  && a.every((t, i) => t.screen === b[i].screen && t.arg === b[i].arg);
+
+/** 기록 한 칸이 시킨 대로 길을 맞춘다.
+    되돌아온 자리는 보던 위치를 그대로 쓰고, 새 자리는 처음부터 본다.
+    이미 그 길에 서 있으면 다시 그리지 않는다. */
+export function setCodexTrail(trail, { restore = false } = {}) {
+  const want = (trail && trail.length ? trail : [{ screen: 'home' }])
+    .filter((t) => SCREENS[t.screen]);
+  if (!want.length) want.push({ screen: 'home' });
+  if (sameTrail(want, stack)) return;
+  remember();
+
+  /* 같은 칸이면 보던 자리를 잃지 않게 이어 붙인다 */
+  const next = want.map((t, i) => {
+    const had = stack[i];
+    return (had && had.screen === t.screen && had.arg === t.arg)
+      ? had : { screen: t.screen, arg: t.arg };
+  });
+  stack = next;
+  paint({ restore });
+}
+
+const go = (screen, arg) => {
+  if (!SCREENS[screen]) return;
+  /* 같은 자리로 또 가지 않는다. 전환 중에 두 번 눌려도 길이 겹치지 않는다. */
+  const t = topOf();
+  if (t && t.screen === screen && t.arg === arg) return;
+  remember();
+  stack.push({ screen, arg });
+  /* 먼저 그리고 기록을 남긴다. 기록이 돌아오기를 기다리는 사이에
+     옛 화면이 한 번 더 눌리는 일이 없다. */
+  paint({ restore: false });
+  pushRoute({ view: 'codex', trail: codexTrail() });
+};
+
+/** 도감 안의 뒤로. 기록을 거슬러 가므로 기기의 뒤로 가기와 한 몸이다. */
+const back = () => {
+  remember();
+  backRoute(() => {
+    if (stack.length > 1) { stack.pop(); paint({ restore: true }); }
+    else onExit && onExit();
+  });
+};
 
 /* ------------------------------------------------------------------
    공통 조각
    ------------------------------------------------------------------ */
 
-const page = (backLabel, inner, mod = '') => `
-  <div class="ex-page ${mod}">
+/* 뒤로 갈 자리의 이름. 화면마다 적어 두면 실제로 돌아가는 곳과 어긋난다.
+   그래서 지나온 길에서 바로 앞 칸을 보고 정한다. */
+function backLabel() {
+  const prev = stack[stack.length - 2];
+  if (!prev) return '세계로';
+  if (prev.screen === 'home')     return '백과사전';
+  if (prev.screen === 'worlds')   return '세계';
+  if (prev.screen === 'concepts') return '원리';
+  if (prev.screen === 'world')    return (WORLDS[prev.arg] || {}).title || '세계';
+  if (prev.screen === 'concept')  return (CONCEPTS[prev.arg] || {}).name || '원리';
+  if (prev.screen === 'cycle')    return (CYCLES[prev.arg] || {}).title || '순환';
+  return '뒤로';
+}
+
+/* 화면을 열면 초점은 이 페이지에서 시작한다. 제목이 아니라 페이지를 잡는
+   이유는, 제목 뒤로 탭을 누르면 `뒤로` 가 건너뛰어지기 때문이다.
+   페이지에는 이름을 붙여 두므로 어디인지는 그대로 읽힌다. */
+const page = (inner, mod = '') => `
+  <div class="ex-page ${mod}" data-focus tabindex="-1" role="group">
     <button class="ex-back" type="button">
       <svg viewBox="0 0 20 14" aria-hidden="true"><path d="M19 7H1M7 1 1 7l6 6"
         fill="none" stroke="currentColor" stroke-width="1.4"
         stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>${backLabel}</span>
+      <span>${backLabel()}</span>
     </button>
     ${inner}
   </div>`;
@@ -177,8 +260,9 @@ function renderHome() {
 
   const done = allOpenSolved();
   const empty = JEM_SLOTS.length - cycles.length;
+  const recent = recentSolved(3);
 
-  return page('백과사전', `
+  return page(`
     ${title('', '알아낸 세계와 원리의 기록', '호기심이 만들어내는, 더 넓은 세상의 지도.')}
 
     ${done ? `<p class="ex-alldone">지금 공개된 세계를 모두 발견했어요</p>` : ''}
@@ -190,6 +274,16 @@ function renderHome() {
       ${block(2, '발견한 원리', '원리', foundConcepts().length, conceptTotal(),
               comingConcepts().length, ORBIT, 'concepts')}
     </div>
+
+    <section class="ex-section ex-section--recent">
+      <div class="ex-section-head">
+        <h3 class="ex-section-title">최근 알아낸 질문</h3>
+        ${recent.length ? '<span class="ex-section-note">끝낸 차례대로</span>' : ''}
+      </div>
+      ${recent.length
+        ? `<ul class="ex-list">${recent.map((id) => questionRow(id)).join('')}</ul>`
+        : '<p class="ex-empty">세계에서 첫 질문을 알아보세요</p>'}
+    </section>
 
     <section class="ex-section">
       <div class="ex-section-head">
@@ -243,7 +337,7 @@ function renderWorlds() {
   const found = WORLD_ORDER.filter(worldFound);
   const near  = WORLD_ORDER.filter((id) => !worldFound(id) && worldOpen(id));
   const soon  = WORLD_ORDER.filter((id) => !worldOpen(id));
-  return page('세계', `
+  return page(`
     ${title('', '발견한 현상과 존재', '')}
     <ul class="ex-entries">${found.map(worldRow).join('')}</ul>
     ${near.length ? `
@@ -265,7 +359,7 @@ function renderWorld(id) {
   const w = WORLDS[id];
   const qs = w.questions.filter(isSolved);
   const cs = w.concepts.filter(conceptFound);
-  return page('세계', `
+  return page(`
     <p class="ex-crumb">세계 <span>/</span> ${w.title}</p>
     <div class="ex-hero">${w.plate ? thumb(w.plate) : ''}</div>
     <h2 class="ex-title ex-title--detail">${w.title}</h2>
@@ -320,7 +414,7 @@ function renderConcepts() {
   const found = CONCEPT_ORDER.filter(conceptFound);
   const near  = CONCEPT_ORDER.filter((id) => !conceptFound(id) && conceptOpen(id));
   const soon  = CONCEPT_ORDER.filter((id) => !conceptOpen(id));
-  return page('원리', `
+  return page(`
     ${title('', '알아낸 원리', '')}
     <ul class="ex-entries">${found.map(conceptRow).join('')}</ul>
     ${near.length ? `
@@ -359,7 +453,7 @@ function renderConcept(id) {
          <p class="ex-rel-body">${br(body)}</p>
        </div>`);
 
-  return page('원리', `
+  return page(`
     ${title(`CONCEPT ${two(n)}`, c.name, m.lead)}
 
     <div class="ex-web">
@@ -394,7 +488,7 @@ function renderConcept(id) {
 function renderCycle(id) {
   const c = CYCLES[id];
   const qs = c.requiredNodes.filter(isSolved);
-  return page('백과사전', `
+  return page(`
     <p class="ex-crumb">순환 <span>/</span> ${c.title}</p>
     ${hasBadge(c) ? `<div class="ex-hero ex-hero--badge">${badgeArt(c)}</div>` : ''}
     <h2 class="ex-title ex-title--detail">${c.title}</h2>
@@ -418,7 +512,7 @@ function renderCycle(id) {
    ------------------------------------------------------------------ */
 
 function renderArticleScreen(id) {
-  return page('백과사전', `<div class="ex-article">${renderArticle(NODES[id])}</div>`);
+  return page(`<div class="ex-article">${renderArticle(NODES[id])}</div>`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -433,11 +527,13 @@ const SCREENS = {
   article:  renderArticleScreen,
 };
 
-function paint() {
+function paint({ restore = false } = {}) {
+  const mine = ++painting;
   const el = sheet();
-  const top = stack[stack.length - 1];
+  const top = topOf();
   el.innerHTML = SCREENS[top.screen](top.arg);
-  el.scrollTop = 0;
+  /* 새 화면은 처음부터, 되돌아온 화면은 보던 자리부터 */
+  el.scrollTop = restore ? (top.scroll || 0) : 0;
 
   /* 리스너는 매번 새로 그려지는 페이지에 건다.
      시트(#codex)에 걸면 화면을 옮길 때마다 쌓인다. */
@@ -481,23 +577,57 @@ function paint() {
     if (t) go(t.dataset.go, t.dataset.arg);
   });
 
+  /* 지금 어느 화면인지 이름을 붙인다 */
+  const named = pageEl.querySelector('.ex-title, .ex-crumb, .article-title');
+  pageEl.setAttribute('aria-label',
+    named ? named.textContent.replace(/\s+/g, ' ').trim() : '백과사전');
+
   requestAnimationFrame(() => {
+    if (mine !== painting) return;          /* 그 사이 화면이 또 바뀌었다 */
     pageEl.classList.add('is-in');
-    focusStart(el);
+
+    /* 글이 다 자리를 잡은 뒤라야 보던 높이가 맞다 */
+    if (restore && top.scroll) {
+      el.scrollTop = Math.min(top.scroll, Math.max(0, el.scrollHeight - el.clientHeight));
+    }
+
+    /* 초점과 스크롤이 서로 싸우지 않게, 초점은 스크롤을 건드리지 않고 옮긴다.
+       고르던 것이 사라졌으면 화면의 시작점으로 간다. */
+    const want = restore && top.focus ? pageEl.querySelector(top.focus) : null;
+    if (want) want.focus({ preventScroll: true });
+    else focusStart(el);
   });
 }
 
-/** @param {object} o
+/** 도감을 연다. 지나온 길은 지우지 않는다.
+ *  세계 탭에 잠깐 다녀와도 보던 화면과 자리가 그대로다.
+ *
+ *  @param {object} o
  *  @param {Function} o.onExit  홈에서 뒤로 갈 때 — 세계로 돌아간다 */
-export async function openCodex({ onExit: exit } = {}) {
+export async function openCodex({ onExit: exit, trail } = {}) {
   onExit = exit;
-  stack = [{ screen: 'home' }];
-  paint();
-  await openSheet(sheet(), { focus: false });
-  focusStart(sheet());
+  if (trail) {
+    const want = trail.filter((t) => SCREENS[t.screen]);
+    stack = want.length
+      ? want.map((t, i) => {
+          const had = stack[i];
+          return (had && had.screen === t.screen && had.arg === t.arg)
+            ? had : { screen: t.screen, arg: t.arg };
+        })
+      : [{ screen: 'home' }];
+  }
+  paint({ restore: true });
+  /* 도감은 모달이 아니다. 아래 메뉴는 열려 있는 동안에도 쓸 수 있다.
+     뒤에 남은 세계의 질문만 초점에서 뺀다. */
+  blockWorld(true);
+  await openSheet(sheet(), { modal: false, focus: false });
+  const t = topOf();
+  const want = t.focus ? sheet().querySelector(t.focus) : null;
+  if (want) want.focus({ preventScroll: true }); else focusStart(sheet());
 }
 
 export async function closeCodex() {
+  remember();
   await closeSheet(sheet());
-  stack = [];
+  blockWorld(false);
 }

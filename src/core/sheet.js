@@ -19,8 +19,8 @@ let open = null;
 let returnTo = null;
 
 /** 뒤쪽은 초점에서 아예 빠진다. inert 를 모르는 기기에서는 tabindex 로 막는다. */
-function background(off) {
-  ['nodes', 'nav'].forEach((id) => {
+function block(ids, off) {
+  ids.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (off) el.setAttribute('inert', ''); else el.removeAttribute('inert');
@@ -36,6 +36,10 @@ function background(off) {
     });
   });
 }
+
+/** 도감은 모달이 아니라 화면 하나다. 아래 메뉴는 그대로 쓸 수 있어야 한다.
+    뒤에 남은 세계의 질문만 초점에서 뺀다. */
+export const blockWorld = (on) => block(['nodes'], on);
 
 function onKey(e) {
   if (!open || e.key !== 'Tab') return;
@@ -66,7 +70,7 @@ export async function openSheet(el, { modal = true, focus = true } = {}) {
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-modal', 'true');
     open = el;
-    background(true);
+    block(['nodes', 'nav'], true);
     addEventListener('keydown', onKey, true);
   }
   el.classList.add('is-open');
@@ -92,7 +96,7 @@ export async function closeSheet(el, { back } = {}) {
   if (open === el) {
     open = null;
     removeEventListener('keydown', onKey, true);
-    background(false);
+    block(['nodes', 'nav'], false);
     const to = back === undefined ? returnTo : back;
     returnTo = null;
     if (to && to.isConnected) to.focus({ preventScroll: true });

@@ -191,6 +191,8 @@ const THUMB_SRC = {
   bloom:  GROWTH_STAGES.bloomTree,
   bee:    FLYERS.bee,
   fruit:  GROWTH_STAGES.fruitTree,
+  /* 걷는 띠는 여섯 칸이라 작은 그림으로 쓰면 뭉친다. 그 세계의 나무를 쓴다. */
+  eater:  GROWTH_STAGES.fruitTree,
   river:  RIVER.src,
 };
 

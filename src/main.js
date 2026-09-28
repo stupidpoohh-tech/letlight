@@ -11,7 +11,8 @@ import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
 import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld,
          refreshResumeMarks } from './scenes/world.js';
-import { openCodex, closeCodex } from './scenes/codex.js';
+import { openCodex, closeCodex, codexTrail, setCodexTrail } from './scenes/codex.js';
+import { startRoute, pushRoute, routeNow } from './core/route.js';
 import { unlock, isMuted, setMuted } from './core/sound.js';
 
 const nav = document.getElementById('nav');
@@ -20,32 +21,74 @@ const navItems = [...nav.querySelectorAll('.nav-item')];
 const codexBtn = navItems.find((b) => b.dataset.view === 'codex');
 
 let view = 'world';
-let switching = false;
 
-async function goto(next) {
-  if (switching || next === view) return;
-  switching = true;
+/* 화면을 바꾸는 일은 한 줄로 세워 둔다. 빠르게 눌러도 순서가 꼬이지 않는다. */
+let queue = Promise.resolve();
+const serial = (fn) => { queue = queue.then(fn).catch(() => {}); return queue; };
+
+function paintNav(next) {
   navItems.forEach((b) => {
     const on = b.dataset.view === next;
     b.classList.toggle('is-active', on);
+    b.setAttribute('aria-selected', String(on));
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
-
-  if (next === 'codex') {
-    view = 'codex';
-    hideNodes(true);
-    /* 도감에는 제 손잡이가 따로 있다. 세계 위의 것은 물러난다. */
-    sndBtn.classList.remove('is-on');
-    codexBtn.classList.remove('is-fresh');
-    await openCodex({ onExit: () => { switching = false; goto('world'); } });
-  } else {
-    view = 'world';
-    await closeCodex();
-    hideNodes(false);
-    if (sndBtn.getAttribute('aria-hidden') !== 'true') sndBtn.classList.add('is-on');
-  }
-  switching = false;
 }
+
+/* 마지막으로 가려던 자리. 빠르게 여러 번 눌리면 중간은 건너뛰고
+   마지막 자리로 한 번에 맞춘다. */
+let wanted = null;
+
+/** 기록 한 칸을 화면에 그대로 옮긴다. 이동을 결정하지는 않는다. */
+function applyRoute(r, opts = {}) {
+  wanted = { r, opts };
+  serial(async () => {
+    while (wanted) {
+      const { r: at, opts: o } = wanted;
+      wanted = null;
+      await settle(at, o);
+    }
+  });
+}
+
+async function settle(r, { back = false } = {}) {
+  {
+    paintNav(r.view);
+
+    if (r.view === 'codex') {
+      if (view !== 'codex') {
+        view = 'codex';
+        hideNodes(true);
+        /* 도감에는 제 손잡이가 따로 있다. 세계 위의 것은 물러난다. */
+        sndBtn.classList.remove('is-on');
+        codexBtn.classList.remove('is-fresh');
+        await openCodex({
+          trail: r.trail,
+          onExit: () => goto('world'),
+        });
+      } else {
+        setCodexTrail(r.trail, { restore: back });
+      }
+      return;
+    }
+
+    if (view === 'codex') {
+      view = 'world';
+      await closeCodex();
+      hideNodes(false);
+      if (sndBtn.getAttribute('aria-hidden') !== 'true') sndBtn.classList.add('is-on');
+    }
+  }
+}
+
+/** 아래 메뉴로 옮길 때. 도감에서 보던 길은 그대로 들고 간다.
+    지금 어디인지는 기록만 보고 정한다. 화면은 그 뒤를 따라온다. */
+function goto(next) {
+  if (next === routeNow().view) return;
+  pushRoute({ view: next, trail: codexTrail() });
+}
+
+startRoute(applyRoute);
 
 nav.addEventListener('click', (e) => {
   const b = e.target.closest('.nav-item');

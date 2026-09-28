@@ -81,6 +81,11 @@ export function markSolved(id) {
   saveSolved();
 }
 
+/** 최근에 알아낸 질문. 콘텐츠 순서가 아니라 실제로 끝낸 순서다.
+    solvedOrder 가 이미 그 순서를 들고 있으므로 따로 저장하지 않는다. */
+export const recentSolved = (n = 3) =>
+  state.solvedOrder.filter((id) => NODES[id]).slice(-n).reverse();
+
 /** 지금 공개된 질문. 데이터에 실제로 들어 있는 것이 전부다. */
 export const openIds = () => NODE_ORDER.filter((id) => NODES[id]);
 

@@ -9,10 +9,15 @@
   --ex-bg-soft:  #fafaf8;
   --ex-ink:      #1c1d1a;
   --ex-ink-2:    #55574f;
-  --ex-ink-3:    #8e9186;
+  /* 보조 글자도 글자다. 흰 바탕에서 4.5:1 을 넘긴다 (4.90).
+     색조는 그대로 세이지 회색이고, 밝기만 내렸다. */
+  --ex-ink-3:    #6f7268;
+  /* 글이 아닌 것 — 선, 잠긴 항목의 표시. 대비 기준을 따르지 않는다. */
+  --ex-ink-mute: #9b9e93;
   --ex-line:     #e7e8e3;
   --ex-line-2:   #f1f2ee;
-  --ex-accent:   #7d8760;   /* muted olive — 작은 곳에만 */
+  /* 절제된 올리브 그대로. 흰 바탕에서 5.12:1. */
+  --ex-accent:   #68724d;
 }
 
 #codex {
@@ -206,10 +211,9 @@ button.ex-row, button.ex-entry, .ex-link, button.ex-rel {
   display: block;
   filter: saturate(.16) contrast(1.03);
 }
-.ex-row-lock { display: flex; justify-content: center; color: var(--ex-ink-3); }
+.ex-row-lock { display: flex; justify-content: center; color: var(--ex-ink-mute); }
 .ex-row.is-locked { cursor: default; }
 .ex-row.is-locked .ex-row-title { color: var(--ex-ink-3); font-weight: 400; }
-.ex-row.is-locked .ex-arrow { opacity: .35; }
 
 .ex-arrow { width: 24px; height: 12px; flex: none; }
 .ex-lock  { width: 15px; height: 17px; }
@@ -252,10 +256,15 @@ button.ex-row, button.ex-entry, .ex-link, button.ex-rel {
   font-size: .82rem; letter-spacing: .04em; color: var(--ex-ink-3);
 }
 .ex-entry.is-locked, .ex-entry.is-soon { cursor: default; }
-.ex-entry.is-soon .ex-entry-name { color: var(--ex-ink-3); }
-.ex-entry.is-soon .ex-entry-art { opacity: .34; }
-.ex-entry.is-soon .ex-entry-lead { opacity: .8; }
-.ex-lock--soon { opacity: .7; }
+.ex-entry.is-soon .ex-entry-name { color: var(--ex-ink-2); }
+.ex-entry.is-soon .ex-entry-art { opacity: .42; }
+.ex-entry.is-soon .ex-lock { color: var(--ex-ink-mute); }
+
+/* 갈 수 있는 것과 없는 것은 줄의 왼쪽 끝에서 갈린다.
+   갈 수 있는 줄에만 화살표가 있고, 못 가는 줄은 자물쇠나 점선 동그라미다. */
+.ex-entry.is-locked, .ex-entry.is-soon,
+.ex-row.is-locked { grid-template-columns: var(--ex-art, 108px) 1fr; }
+.ex-row.is-locked { --ex-art: 62px; }
 .ex-soon-note {
   margin: 10px 0 0;
   font-size: .82rem; line-height: 1.6; color: var(--ex-ink-3);
@@ -378,8 +387,10 @@ button.ex-rel { cursor: pointer; }
 @media (max-width: 380px) {
   .ex-page { --ex-pad: 20px; }
   .ex-entry { grid-template-columns: 84px 1fr 20px; gap: 13px; padding: 18px 2px; }
+  .ex-entry.is-locked, .ex-entry.is-soon { --ex-art: 84px; }
   .ex-entry-art { height: 66px; }
   .ex-row { grid-template-columns: 50px 1fr 20px; gap: 12px; }
+  .ex-row.is-locked { --ex-art: 50px; }
   .ex-thumb { height: 38px; }
 }
 
@@ -428,20 +439,11 @@ button.ex-rel { cursor: pointer; }
 
 .ex-page--home .ex-section { margin-bottom: 16px; }
 
-/* 보석함은 무대 끝까지 펼친다.
-   높이가 모자란 화면에서만 --jembox-h 가 내려오고, 그만큼 폭도 함께 준다.
-   상한을 여기 한 자리에만 두어야 어느 높이에서든 걸린다. */
-.ex-page--home {
-  --jembox-h: 9999px;
-}
+/* 보석함은 늘 무대 끝까지 펼친다 */
 .ex-page--home .ex-jembox {
-  --jembox-w: calc(var(--jembox-h) * 900 / 507);
   width: calc(100% + var(--ex-pad) * 2);
-  max-width: var(--jembox-w);
-  /* 끝까지 펴질 때는 여백 밖으로 나가고, 상한에 걸려 좁아지면 가운데로 온다.
-     둘 중 덜 밀어내는 쪽을 고르면 두 경우가 한 줄로 해결된다. */
-  margin-left: max(calc(var(--ex-pad) * -1), calc((100% - var(--jembox-w)) / 2));
-  margin-right: auto;
+  margin-left: calc(var(--ex-pad) * -1);
+  margin-right: calc(var(--ex-pad) * -1);
 }
 .ex-page--home .ex-jembox-names { margin-top: 8px; }
 
@@ -457,48 +459,33 @@ button.ex-rel { cursor: pointer; }
 .ex-page--home .ex-reset-sure { grid-column: 1 / -1; }
 .ex-page--home .ex-made { margin-top: 26px; padding-top: 16px; }
 
-/* 더 낮은 화면에서는 한 단계 더 좁힌다. 부제는 접는다.
-
-   실기기의 660px 안팎을 여기서 받는다. 645px 로 두었을 때는
-   이 구간이 걸리지 않아 홈이 아래로 넘쳤다. */
+/* 낮은 화면에서는 여백만 조금 줄인다.
+   글자 크기와 누르는 자리는 건드리지 않는다. 모자라면 아래로 흐른다.
+   최근 알아낸 질문이 한 자리 더 쓰므로, 홈은 이제 한 화면에 다 들어오지
+   않을 수 있다. 억지로 밀어 넣는 대신 스크롤을 허용한다. */
 @media (max-height: 740px) {
   .ex-page--home {
-    padding-top: calc(var(--safe-top) + 8px);
-    padding-bottom: calc(var(--safe-bottom) + 78px);
+    padding-top: calc(var(--safe-top) + 9px);
+    padding-bottom: calc(var(--safe-bottom) + 84px);
   }
-  .ex-page--home .ex-back { margin-bottom: 8px; }
-  .ex-page--home .ex-head { margin-bottom: 9px; }
-  .ex-page--home .ex-rule { margin-bottom: 8px; }
-  .ex-page--home .ex-sub  { display: none; }
-  .ex-page--home .ex-blocks { gap: 7px; margin-bottom: 11px; }
-  .ex-page--home .ex-block { padding: 9px 11px 9px; }
-  .ex-page--home .ex-block-art { height: 32px; margin-bottom: 6px; }
-  .ex-page--home .ex-section { margin-bottom: 10px; }
-  .ex-page--home .ex-section-head { margin-bottom: 6px; }
-  .ex-page--home .ex-jembox-names { margin-top: 6px; }
-  .ex-page--home .ex-settings { margin-top: 14px; padding-top: 10px; }
-  .ex-page--home .ex-made { margin-top: 14px; padding-top: 12px; }
-
+  .ex-page--home .ex-back { margin-bottom: 9px; }
+  .ex-page--home .ex-head { margin-bottom: 10px; }
+  .ex-page--home .ex-blocks { gap: 8px; margin-bottom: 13px; }
+  .ex-page--home .ex-section { margin-bottom: 13px; }
+  .ex-page--home .ex-settings { margin-top: 18px; }
+  .ex-page--home .ex-made { margin-top: 18px; }
 }
-@media (max-height: 740px) { .ex-page--home { --jembox-h: 184px; } }
-@media (max-height: 700px) { .ex-page--home { --jembox-h: 168px; } }
-@media (max-height: 668px) { .ex-page--home { --jembox-h: 152px; } }
-@media (max-height: 645px) { .ex-page--home { --jembox-h: 134px; } }
-@media (max-height: 615px) { .ex-page--home { --jembox-h: 112px; } }
 
-/* 안내 한 줄이 붙은 홈은 보석함이 그만큼 물러난다 */
-@media (max-height: 900px) { .ex-page--note { --jembox-h: 182px; } }
-@media (max-height: 740px) { .ex-page--note { --jembox-h: 146px; } }
-@media (max-height: 700px) { .ex-page--note { --jembox-h: 126px; } }
-@media (max-height: 668px) { .ex-page--note { --jembox-h: 106px; } }
-@media (max-height: 645px) { .ex-page--note { --jembox-h: 96px; } }
-@media (max-height: 615px) { .ex-page--note { --jembox-h: 64px; } }
+/* ---- 최근 알아낸 질문 ---- */
 
-/* 더 낮은 화면. 여기서부터는 그림 칸까지 물러선다. */
-@media (max-height: 645px) {
-  .ex-page--home .ex-block-art { height: 26px; margin-bottom: 5px; }
-  .ex-page--home .ex-settings { padding-top: 8px; }
-  .ex-page--home .ex-made { margin-top: 12px; padding-top: 9px; }
+.ex-section--recent .ex-list { margin-top: 10px; }
+.ex-empty {
+  margin: 12px 0 0;
+  padding: 15px 2px;
+  border-top: 1px solid var(--ex-line-2);
+  border-bottom: 1px solid var(--ex-line-2);
+  font-size: .9rem; line-height: 1.6;
+  color: var(--ex-ink-2);
 }
 
 /* ---- 발견한 순환 : 보석함 ---- */
