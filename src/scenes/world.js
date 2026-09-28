@@ -6,7 +6,7 @@ import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../a
 import { buildRainLayer, addDrops } from '../art/rain.js';
 import { buildGrowth, setStage, growPulse, carryScale, settleStage } from '../art/growth.js';
 import { buildLayer, fadeIn } from '../art/layer.js';
-import { GROWTH_STAGES, WATER_LAYERS, preload, isReady } from '../art/assets.js';
+import { GROWTH_STAGES, WATER_LAYERS, FLYERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved, opensOf, isSolved } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
@@ -184,7 +184,8 @@ async function revealRain() {
   if (!cloud) return;
 
   /* 다음 장면에서 쓸 그림을 지금 받아 둔다 */
-  preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
+  preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS),
+           ...Object.values(FLYERS)]);
 
   /* 1. 구름 자체가 먼저 조금 변한다 */
   await thickenCloud(cloud, { to: 0.52, duration: 2400 });
@@ -638,6 +639,63 @@ function settleBloom() {
   state.bloomVisible = true;
 }
 
+
+/* ------------------------------------------------------------------
+   세계의 변화 9 — 움직이지 못하는 꽃에게로, 움직일 수 있는 것이 온다
+
+   화면을 떠도는 장식이 아니다. 꽃이 핀 수관으로 다가와 한 꽃에 내려앉고,
+   중심 쪽으로 조금 파고든 뒤, 다른 꽃으로 옮겨 가고, 떠난다.
+   세계에는 꽃의 자외선 무늬를 그리지 않는다. 그것은 도감에서만 본다.
+   ------------------------------------------------------------------ */
+
+/* 꽃이 핀 수관 언저리. 나무 자리에서 끌어온다. */
+const FLIGHT_AT = { left: GROWTH_AT.left - 2, top: 61, width: 42, height: 23 };
+
+function buildFlight() {
+  let box = el.fx.querySelector('.pollen-flight');
+  if (box) return box;
+
+  box = document.createElement('div');
+  box.className = 'pollen-flight';
+  box.style.left = `${FLIGHT_AT.left}%`;
+  box.style.top = `${FLIGHT_AT.top}%`;
+  box.style.width = `${FLIGHT_AT.width}%`;
+  box.style.height = `${FLIGHT_AT.height}%`;
+
+  for (const [key, src] of Object.entries(FLYERS)) {
+    const path = document.createElement('div');
+    path.className = `flyer flyer--${key}`;
+    const img = document.createElement('img');
+    img.alt = '';
+    img.decoding = 'async';
+    /* 그림이 아직 없으면 그 한 마리만 조용히 빠진다 */
+    img.addEventListener('error', () => { path.hidden = true; path.style.display = 'none'; });
+    img.src = src;
+    path.appendChild(img);
+    box.appendChild(path);
+  }
+
+  el.fx.appendChild(box);
+  return box;
+}
+
+async function revealPollinators() {
+  const box = buildFlight();
+  await nextFrame();
+  /* 날아오는 길은 css 가 계속 돌린다. 여기서는 오는 것만 보인다. */
+  await tween({
+    duration: 3000, easing: ease.inOut,
+    onUpdate: (t) => { box.style.opacity = t.toFixed(3); },
+  });
+  state.pollinatorVisible = true;
+}
+
+/** 이미 알아낸 것. 연출 없이 그냥 거기 있다. */
+function settlePollinators() {
+  buildFlight().style.opacity = '1';
+  state.pollinatorVisible = true;
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
@@ -647,6 +705,7 @@ const EFFECTS = {
   tree:  revealMatureTree,
   heat:  revealEnergyFlow,
   bloom: revealBloom,
+  pollinator: revealPollinators,
 };
 
 /* ------------------------------------------------------------------
@@ -716,7 +775,8 @@ export function hideNodes(on) {
    알아낸 질문만 저장하고, 나머지는 전부 여기에서 되짚는다.
    어떤 연출도 다시 틀지 않는다. `#from=` 지름길도 이 길을 쓴다. */
 export async function restoreWorld() {
-  preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS)]);
+  preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS),
+           ...Object.values(FLYERS)]);
 
   if (isSolved('cloudWhite')) {
     cloud = buildCloud(CLOUD_AT);
@@ -772,6 +832,8 @@ export async function restoreWorld() {
     state.plantVisible = stage !== 'sprout';
     state.matureTreeVisible = stage === 'matureTree';
   }
+
+  if (isSolved('flowerGuide')) settlePollinators();
 
   /* 그림이 다 올라온 뒤에 틀을 맞춘다. 늦게 와도 조용히 붙는다. */
   if (isSolved('treeBloom')) {

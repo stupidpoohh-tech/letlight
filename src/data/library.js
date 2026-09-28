@@ -30,9 +30,10 @@ export const WORLDS = {
   plant: {
     title: '식물', en: 'Plant', plate: 'plant',
     lead: '햇빛과 물로 살아가는 생명의 세계',
-    questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom'],
+    questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom', 'flowerGuide'],
     concepts: ['imbibition', 'photosynthesis', 'carbonFixation',
-               'selfOrganization', 'plasticity', 'dormancy', 'photoperiod'],
+               'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
+               'floralGuide', 'pollination'],
   },
   fog: {
     title: '안개', en: 'Fog',
@@ -110,12 +111,23 @@ export const CONCEPT_META = {
     lead: '하루 가운데 밝은 시간의 길이.\n식물은 이것으로 계절의 자리를 읽는다.',
     siblings: ['광수용체', '일주기 시계', 'FT 단백질', '플로리겐', '체관'],
   },
+  floralGuide: {
+    first: 'flowerGuide', worlds: ['plant'], ahead: '감각',
+    lead: '꽃에 닿은 곤충이 어디에 내려앉고 어느 쪽으로 움직일지에\n영향을 주는 시각적 단서.',
+    siblings: ['자외선 반사', '꽃잎 대비', '착지', '보상 학습', '꽃의 향'],
+  },
+  pollination: {
+    first: 'flowerGuide', worlds: ['plant'], ahead: '열매',
+    lead: '움직이지 못하는 식물이\n움직이는 동물의 몸에 꽃가루를 실어 보내는 일.',
+    siblings: ['수술', '암술머리', '꽃가루', '꿀', '수분자', '공진화'],
+  },
 };
 
 export const CONCEPT_ORDER = [
   'scattering', 'growth', 'infiltration', 'runoff', 'latentHeat',
   'imbibition', 'photosynthesis', 'carbonFixation',
   'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
+  'floralGuide', 'pollination',
 ];
 
 /* ------------------------------------------------------------------

@@ -29,9 +29,16 @@ GROWTH = {
     "sprout":     "tree1.png",   # 새싹
     "young-tree": "tree2.png",   # 어린나무
     "mature-tree": "tree3.png",  # 큰 나무
-    "bloom-tree": "tree4.png",   # 꽃이 핀 나무
+    "bloom-tree": "tree-flower.png",  # 꽃이 핀 나무
 }
 GROWTH_WIDTH = 520
+
+# 꽃에 찾아오는 것들.  세계에서는 아주 작게 놓인다.
+FLYERS = {
+    "bee":       "bee.png",
+    "butterfly": "butterfly.png",
+}
+FLYER_WIDTH = 260
 
 # 강.  후보로 river1~5.png 를 올려 두었고, 그중 하나만 세계에 쓴다.
 # 나머지는 지우지 않고 variant 후보로 남겨 둔다.
@@ -174,6 +181,7 @@ def main():
 
     jobs = [(ROOT / f"cloud{i}.png", OUT / f"cloud-{i}.webp", CLOUD_WIDTH) for i in range(1, 6)]
     jobs += [(ROOT / src, OUT / f"{name}.webp", GROWTH_WIDTH) for name, src in GROWTH.items()]
+    jobs += [(ROOT / src, OUT / f"{name}.webp", FLYER_WIDTH) for name, src in FLYERS.items()]
     jobs += [(ROOT / RIVER_MAIN, OUT / "river.webp", RIVER_WIDTH)]
 
 

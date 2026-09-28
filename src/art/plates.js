@@ -1,6 +1,6 @@
 /* 도감 도판 — 그린 구름에 설명을 얹는다. */
 
-import { GROWTH_STAGES, isReady } from './assets.js';
+import { GROWTH_STAGES, FLYERS, isReady } from './assets.js';
 
 const CLOUD = { src: 'assets/cloud-3.webp', w: 760, h: 540 };
 const RAIN  = { src: 'assets/cloud-4.webp', w: 760, h: 571 };
@@ -76,6 +76,57 @@ function growthPlate(src) {
     </svg>`;
 }
 
+
+/** 벌이 보는 꽃 — 세계에는 그리지 않는 무늬를 여기에서만 본다.
+    왼쪽은 사람 눈에 보이는 꽃, 오른쪽은 중심으로 모이는 단서가 드러난 꽃. */
+function beePlate() {
+  const petals = (cx, cy, r, stroke) => {
+    let out = '';
+    for (let i = 0; i < 6; i++) {
+      const deg = i * 60 - 90;
+      const a = (deg * Math.PI) / 180;
+      const px = (cx + Math.cos(a) * r * 0.58).toFixed(1);
+      const py = (cy + Math.sin(a) * r * 0.58).toFixed(1);
+      out += `<ellipse cx="${px}" cy="${py}"
+                rx="${(r * 0.46).toFixed(1)}" ry="${(r * 0.27).toFixed(1)}"
+                transform="rotate(${deg} ${px} ${py})"
+                fill="none" stroke="${stroke}" stroke-width="1.2"/>`;
+    }
+    return out;
+  };
+
+  /* 오른쪽 꽃에만. 꽃잎 안쪽이 중심으로 모인다. */
+  const guides = (cx, cy, r) => {
+    let out = '';
+    for (let i = 0; i < 6; i++) {
+      const a = ((i * 60 - 90) * Math.PI) / 180;
+      out += `<line x1="${(cx + Math.cos(a) * r * 0.86).toFixed(1)}"
+                    y1="${(cy + Math.sin(a) * r * 0.86).toFixed(1)}"
+                    x2="${(cx + Math.cos(a) * r * 0.26).toFixed(1)}"
+                    y2="${(cy + Math.sin(a) * r * 0.26).toFixed(1)}"/>`;
+    }
+    return out;
+  };
+
+  const bee = isReady(FLYERS.bee)
+    ? `<image href="${FLYERS.bee}" x="296" y="196" width="54" height="55"/>` : '';
+
+  return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+      <g>${petals(116, 132, 76, '#c6bda6')}</g>
+      <circle cx="116" cy="132" r="15" fill="none" stroke="#c6bda6" stroke-width="1.2"/>
+
+      <g>${petals(276, 132, 76, '#c6bda6')}</g>
+      <g stroke="#8d7fb4" stroke-width="1.4" stroke-linecap="round"
+         stroke-dasharray="3 4" opacity="0.72">${guides(276, 132, 76)}</g>
+      <circle cx="276" cy="132" r="15" fill="#8d7fb4" opacity="0.22"/>
+      <circle cx="276" cy="132" r="15" fill="none" stroke="#8d7fb4"
+              stroke-width="1.3" opacity="0.72"/>
+
+      ${bee}
+      <line x1="28" y1="268" x2="372" y2="268" stroke="#2f2e27" stroke-width="1" opacity="0.18"/>
+    </svg>`;
+}
+
 function unknownPlate() {
   return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
       <rect x="28" y="20" width="344" height="250" fill="none"
@@ -101,6 +152,7 @@ export function plate(kind) {
   if (kind === 'tree') {
     return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
   }
+  if (kind === 'bee') return beePlate();
   /* 꽃 그림이 아직이면 큰 나무로 대신한다 */
   if (kind === 'bloom') {
     if (isReady(GROWTH_STAGES.bloomTree)) return growthPlate(GROWTH_STAGES.bloomTree);
@@ -118,6 +170,7 @@ const THUMB_SRC = {
   plant:  GROWTH_STAGES.youngTree,
   tree:   GROWTH_STAGES.matureTree,
   bloom:  GROWTH_STAGES.bloomTree,
+  bee:    FLYERS.bee,
   river:  RIVER.src,
 };
 

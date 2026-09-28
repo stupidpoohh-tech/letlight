@@ -8,6 +8,12 @@ export const GROWTH_STAGES = {
   bloomTree:  'assets/bloom-tree.webp',  // 꽃이 핀 나무
 };
 
+/* 꽃에 찾아오는 것들 */
+export const FLYERS = {
+  bee:       'assets/bee.webp',        // 벌
+  butterfly: 'assets/butterfly.webp',  // 나비
+};
+
 /* 비가 땅에 닿은 뒤. 그림이 아직 없으면 그 층은 조용히 빠진다. */
 export const WATER_LAYERS = {
   soil:  'assets/soil-water.webp',  // 지표 아래의 물 (아직 없음)
