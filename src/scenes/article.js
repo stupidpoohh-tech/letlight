@@ -57,7 +57,55 @@ function block(t, state) {
   return para(t);
 }
 
-export function renderArticle(node) {
+/* 문제 다시 보기 — 도감에서 다시 읽을 때만 붙는다.
+
+   한 번 푼 문제는 다시 볼 길이 없었다. 글만 남고 문제는 지나가 버린다.
+   그런데 되짚기 한마디(hint)는 그 노드에서 얻은 모델을 가장 짧게 적어 둔
+   문장이라, 다시 읽을 값이 있다.
+
+   푼 사람만 보는 자리라 정답을 가리지 않는다. 색이 아니라 `정답` 이라는
+   글자로 표시한다. 여기서 다시 풀게 하지는 않는다. 읽는 자리다.
+   접어 두므로 글을 다 읽고 내려온 사람의 길을 막지 않는다. */
+const reviewOne = (q, tag, n) => `
+  <details class="review-q" data-review="${n}">
+    <summary class="review-head">
+      <span class="review-tag">${tag}</span>
+      <span class="review-title">${String(q.prompt).split('\n')[0]}</span>
+    </summary>
+    <div class="review-body">
+      <p class="review-prompt">${br(q.prompt)}</p>
+      <ul class="review-choices">
+        ${q.choices.map((c) => {
+          const right = c.key === q.answer;
+          return `<li class="review-choice${right ? ' is-answer' : ''}">
+            <p class="review-line">
+              <span class="review-key">${c.key}</span>
+              <span class="review-text">${br(c.text)}</span>
+            </p>
+            ${right ? '<p class="review-mark">정답</p>' : ''}
+            ${c.hint ? `<p class="review-hint">${br(c.hint)}</p>` : ''}
+          </li>`;
+        }).join('')}
+      </ul>
+    </div>
+  </details>`;
+
+const review = (node) => {
+  const qs = [[node.quiz, '들어가는 문제'], [node.exitQuiz, '나오는 문제']]
+    .filter(([q]) => q && q.prompt && q.choices);
+  if (!qs.length) return '';
+  return `<section class="article-review">
+    <h3 class="review-h">문제 다시 보기</h3>
+    ${qs.map(([q, tag], i) => reviewOne(q, tag, i)).join('')}
+  </section>`;
+};
+
+/**
+ *  @param {object} node
+ *  @param {object} [o]
+ *  @param {boolean} [o.withQuiz]  푼 문제를 글 아래에 다시 붙인다 (도감 전용)
+ */
+export function renderArticle(node, { withQuiz = false } = {}) {
   const ids = [].concat(node.concept || []);
   const found = ids.map((id) => CONCEPTS[id]).filter(Boolean);
   const linked = ids
@@ -96,7 +144,9 @@ export function renderArticle(node) {
       ${linked.length ? `<p class="article-rel">
         <b>연결 원리</b><span class="article-rel-sep">|</span
         ><span class="article-rel-list">${linked.join(' · ')}</span></p>` : ''}
-    </aside>` : ''}`;
+    </aside>` : ''}
+
+    ${withQuiz ? review(node) : ''}`;
 }
 
 /** 문제를 맞힌 뒤 읽는다.

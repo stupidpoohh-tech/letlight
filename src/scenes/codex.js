@@ -512,7 +512,8 @@ function renderCycle(id) {
    ------------------------------------------------------------------ */
 
 function renderArticleScreen(id) {
-  return page(`<div class="ex-article">${renderArticle(NODES[id])}</div>`);
+  /* 도감에서는 글 아래에 푼 문제도 접어 둔다. 학습 중에는 붙이지 않는다. */
+  return page(`<div class="ex-article">${renderArticle(NODES[id], { withQuiz: true })}</div>`);
 }
 
 /* ------------------------------------------------------------------ */
