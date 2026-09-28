@@ -361,18 +361,20 @@
    실기기 브라우저는 주소창과 하단바가 높이를 가져가서, 무대가 660px 안팎이 된다.
    홈에서만 조판을 좁힌다. 다른 화면은 그대로 넉넉하게 둔다. */
 
-.ex-page--home { padding-top: calc(var(--safe-top) + 13px); }
-.ex-page--home .ex-back { margin-bottom: 13px; }
-.ex-page--home .ex-head { margin-bottom: 14px; }
+.ex-page--home {
+  padding-top: calc(var(--safe-top) + 13px);
+  padding-bottom: calc(var(--safe-bottom) + 92px);
+}
+.ex-page--home .ex-back { margin-bottom: 11px; }
+.ex-page--home .ex-head { margin-bottom: 12px; }
 .ex-page--home .ex-rule { margin-bottom: 11px; }
 .ex-page--home .ex-title { font-size: clamp(1.24rem, 5.2vw, 1.5rem); line-height: 1.3; }
 .ex-page--home .ex-sub { margin-top: 7px; font-size: .84rem; }
 
-/* 세계와 원리는 나란히 선다 */
 .ex-page--home .ex-blocks {
   grid-template-columns: 1fr 1fr;
   gap: 9px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .ex-page--home .ex-block {
   grid-template-columns: 1fr;
@@ -397,7 +399,7 @@
   width: 19px; height: 10px;
 }
 
-.ex-page--home .ex-section { margin-bottom: 22px; }
+.ex-page--home .ex-section { margin-bottom: 16px; }
 
 /* 보석함은 무대 끝까지 펼친다 */
 .ex-page--home .ex-jembox {
@@ -405,18 +407,61 @@
   margin-left: calc(var(--ex-pad) * -1);
   margin-right: calc(var(--ex-pad) * -1);
 }
-.ex-page--home .ex-jembox-names { margin-top: 9px; }
+.ex-page--home .ex-jembox-names { margin-top: 8px; }
 
-/* 더 낮은 화면에서는 한 단계 더 좁힌다. 부제는 접는다. */
-@media (max-height: 645px) {
-  .ex-page--home { padding-top: calc(var(--safe-top) + 10px); }
-  .ex-page--home .ex-back { margin-bottom: 10px; }
-  .ex-page--home .ex-head { margin-bottom: 10px; }
+/* 손잡이 둘은 짧다. 한 줄에 나란히 두어 높이를 절반으로 쓴다.
+   누르는 자리는 그대로 44px 이다. */
+.ex-page--home .ex-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 10px;
+  margin-top: 24px;
+  padding-top: 14px;
+}
+.ex-page--home .ex-reset-sure { grid-column: 1 / -1; }
+.ex-page--home .ex-made { margin-top: 26px; padding-top: 16px; }
+
+/* 더 낮은 화면에서는 한 단계 더 좁힌다. 부제는 접는다.
+
+   실기기의 660px 안팎을 여기서 받는다. 645px 로 두었을 때는
+   이 구간이 걸리지 않아 홈이 아래로 넘쳤다. */
+@media (max-height: 740px) {
+  .ex-page--home {
+    padding-top: calc(var(--safe-top) + 8px);
+    padding-bottom: calc(var(--safe-bottom) + 78px);
+  }
+  .ex-page--home .ex-back { margin-bottom: 8px; }
+  .ex-page--home .ex-head { margin-bottom: 9px; }
+  .ex-page--home .ex-rule { margin-bottom: 8px; }
   .ex-page--home .ex-sub  { display: none; }
-  .ex-page--home .ex-blocks { gap: 7px; margin-bottom: 13px; }
+  .ex-page--home .ex-blocks { gap: 7px; margin-bottom: 11px; }
   .ex-page--home .ex-block { padding: 9px 11px 9px; }
-  .ex-page--home .ex-block-art { height: 36px; margin-bottom: 7px; }
-  .ex-page--home .ex-section { margin-bottom: 15px; }
+  .ex-page--home .ex-block-art { height: 32px; margin-bottom: 6px; }
+  .ex-page--home .ex-section { margin-bottom: 10px; }
+  .ex-page--home .ex-section-head { margin-bottom: 6px; }
+  .ex-page--home .ex-jembox-names { margin-top: 6px; }
+  .ex-page--home .ex-settings { margin-top: 14px; padding-top: 10px; }
+  .ex-page--home .ex-made { margin-top: 14px; padding-top: 12px; }
+
+  /* 보석함도 조금 물러선다. 가로로 꽉 차는 모습은 그대로 두고,
+     높이가 모자란 화면에서만 폭을 줄여 자리를 낸다. */
+  .ex-page--home .ex-jembox {
+    max-width: calc(var(--jembox-h) * 900 / 507);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+@media (max-height: 740px) { .ex-page--home { --jembox-h: 184px; } }
+@media (max-height: 700px) { .ex-page--home { --jembox-h: 168px; } }
+@media (max-height: 668px) { .ex-page--home { --jembox-h: 152px; } }
+@media (max-height: 645px) { .ex-page--home { --jembox-h: 134px; } }
+@media (max-height: 615px) { .ex-page--home { --jembox-h: 112px; } }
+
+/* 더 낮은 화면. 여기서부터는 그림 칸까지 물러선다. */
+@media (max-height: 645px) {
+  .ex-page--home .ex-block-art { height: 26px; margin-bottom: 5px; }
+  .ex-page--home .ex-settings { padding-top: 8px; }
+  .ex-page--home .ex-made { margin-top: 12px; padding-top: 9px; }
 }
 
 /* ---- 발견한 순환 : 보석함 ---- */
