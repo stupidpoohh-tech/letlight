@@ -31,10 +31,11 @@ export const WORLDS = {
     title: '식물', en: 'Plant', plate: 'plant',
     lead: '햇빛과 물로 살아가는 생명의 세계',
     questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom',
-                'flowerGuide', 'treeFruit'],
+                'flowerGuide', 'treeFruit', 'fruitEater'],
     concepts: ['imbibition', 'photosynthesis', 'carbonFixation',
                'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
-               'floralGuide', 'pollination', 'doubleFertilization', 'fruitSet'],
+               'floralGuide', 'pollination', 'doubleFertilization', 'fruitSet',
+               'ripening', 'seedDispersal'],
   },
   fog: {
     title: '안개', en: 'Fog',
@@ -132,6 +133,16 @@ export const CONCEPT_META = {
     lead: '수정을 신호로 씨방의 억제가 풀리고\n본격적인 과실 성장이 시작되는 전환.',
     siblings: ['씨방', '옥신', '지베렐린', '사이토키닌', '단위결실', '에틸렌'],
   },
+  ripening: {
+    first: 'fruitEater', worlds: ['plant'], ahead: '향',
+    lead: '지키던 열매가 부르는 열매로 바뀌는 동안\n맛과 굳기와 색이 함께 달라지는 과정.',
+    siblings: ['전분', '당', '세포벽', '엽록소', '카로티노이드', '안토시아닌', '에틸렌'],
+  },
+  seedDispersal: {
+    first: 'fruitEater', worlds: ['plant'], ahead: '숲',
+    lead: '걷지 못하는 식물이 과육을 내주고\n씨앗의 이동을 얻는 거래.',
+    siblings: ['육질과', '종자 포식자', '소화관 통과', '어미나무', '정착'],
+  },
 };
 
 export const CONCEPT_ORDER = [
@@ -139,6 +150,7 @@ export const CONCEPT_ORDER = [
   'imbibition', 'photosynthesis', 'carbonFixation',
   'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
   'floralGuide', 'pollination', 'doubleFertilization', 'fruitSet',
+  'ripening', 'seedDispersal',
 ];
 
 /* ------------------------------------------------------------------

@@ -41,6 +41,14 @@ FLYERS = {
 }
 FLYER_WIDTH = 260
 
+# 걷는 동물.  한 장씩 올라온 그림을 가로로 이어 한 장의 띠로 만든다.
+# 여섯 칸을 차례로 보여 주면 걷는다.  칸이 흔들리지 않게 여섯 장의
+# 그림 영역을 합쳐 같은 틀로 잘라 낸다.
+WALKS = {
+    "deer-walk": ["dear%d.png" % i for i in range(1, 7)],
+}
+WALK_FRAME_WIDTH = 240
+
 # 강.  후보로 river1~5.png 를 올려 두었고, 그중 하나만 세계에 쓴다.
 # 나머지는 지우지 않고 variant 후보로 남겨 둔다.
 RIVER_MAIN = "river2.png"
@@ -146,6 +154,25 @@ def build_icon(src: Path, dst: Path, size: int):
     return (size, size)
 
 
+def build_strip(srcs, dst: Path, frame_width: int):
+    """여러 장을 같은 틀로 잘라 가로로 잇는다.  돌려주는 값은 한 칸의 크기."""
+    ims = [Image.open(s).convert("RGBA") for s in srcs]
+    box = None
+    for im in ims:
+        b = im.split()[-1].point(lambda v: 255 if v > 8 else 0).getbbox()
+        box = b if box is None else (min(box[0], b[0]), min(box[1], b[1]),
+                                     max(box[2], b[2]), max(box[3], b[3]))
+    w, h = box[2] - box[0], box[3] - box[1]
+    fw = min(frame_width, w)
+    fh = max(1, round(h * fw / w))
+
+    strip = Image.new("RGBA", (fw * len(ims), fh), (0, 0, 0, 0))
+    for i, im in enumerate(ims):
+        strip.alpha_composite(im.crop(box).resize((fw, fh), Image.LANCZOS), (i * fw, 0))
+    strip.save(dst, "WEBP", quality=88, method=6)
+    return fw, fh
+
+
 def build_flat(src: Path, dst: Path, max_width: int):
     """바탕이 있는 그대로 줄이기만 한다. 보석함처럼 종이째 쓰는 그림."""
     im = Image.open(src).convert("RGB")
@@ -196,6 +223,18 @@ def main():
         total += kb
         print(f"  {dst.name:24s} {size[0]}x{size[1]}  {kb:6.1f} KB"
               f"  (원본 {src.stat().st_size/1024/1024:.1f} MB)")
+
+    # 걷는 동물의 띠
+    for name, frames in WALKS.items():
+        srcs = [ROOT / f for f in frames]
+        if not all(f.exists() for f in srcs):
+            missing.extend(f.name for f in srcs if not f.exists())
+            continue
+        dst = OUT / f"{name}.webp"
+        fw, fh = build_strip(srcs, dst, WALK_FRAME_WIDTH)
+        kb = dst.stat().st_size / 1024
+        total += kb
+        print(f"  {dst.name:24s} {fw}x{fh} x{len(srcs)}  {kb:6.1f} KB")
 
     # 보석함은 종이째, 보석은 바탕을 지워서
     extra = [(ROOT / JEM_BOX, OUT / "jem-box.webp", JEM_BOX_WIDTH, build_flat)]

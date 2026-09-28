@@ -41,6 +41,7 @@ python3 -m http.server 8080
 | `/#skip&from=treeBloom` | 큰 나무에 꽃이 피는 노드부터 |
 | `/#skip&from=flowerGuide` | 꽃에 벌이 찾아오는 노드부터 |
 | `/#skip&from=treeFruit` | 꽃이 열매로 바뀌는 노드부터 |
+| `/#skip&from=fruitEater` | 열매를 먹으러 동물이 오는 노드부터 |
 | `/#reset` | 지금까지 알아낸 것을 지우고 처음부터 |
 
 `from=` 은 확인용 지름길이다. 앞선 세계 변화(구름 · 비)는 재생하지 않는다.
@@ -276,6 +277,7 @@ waterCycle: {
 | `tree-fruit.png` | `assets/fruit-tree.webp` | 수정 뒤 열매가 달린 나무 |
 | `bee.png` | `assets/bee.webp` | 꽃을 찾아온 벌 |
 | `butterfly.png` | `assets/butterfly.webp` | 꽃을 찾아온 나비 |
+| `dear1~6.png` | `assets/deer-walk.webp` | 열매를 먹으러 온 사슴. 여섯 칸을 가로로 이은 한 장의 띠가 된다 |
 
 파일 이름이 다를 때는 `tools/build-assets.py` 의 `GROWTH` 에서
 `{ 만들어질 이름: 올린 원본 }` 으로 이어 주면 된다.
@@ -505,9 +507,10 @@ AI 생성 · CMS · 추가 지식 노드는 만들지 않았다.
 
 placeholder 로 남은 것:
 
-- **다음 노드** — `waterLatentHeat` 와 `treeFruit` 다음은 아직 정하지 않았다
-- **아직 쓰지 않은 원본** — `tree-red · red-leaves · dear1~6.png` 는 루트에
-  올라와 있지만 아직 어느 노드에도 붙지 않았다. 변환하지 않고 그대로 둔다
+- **다음 노드** — `waterLatentHeat` 와 `fruitEater` 다음은 아직 정하지 않았다.
+  씨앗이 어미나무에서 멀어지는 일은 아직 보여 주지 않는다
+- **아직 쓰지 않은 원본** — `tree-red · red-leaves.png` 는 루트에 올라와
+  있지만 아직 어느 노드에도 붙지 않았다. 변환하지 않고 그대로 둔다
 - **땅속의 물 그림** — `assets/soil-water.webp` 가 올라오면 그대로 붙는다.
   임시 그림은 만들지 않았다
 - **강 후보** — `river1 · 3 · 4 · 5.png` 는 쓰지 않고 남겨 두었다

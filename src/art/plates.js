@@ -1,6 +1,6 @@
 /* 도감 도판 — 그린 구름에 설명을 얹는다. */
 
-import { GROWTH_STAGES, FLYERS, isReady } from './assets.js';
+import { GROWTH_STAGES, FLYERS, WALKERS, isReady } from './assets.js';
 
 const CLOUD = { src: 'assets/cloud-3.webp', w: 760, h: 540 };
 const RAIN  = { src: 'assets/cloud-4.webp', w: 760, h: 571 };
@@ -153,6 +153,22 @@ export function plate(kind) {
     return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
   }
   if (kind === 'bee') return beePlate();
+  /* 걷는 띠의 첫 칸만 잘라 세운다 */
+  if (kind === 'eater') {
+    if (!isReady(WALKERS.deer.src)) return '';
+    const w = 124, h = Math.round(w * 231 / 240);   // 한 칸의 비율
+    const x = 244, y = 258 - h;                     // 나무와 같은 땅에 선다
+    return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+      ${isReady(GROWTH_STAGES.fruitTree)
+        ? `<image href="${GROWTH_STAGES.fruitTree}" x="30" y="6" width="220" height="252"
+                 preserveAspectRatio="xMidYMax meet"/>` : ''}
+      <clipPath id="plate-walk"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath>
+      <image href="${WALKERS.deer.src}" x="${x}" y="${y}"
+             width="${w * WALKERS.deer.frames}" height="${h}"
+             preserveAspectRatio="none" clip-path="url(#plate-walk)"/>
+      <line x1="28" y1="276" x2="372" y2="276" stroke="#2f2e27" stroke-width="1" opacity="0.18"/>
+    </svg>`;
+  }
   if (kind === 'fruit') {
     return isReady(GROWTH_STAGES.fruitTree) ? growthPlate(GROWTH_STAGES.fruitTree) : '';
   }

@@ -87,6 +87,37 @@ export function carryScale(growth, key) {
   setScale(next, parseFloat(prev.dataset.sx || 1), parseFloat(prev.dataset.sy || 1));
 }
 
+/** 다음 단계를 앞 단계와 똑같은 크기에 놓는다.
+
+    그림마다 세로 비율이 달라서, 배율만 물려주면 바뀌는 순간 몸집이 튄다.
+    여기서는 화면에 보이는 상자를 맞춘다. 그래서 넘어가는 동안에는
+    크기가 그대로이고, 자라는 일은 그다음에 따로 보인다.
+    돌려줄 값은 원래 비율로 돌아가기 위해 세로에 곱해야 할 몫이다. */
+export function matchBox(growth, key) {
+  const next = growth.stages.get(key);
+  const prev = growth.current;
+  if (!next || !prev) return 1;
+  const sx = parseFloat(prev.dataset.sx || 1);
+  const sy = parseFloat(prev.dataset.sy || 1);
+  if (!next.naturalWidth || !prev.naturalWidth) { setScale(next, sx, sy); return 1; }
+  const shape = (prev.naturalHeight / prev.naturalWidth) / (next.naturalHeight / next.naturalWidth);
+  setScale(next, sx, sy * shape);
+  return shape;
+}
+
+/** 지금 단계를 정해 둔 크기까지 자라게 한다.
+
+    growPulse 는 지금 크기에 곱하는 것이라 연출을 거칠 때마다 조금씩 어긋난다.
+    이쪽은 끝나는 자리를 못 박으므로, 되돌린 세계와 같은 크기에서 멎는다. */
+export function growTo(growth, key, { x = 1, y = 1 } = {}, { duration = 1600 } = {}) {
+  const img = growth.current;
+  if (!img || img.dataset.missing) return Promise.resolve();
+  const base = SCALE[key] ?? 1;
+  const sx0 = parseFloat(img.dataset.sx || 1);
+  const sy0 = parseFloat(img.dataset.sy || 1);
+  return growPulse(growth, { x: (base * x) / sx0, y: (base * y) / sy0, duration });
+}
+
 /** 생장점이 한 번 더 일한다.
     위로 자라고(y), 가지가 옆으로 갈라지며(x) 몸이 조금씩 달라진다.
     나무를 절차적으로 그리는 것이 아니라, 같은 일이 반복된다는 감각만 남긴다. */

@@ -15,6 +15,11 @@ export const FLYERS = {
   butterfly: 'assets/butterfly.webp',  // 나비
 };
 
+/* 걸어오는 것들. 한 장의 띠에 걸음 여섯 칸이 가로로 이어져 있다. */
+export const WALKERS = {
+  deer: { src: 'assets/deer-walk.webp', frames: 6 },  // 열매를 먹으러 온 사슴
+};
+
 /* 비가 땅에 닿은 뒤. 그림이 아직 없으면 그 층은 조용히 빠진다. */
 export const WATER_LAYERS = {
   soil:  'assets/soil-water.webp',  // 지표 아래의 물 (아직 없음)

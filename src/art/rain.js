@@ -24,7 +24,9 @@ export function addDrops(layer, n, { rng, once = false, delays = null,
     const el = document.createElement('i');
     el.className = once ? 'raindrop is-once' : 'raindrop';
     const dur = between(r, 1.2, 1.75);
-    const delay = delays ? delays[i] : between(r, 0, 1.6);
+    /* 계속 내리는 비는 이미 떨어지고 있던 중이다. 시작 지점을 뒤로 물리면
+       처음부터 하늘 전체에 방울이 흩어져 있고, 멈춰 세워도 그 모습이 남는다. */
+    const delay = delays ? delays[i] : -between(r, 0, dur);
 
     el.style.left = `${between(r, 4, 96).toFixed(1)}%`;
     el.style.height = `${between(r, 13, 24).toFixed(1)}px`;

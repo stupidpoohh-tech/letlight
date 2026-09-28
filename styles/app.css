@@ -869,6 +869,91 @@ body {
 
 
 
+
+/* ---- 다 여문 열매 ----
+
+   열매를 다시 그리지 않는다. 수관 안에서만 과육의 빛이 조금 짙어진다. */
+.fruit-ripe {
+  mix-blend-mode: multiply;
+  background: linear-gradient(to bottom,
+      rgba(196,104,72,.20)  0%,
+      rgba(186,96,66,.13)  52%,
+      rgba(178,94,68,.07) 100%);
+}
+
+/* ---- 열매를 먹으러 온 것 ----
+
+   이 세계에서 처음으로 땅 위를 걷는 것이다.
+   걸음은 한 장의 띠에 담긴 여섯 칸을 차례로 넘겨 만든다.
+   다가오고, 나무 곁에 서서 먹고, 다시 걸어 나간다. */
+
+.deer-walk {
+  position: absolute;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+}
+.walk-path {
+  position: absolute; inset: 0;
+  animation: deer-round 54s linear infinite;
+}
+.deer {
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 15%;
+  aspect-ratio: 240 / 231;
+  background-image: var(--strip);
+  background-repeat: no-repeat;
+  /* 여섯 칸이 가로로 이어져 있으므로 가로만 여섯 배로 편다 */
+  background-size: calc(var(--frames, 6) * 100%) 100%;
+  background-position-x: 0%;
+  animation: deer-step 54s infinite;
+}
+
+/* 길. 상자 크기를 기준으로 한다. */
+@keyframes deer-round {
+  0%   { transform: translate(-22%, 0);  opacity: 0; }
+  6%   { opacity: 1; }
+  30%  { transform: translate(44%, 0); }   /* 나무 곁에 닿는다 */
+  62%  { transform: translate(44%, 0); }   /* 서서 먹는다 */
+  94%  { transform: translate(116%, 0); opacity: 1; }
+  100% { transform: translate(122%, 0); opacity: 0; }
+}
+
+/* 걸음. 길과 같은 시간을 쓰므로 서 있는 구간에서는 발도 멎는다.
+   한 번의 0% → 120% 가 네 발의 한 바퀴다. 다가오는 동안 여섯 바퀴,
+   나가는 동안 일곱 바퀴를 돈다. 120% 는 여섯 칸을 다 지난 경계라
+   그 자리는 보이지 않는다. 그래서 다음 바퀴의 0% 로 그냥 이어진다. */
+@keyframes deer-step {
+  0%      { background-position-x: 0%;   animation-timing-function: steps(6); }
+  5.00%   { background-position-x: 120%; }
+  5.01%   { background-position-x: 0%;   animation-timing-function: steps(6); }
+  10.00%  { background-position-x: 120%; }
+  10.01%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  15.00%  { background-position-x: 120%; }
+  15.01%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  20.00%  { background-position-x: 120%; }
+  20.01%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  25.00%  { background-position-x: 120%; }
+  25.01%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  30.00%  { background-position-x: 120%; }
+  30.01%  { background-position-x: 0%;   animation-timing-function: steps(1); }
+  62%     { background-position-x: 0%;   animation-timing-function: steps(6); }
+  67.43%  { background-position-x: 120%; }
+  67.44%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  72.86%  { background-position-x: 120%; }
+  72.87%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  78.29%  { background-position-x: 120%; }
+  78.30%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  83.71%  { background-position-x: 120%; }
+  83.72%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  89.14%  { background-position-x: 120%; }
+  89.15%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  94.57%  { background-position-x: 120%; }
+  94.58%  { background-position-x: 0%;   animation-timing-function: steps(6); }
+  100.00% { background-position-x: 120%; }
+}
+
 /* ---- 꽃이 하던 일을 바꾼다 ----
 
    열매를 따로 얹지 않는다. 꽃빛이 안쪽으로 한 번 모였다가 물러나고,
@@ -983,7 +1068,8 @@ body {
    수관 안에서만 빛의 결이 몇 번 지나간다. 틀 밖으로는 번지지 않는다. */
 
 .bloom-flush,
-.fruit-glow {
+.fruit-glow,
+.fruit-ripe {
   position: absolute;
   left: 50%; bottom: 0;
   width: 100%;
@@ -1089,12 +1175,24 @@ body {
   .heat-wisp, .ex-jem,
   .bloom-wave, .growth-anchor.is-blooming .growth-stage,
   .fruit-glow, .growth-anchor.is-fruiting .growth-stage,
-  .flyer, .flyer img {
+  .flyer, .flyer img, .walk-path, .deer {
     animation: none !important;
   }
   /* 멈춰 세우면 뜻이 없어지는 것들은 아예 감춘다 */
   .river-flow, .heat-wisp, .bloom-wave { opacity: 0 !important; }
+
+  /* 비는 그 질문이 알아낸 것 자체다. 감추면 세계가 변한 흔적이 사라진다.
+     그래서 지우지 않고, 떨어지던 자리에 세워 둔다.
+     방울마다 시작 지점이 다르므로 멈춰도 하늘에 흩어진 모습으로 남는다. */
+  .raindrop {
+    animation-name: rainfall !important;
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
+    animation-play-state: paused !important;
+  }
   /* 날아오는 것은 나는 일이 전부다. 세워 두지 않고 한 자리에 앉혀 둔다. */
   .flyer--bee { transform: translate(18%, 28%); }
   .flyer--butterfly { transform: translate(52%, 26%); }
+  /* 걷는 것은 나무 곁에 서 있다 */
+  .walk-path { transform: translate(44%, 0); }
 }

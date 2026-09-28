@@ -4,9 +4,9 @@
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
 import { buildRainLayer, addDrops } from '../art/rain.js';
-import { buildGrowth, setStage, growPulse, carryScale, settleStage } from '../art/growth.js';
+import { buildGrowth, setStage, growPulse, matchBox, growTo, settleStage } from '../art/growth.js';
 import { buildLayer, fadeIn } from '../art/layer.js';
-import { GROWTH_STAGES, WATER_LAYERS, FLYERS, preload, isReady } from '../art/assets.js';
+import { GROWTH_STAGES, WATER_LAYERS, FLYERS, WALKERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved, opensOf, isSolved } from '../core/state.js';
 import { stageRect } from '../core/stage.js';
@@ -185,7 +185,7 @@ async function revealRain() {
 
   /* 다음 장면에서 쓸 그림을 지금 받아 둔다 */
   preload([...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS),
-           ...Object.values(FLYERS)]);
+           ...Object.values(FLYERS), WALKERS.deer.src]);
 
   /* 1. 구름 자체가 먼저 조금 변한다 */
   await thickenCloud(cloud, { to: 0.52, duration: 2400 });
@@ -271,7 +271,9 @@ async function revealYoungTree() {
   /* 씨앗 안에 저장돼 있던 것에 기대던 생명이,
      이제 바깥의 빛을 쓰기 시작한다 */
   if (!isReady(GROWTH_STAGES.youngTree)) {
+    matchBox(growth, 'youngTree');
     await setStage(growth, 'youngTree', { duration: 2600 });
+    await growTo(growth, 'youngTree', {}, { duration: 2600 });
     state.plantVisible = true;
     return;
   }
@@ -287,7 +289,10 @@ async function revealYoungTree() {
     onUpdate: (v) => { light.style.opacity = v.toFixed(3); },
   });
 
+  /* 새싹이 갈아 끼워지는 것이 아니라, 같은 크기에서 넘어가 자란다 */
+  matchBox(growth, 'youngTree');
   await setStage(growth, 'youngTree', { duration: 2600 });
+  await growTo(growth, 'youngTree', {}, { duration: 2800 });
 
   /* 빛은 완전히 사라지지 않는다. 이제 이 나무가 쓰는 것이다. */
   await tween({
@@ -446,12 +451,15 @@ async function revealMatureTree() {
     await wait(420);
   }
 
-  /* 큰 나무는 갈아 끼워지는 것이 아니라, 자라던 흐름 위에서 이어진다 */
+  /* 큰 나무는 갈아 끼워지는 것이 아니라, 자라던 흐름 위에서 이어진다.
+     넘어가는 동안에는 크기가 그대로이고, 자라는 일은 그다음에 보인다. */
+  matchBox(growth, 'matureTree');
   await setStage(growth, 'matureTree', { duration: 3400 });
-  await growPulse(growth, { x: 1.52, y: 1.52, duration: 3200 });
+  await growTo(growth, 'matureTree',
+               { x: TREE_GROWN.x * 0.97, y: TREE_GROWN.y * 0.985 }, { duration: 3200 });
 
   /* 마지막으로 수관이 조금 더 넓어진다. 끝나면 TREE_GROWN 만큼 자라 있다. */
-  await growPulse(growth, { x: 1.04, y: 1.01, duration: 1600 });
+  await growTo(growth, 'matureTree', TREE_GROWN, { duration: 1600 });
   state.matureTreeVisible = true;
 }
 
@@ -601,6 +609,12 @@ function crownLayer(cls, waves = 0) {
 
 const bloomLayer = () => crownLayer('bloom-flush', 3);
 
+/** 나무가 넘어가고 자라는 동안 수관 위의 한 겹이 그 상자를 따라간다.
+    기다리지 않는다. 자라는 연출과 같은 시간 동안 나란히 돈다. */
+function followCrown(cls, duration) {
+  tween({ duration, onUpdate: () => crownLayer(cls) });
+}
+
 async function revealBloom() {
   await plantGround();
 
@@ -614,9 +628,12 @@ async function revealBloom() {
     });
   }
 
-  /* 2. 며칠 사이에 나무 전체가 꽃으로 덮인다 */
-  carryScale(growth, 'bloomTree');
+  /* 2. 며칠 사이에 나무 전체가 꽃으로 덮인다.
+     같은 크기에서 넘어가고, 수관이 부푸는 일은 그다음에 보인다. */
+  matchBox(growth, 'bloomTree');
+  followCrown('bloom-flush', 6000);
   await setStage(growth, 'bloomTree', { duration: 3200 });
+  await growTo(growth, 'bloomTree', TREE_GROWN, { duration: 2800 });
 
   /* 3. 틀을 지금 그림에 다시 맞추고, 남은 물결이 마저 지나간다 */
   const flush = bloomLayer();
@@ -734,8 +751,10 @@ async function revealFruit() {
   await growPulse(growth, { x: 1.018, y: 1.012, duration: 1400 });
 
   /* 4. 어린 열매. 갑자기 놓이는 것이 아니라 자라던 흐름 위에서 이어진다. */
-  carryScale(growth, 'fruitTree');
+  matchBox(growth, 'fruitTree');
   await setStage(growth, 'fruitTree', { duration: 3600 });
+  /* 부푼 만큼을 되돌려, 되돌린 세계와 같은 크기에서 멎는다 */
+  await growTo(growth, 'fruitTree', TREE_GROWN, { duration: 2400 });
 
   /* 5. 그 뒤로는 익어 가는 아주 느린 숨만 남는다 */
   const glow = crownLayer('fruit-glow');
@@ -757,6 +776,79 @@ function settleFruit() {
   state.fruitVisible = true;
 }
 
+
+/* ------------------------------------------------------------------
+   세계의 변화 11 — 지키던 열매가 부르는 열매가 된다
+
+   열매를 다시 그리지 않는다. 수관 안에서만 과육의 빛이 짙어지고,
+   그 뒤에 처음으로 땅 위를 걷는 것이 온다.
+   걸음은 한 장의 띠에 담긴 여섯 칸을 차례로 넘겨 만든다.
+   씨앗이 어미나무에서 멀어지는 일은 여기서 보여 주지 않는다.
+   ------------------------------------------------------------------ */
+
+/* 나무 곁의 땅. 나무 자리에서 끌어온다. */
+const WALK_AT = { left: GROWTH_AT.left - 6, top: GROWTH_AT.top - 9, width: 62, height: 9 };
+
+function buildWalk() {
+  let box = el.fx.querySelector('.deer-walk');
+  if (box) return box;
+
+  box = document.createElement('div');
+  box.className = 'deer-walk';
+  box.style.left = `${WALK_AT.left}%`;
+  box.style.top = `${WALK_AT.top}%`;
+  box.style.width = `${WALK_AT.width}%`;
+  box.style.height = `${WALK_AT.height}%`;
+
+  const path = document.createElement('div');
+  path.className = 'walk-path';
+  const one = document.createElement('i');
+  one.className = 'deer';
+  one.style.setProperty('--strip', `url("${new URL(WALKERS.deer.src, document.baseURI).href}")`);
+  one.style.setProperty('--frames', WALKERS.deer.frames);
+  path.appendChild(one);
+  box.appendChild(path);
+
+  /* 띠가 아직 없으면 걷는 것만 조용히 빠진다 */
+  const probe = new Image();
+  probe.onerror = () => { box.hidden = true; box.style.display = 'none'; };
+  probe.src = WALKERS.deer.src;
+
+  addGround(box);
+  return box;
+}
+
+async function revealEater() {
+  await plantGround();
+
+  /* 1. 열매가 마저 여문다. 수관 안에서만 과육의 빛이 짙어진다. */
+  const ripe = crownLayer('fruit-ripe');
+  if (ripe) {
+    await nextFrame();
+    await tween({
+      duration: 3400, easing: ease.inOut,
+      onUpdate: (t) => { ripe.style.opacity = t.toFixed(3); },
+    });
+  }
+
+  /* 2. 이 세계에서 처음으로 땅 위를 걷는 것이 온다 */
+  const box = buildWalk();
+  await nextFrame();
+  await tween({
+    duration: 2800, easing: ease.inOut,
+    onUpdate: (t) => { box.style.opacity = t.toFixed(3); },
+  });
+  state.eaterVisible = true;
+}
+
+/** 이미 알아낸 것. 연출 없이 그냥 거기 있다. */
+function settleEater() {
+  const ripe = crownLayer('fruit-ripe');
+  if (ripe) ripe.style.opacity = '1';
+  buildWalk().style.opacity = '1';
+  state.eaterVisible = true;
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
@@ -768,6 +860,7 @@ const EFFECTS = {
   bloom: revealBloom,
   pollinator: revealPollinators,
   fruit: revealFruit,
+  eater: revealEater,
 };
 
 /* ------------------------------------------------------------------
@@ -838,7 +931,7 @@ export function hideNodes(on) {
    어떤 연출도 다시 틀지 않는다. `#from=` 지름길도 이 길을 쓴다. */
 export async function restoreWorld() {
   preload([CLOUD_AT.src, ...Object.values(GROWTH_STAGES), ...Object.values(WATER_LAYERS),
-           ...Object.values(FLYERS)]);
+           ...Object.values(FLYERS), WALKERS.deer.src]);
 
   if (isSolved('cloudWhite')) {
     cloud = buildCloud(CLOUD_AT);
@@ -897,11 +990,13 @@ export async function restoreWorld() {
   }
 
   if (isSolved('flowerGuide')) settlePollinators();
+  if (isSolved('fruitEater')) buildWalk().style.opacity = '1';
 
   /* 수관 위의 한 겹은 그림이 다 올라온 뒤에 틀을 맞춘다. 늦게 와도 조용히 붙는다.
      열매를 알아냈으면 꽃빛은 이미 물러난 뒤다. */
-  const settleCrown = isSolved('treeFruit') ? settleFruit
-                    : isSolved('treeBloom') ? settleBloom : null;
+  const settleCrown = isSolved('fruitEater') ? () => { settleFruit(); settleEater(); }
+                    : isSolved('treeFruit')  ? settleFruit
+                    : isSolved('treeBloom')  ? settleBloom : null;
   if (settleCrown) {
     const tree = growth && growth.current;
     if (tree && !tree.complete) tree.addEventListener('load', settleCrown, { once: true });

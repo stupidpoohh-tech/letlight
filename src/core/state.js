@@ -47,6 +47,7 @@ export const state = {
   bloomVisible: false,
   pollinatorVisible: false,
   fruitVisible: false,
+  eaterVisible: false,
 };
 
 export const statusOf  = (id) => state.nodes[id];
