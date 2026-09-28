@@ -16,9 +16,29 @@ const sheet = () => document.getElementById('article');
 /* 승인본의 소제목(### )과 강조(**…**)를 그대로 살린다 */
 const fmt = (t) => br(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-const block = (t) => (t.startsWith('### ')
-  ? `<h3 class="article-h">${fmt(t.slice(4))}</h3>`
+const para = (t) => (String(t).startsWith('### ')
+  ? `<h3 class="article-h">${fmt(String(t).slice(4))}</h3>`
   : `<p>${fmt(t)}</p>`);
+
+/* 꼭 읽지 않아도 되는 대목은 접어 둔다.
+
+   details 를 그대로 쓴다. 키보드로도 보조기술로도 이미 열리고 닫히는 물건이라
+   따로 만들 것이 없다. 스스로 열거나 닫지 않는다.
+   접혀 있어도 핵심 설명은 바깥에 남아 있어야 한다. */
+const fold = (t, n) => `
+  <details class="article-fold" data-fold="${n}">
+    <summary class="fold-head">
+      <span class="fold-tag">조금 더 알아보기</span>
+      <span class="fold-title">${br(t.more)}</span>
+    </summary>
+    <div class="fold-body">${t.body.map(para).join('')}</div>
+  </details>`;
+
+/** 본문 한 덩어리. 문단이거나, 소제목이거나, 접힌 대목이다. */
+function block(t, state) {
+  if (t && typeof t === 'object' && t.more) return fold(t, state.folds++);
+  return para(t);
+}
 
 export function renderArticle(node) {
   const ids = [].concat(node.concept || []);
@@ -28,6 +48,8 @@ export function renderArticle(node) {
     .slice(0, 3);
 
   const art = plate(node.article.plate);
+  const lead = node.article.lead || [];
+  const state = { folds: 0 };
 
   /* 읽는 것이 먼저다.
      제목 → (도판) → 본문 → 분류를 돕는 것 순으로 둔다.
@@ -39,10 +61,14 @@ export function renderArticle(node) {
   return `
     <h2 class="article-title" data-focus tabindex="-1">${br(node.article.title)}</h2>
 
+    ${lead.length ? `<div class="article-lead">
+      ${lead.map((t) => `<p>${fmt(t)}</p>`).join('')}
+    </div>` : ''}
+
     ${art ? `<figure class="article-plate">${art}</figure>` : ''}
 
     <div class="article-body">
-      ${node.article.body.map(block).join('')}
+      ${node.article.body.map((t) => block(t, state)).join('')}
     </div>
 
     ${more ? `<aside class="article-more">
@@ -65,12 +91,14 @@ export function renderArticle(node) {
  *  @param {object} o
  *  @param {boolean} o.passedExit  나오는 문제를 이미 맞히고 나갔던 자리인가
  *  @param {number}  o.scroll      읽던 자리
+ *  @param {number[]} o.folds      펼쳐 두었던 대목
  *  @param {Function} o.onStep     단계가 바뀔 때 ('article' | 'door')
  *  @param {Function} o.onScroll   읽던 자리가 바뀔 때
+ *  @param {Function} o.onFolds    펼치거나 접을 때
  *  @returns {Promise<{done: boolean}>}
  */
 export function openArticle(node, {
-  passedExit = false, scroll = 0, onStep, onScroll,
+  passedExit = false, scroll = 0, folds = [], onStep, onScroll, onFolds,
 } = {}) {
   const el = sheet();
   const q = node.exitQuiz;
@@ -95,6 +123,15 @@ export function openArticle(node, {
 
     chrome(false);
     await openSheet(el);
+
+    /* 펼쳐 두었던 대목을 먼저 되살린다. 접힘이 달라지면 글의 높이가 달라지므로
+       이것이 먼저다. 그다음에 읽던 높이를 맞춘다. */
+    const all = [...el.querySelectorAll('.article-fold')];
+    all.forEach((d, i) => { if (folds.includes(i)) d.open = true; });
+
+    const tellFolds = () => onFolds && onFolds(
+      all.map((d, i) => (d.open ? i : -1)).filter((i) => i >= 0));
+    all.forEach((d) => d.addEventListener('toggle', tellFolds));
 
     /* 읽던 자리로 되돌린다. 글이 다 그려진 뒤라야 높이가 맞다. */
     if (scroll > 0) {

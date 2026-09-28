@@ -48,7 +48,20 @@ function sift(raw, isSolved) {
     if (isSolved && isSolved(id)) continue;
     /* 나오는 문제가 없는 질문은 그 단계로 갈 수 없다 */
     if (d.step === STEP.door && !node.exitQuiz) continue;
-    out[id] = { step: d.step, scroll: Math.max(0, Number(d.scroll) || 0) };
+
+    /* 글이 그 사이에 고쳐졌으면 읽던 높이는 다른 자리를 가리킨다.
+       그럴 때는 단계만 살리고 높이는 버린다. 알아낸 기록은 건드리지 않는다.
+       판을 모르는 옛 기록(len 없음)도 같은 길로 지나간다. */
+    const len = node.article.body.length;
+    const fits = Number(d.len) === len;
+
+    out[id] = {
+      step: d.step,
+      scroll: fits ? Math.max(0, Number(d.scroll) || 0) : 0,
+      folds: fits && Array.isArray(d.folds)
+        ? d.folds.map(Number).filter((n) => Number.isInteger(n) && n >= 0) : [],
+      len,
+    };
   }
   return out;
 }
@@ -70,28 +83,41 @@ function all(isSolved) {
 /** 이 질문을 어디까지 봤는가. 없으면 null. */
 export function resumeOf(id, isSolved) {
   const d = all(isSolved)[id];
-  return d ? { node: id, step: d.step, scroll: d.scroll } : null;
+  return d ? { node: id, step: d.step, scroll: d.scroll, folds: d.folds || [] } : null;
 }
 
 /** 읽다 만 질문이 하나라도 있는가 */
 export const anyResume = (isSolved) => Object.keys(all(isSolved)).length > 0;
 
 /** 지금 자리를 남긴다. 같은 값이면 쓰지 않는다. */
-export function saveResume({ node, step, scroll = 0 }) {
+export function saveResume({ node, step, scroll = 0, folds = [] }) {
   if (!node || !NODES[node] || !STEPS.has(step)) return;
   const map = all();
   const now = map[node];
-  const next = { step, scroll: Math.max(0, Math.round(scroll)) };
-  if (now && now.step === next.step && now.scroll === next.scroll) return;
+  const next = {
+    step,
+    scroll: Math.max(0, Math.round(scroll)),
+    folds: [...folds].map(Number).filter((n) => Number.isInteger(n) && n >= 0).sort((a, b) => a - b),
+    len: NODES[node].article.body.length,
+  };
+  if (now && now.step === next.step && now.scroll === next.scroll
+      && String(now.folds) === String(next.folds)) return;
   map[node] = next;
   write();
 }
 
-/** 읽던 자리만 고쳐 쓴다. 단계는 그대로 둔다. */
+/** 읽던 자리만 고쳐 쓴다. 단계와 펼친 대목은 그대로 둔다. */
 export function saveScroll(node, scroll) {
   const d = all()[node];
   if (!d) return;
-  saveResume({ node, step: d.step, scroll });
+  saveResume({ node, step: d.step, scroll, folds: d.folds });
+}
+
+/** 펼친 대목만 고쳐 쓴다. 읽던 높이는 그대로 둔다. */
+export function saveFolds(node, folds) {
+  const d = all()[node];
+  if (!d) return;
+  saveResume({ node, step: d.step, scroll: d.scroll, folds });
 }
 
 /** 한 질문의 자리를 지운다. 이름이 없으면 전부 지운다. */

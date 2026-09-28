@@ -9,7 +9,7 @@ import { buildLayer, fadeIn } from '../art/layer.js';
 import { GROWTH_STAGES, WATER_LAYERS, FLYERS, WALKERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
 import { state, markSolved, opensOf, isSolved, allOpenSolved } from '../core/state.js';
-import { STEP, resumeOf, saveResume, saveScroll, clearResume } from '../core/resume.js';
+import { STEP, resumeOf, saveResume, saveScroll, saveFolds, clearResume } from '../core/resume.js';
 import { seen, markSeen } from '../core/notes.js';
 import { stageRect } from '../core/stage.js';
 import { ambience, cue } from '../core/sound.js';
@@ -955,12 +955,15 @@ async function choose(nodeEl, node) {
   const read = await openArticle(node, {
     passedExit: atDoor || !hasExitQuiz(node),
     scroll: back,
+    folds: (mine && mine.folds) || [],
     onStep: (step) => saveResume({
       node: node.id,
       step: step === 'door' ? STEP.door : STEP.article,
       scroll: 0,
+      folds: (resumeOf(node.id, isSolved) || {}).folds || [],
     }),
     onScroll: (y) => saveScroll(node.id, y),
+    onFolds: (f) => saveFolds(node.id, f),
   });
   if (!read.done) { await leave(); return; }
 

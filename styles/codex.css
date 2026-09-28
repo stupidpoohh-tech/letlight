@@ -583,6 +583,26 @@ button.ex-rel { cursor: pointer; }
   overflow-wrap: break-word;
 }
 
+/* ---- 도입 ----
+   본문에서 끌어온 한두 문장이다. 새로 쓴 요약이 아니라 글의 첫 자리다.
+   그래서 본문과 같은 글자를 쓰되 조금 크고, 색으로만 한 걸음 물러난다. */
+
+.article-lead {
+  margin: 0 0 2.4rem;
+}
+.article-lead p {
+  margin: 0 0 .9em;
+  font-family: var(--font-ui);
+  font-size: clamp(1.08rem, 4.6vw, 1.18rem);
+  line-height: 1.75;
+  letter-spacing: -.008em;
+  color: var(--ex-ink-2);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.article-lead p:last-child { margin-bottom: 0; }
+.article-lead strong { font-weight: 700; color: var(--ex-ink); }
+
 /* ---- 도판 ----
    쓰던 그림만 쓴다. 비율은 그대로 두고, 제목과 본문이 멀어지지 않게
    높이만 화면에 맞춰 눌러 둔다. 모두 같은 높이에 맞추지는 않는다. */
@@ -631,6 +651,56 @@ button.ex-rel { cursor: pointer; }
   word-break: keep-all;
 }
 .article-body > .article-h:first-child { margin-top: 0; }
+
+/* ---- 접어 둔 대목 ----
+
+   핵심 설명은 바깥에 있다. 여기 들어간 것은 더 읽고 싶을 때 여는 것이다.
+   details 를 그대로 쓰므로 키보드와 보조기술이 이미 다룰 줄 안다.
+   카드도 그림자도 만들지 않는다. 가는 선과 여백으로만 구분한다. */
+
+.article-fold {
+  margin: 2.2rem 0;
+  border-top: 1px solid var(--ex-line);
+  border-bottom: 1px solid var(--ex-line);
+}
+.fold-head {
+  display: flex; align-items: baseline; flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding: 13px 26px 13px 0;
+  position: relative;
+  list-style: none;
+  cursor: pointer;
+  word-break: keep-all;
+}
+.fold-head::-webkit-details-marker { display: none; }
+.fold-tag {
+  font-size: .76rem; font-weight: 700; letter-spacing: .06em;
+  color: var(--ex-accent);
+  white-space: nowrap;
+}
+.fold-title {
+  font-size: .96rem; font-weight: 600; line-height: 1.55;
+  letter-spacing: -.012em;
+  color: var(--ex-ink);
+}
+/* 열고 닫는 표시. 삼각형 대신 선 두 개로 더하기와 빼기를 만든다. */
+.fold-head::before,
+.fold-head::after {
+  content: "";
+  position: absolute; right: 3px; top: 50%;
+  width: 13px; height: 1.5px;
+  background: var(--ex-ink-2);
+  transform: translateY(-50%);
+}
+.fold-head::after { transform: translateY(-50%) rotate(90deg); }
+.article-fold[open] .fold-head::after { transform: translateY(-50%) rotate(0deg); }
+
+.fold-body { padding: 0 0 .6rem; }
+/* 펼친 글도 바깥 본문과 같게 읽힌다 */
+.fold-body p { margin: 0 0 1.85em; }
+.fold-body > p:last-child { margin-bottom: 0; }
+.fold-body .article-h { margin-top: 2rem; }
 
 /* ---- 글을 다 읽은 뒤 ----
    무엇을 알게 되었는지 걸어 두는 자리. 본문보다 가볍게 둔다. */
