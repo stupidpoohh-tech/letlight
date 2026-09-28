@@ -7,6 +7,26 @@
 
 export const RATE = 0.74;
 
+/* 움직임을 줄여 달라고 한 기기.
+   CSS 는 tokens/app.css 가 따로 받는다. 여기는 자바스크립트로 도는 연출 쪽이다.
+   연출을 건너뛰어도 끝나는 값과 순서는 같아야 한다. 그래서 멈추는 것이 아니라
+   마지막 값으로 곧장 간다. 기다림도 거의 남기지 않는다. */
+const QUIET_MOTION = (() => {
+  try {
+    const q = matchMedia('(prefers-reduced-motion: reduce)');
+    let on = q.matches;
+    const listen = q.addEventListener
+      ? (fn) => q.addEventListener('change', fn)
+      : (fn) => q.addListener(fn);
+    listen((e) => { on = e.matches; });
+    return () => on;
+  } catch (e) {
+    return () => false;
+  }
+})();
+
+export const reducedMotion = () => QUIET_MOTION();
+
 export const ease = {
   linear:  (t) => t,
   inOut:   (t) => 0.5 - Math.cos(Math.PI * t) / 2,
@@ -23,7 +43,8 @@ export const ease = {
   },
 };
 
-export const wait = (ms) => new Promise((r) => setTimeout(r, ms * RATE));
+export const wait = (ms) =>
+  new Promise((r) => setTimeout(r, reducedMotion() ? 0 : ms * RATE));
 
 /**
  * 값 하나를 시간에 따라 옮긴다.
@@ -31,10 +52,21 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, ms * RATE));
  */
 export function tween({ from = 0, to = 1, duration = 1000, delay = 0,
                         easing = ease.inOut, onUpdate, onDone }) {
-  duration *= RATE;
-  delay *= RATE;
+  const quiet = reducedMotion();
+  duration *= quiet ? 0 : RATE;
+  delay *= quiet ? 0 : RATE;
   let raf = 0, timer = 0, killed = false;
   const p = new Promise((resolve) => {
+    if (quiet) {
+      /* 마지막 값만 한 번 얹고 끝낸다. 세계가 닿는 자리는 그대로다. */
+      timer = setTimeout(() => {
+        if (killed) return;
+        onUpdate && onUpdate(to, 1);
+        onDone && onDone();
+        resolve();
+      }, 0);
+      return;
+    }
     const start = () => {
       const t0 = performance.now();
       const step = (now) => {

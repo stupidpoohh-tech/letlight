@@ -10,9 +10,14 @@
 import { NODES, CONCEPTS } from './nodes.js';
 import { isSolved } from '../core/state.js';
 
-/* 앞으로 열릴 것까지 포함한 전체 수. 시안의 2/12 · 3/18 을 따른다. */
-export const WORLD_TOTAL = 12;
-export const CONCEPT_TOTAL = 18;
+/* 진행의 분모는 지금 실제로 찾아갈 수 있는 것에서 센다.
+   시안의 12 · 18 같은 고정값을 쓰면, 갈 수 있는 길이 없는 항목까지
+   아직 못 한 일처럼 보인다.
+
+     공개됨(open)   이 질문들을 지나면 닿을 수 있다
+     준비 중        아직 그 세계로 가는 질문이 데이터에 없다
+
+   분모는 공개된 것만 센다. 준비 중인 것은 따로 세어 옆에 적는다. */
 
 export const WORLDS = {
   cloud: {
@@ -162,6 +167,19 @@ export const conceptFound = (id) => isSolved(CONCEPT_META[id]?.first);
 
 export const foundWorlds   = () => WORLD_ORDER.filter(worldFound);
 export const foundConcepts = () => CONCEPT_ORDER.filter(conceptFound);
+
+/** 갈 수 있는 길이 데이터에 있는가 */
+export const worldOpen   = (id) => ((WORLDS[id] || {}).questions || []).some((q) => NODES[q]);
+export const conceptOpen = (id) => Boolean(NODES[(CONCEPT_META[id] || {}).first]);
+
+export const openWorlds    = () => WORLD_ORDER.filter(worldOpen);
+export const openConcepts  = () => CONCEPT_ORDER.filter(conceptOpen);
+export const comingWorlds   = () => WORLD_ORDER.filter((id) => !worldOpen(id));
+export const comingConcepts = () => CONCEPT_ORDER.filter((id) => !conceptOpen(id));
+
+/* 지금 세어지는 분모 */
+export const worldTotal   = () => openWorlds().length;
+export const conceptTotal = () => openConcepts().length;
 
 /** 한 세계에서 지금까지 알아낸 질문 수와 원리 수 */
 export function worldCount(id) {

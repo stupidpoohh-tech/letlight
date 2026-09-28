@@ -35,6 +35,7 @@ export function runOpening() {
     fiat:    document.getElementById('line-fiat'),
     after:   document.getElementById('line-after'),
     law:     document.getElementById('line-law'),
+    tap:     document.getElementById('line-tap'),
     veil:    document.getElementById('veil'),
     glow:    document.getElementById('glow'),
     layer:   document.getElementById('world-layer'),
@@ -102,6 +103,15 @@ export function runOpening() {
 
       el.law.classList.add('is-breathing');
       armed = true;
+
+      /* 여기를 누르면 된다는 것만. 조작 안내지 설명이 아니다. */
+      if (el.tap) {
+        await wait(900);
+        tween({
+          from: 0, to: 0.42, duration: 1600, easing: ease.inOut,
+          onUpdate: (v) => { el.tap.style.opacity = v.toFixed(3); },
+        });
+      }
     };
 
     const onTap = () => advance();
@@ -119,6 +129,13 @@ export function runOpening() {
       el.law.removeEventListener('pointerdown', onTap);
       el.law.removeEventListener('keydown', onKey);
       el.law.classList.remove('is-breathing');
+      if (el.tap) {
+        tween({
+          from: parseFloat(el.tap.style.opacity || 0), to: 0,
+          duration: 700, easing: ease.inOut,
+          onUpdate: (v) => { el.tap.style.opacity = v.toFixed(3); },
+        });
+      }
 
       /* 최초의 빛은 누른 자리에서 태어난다 (무대 안의 좌표로) */
       const stage = stageRect();

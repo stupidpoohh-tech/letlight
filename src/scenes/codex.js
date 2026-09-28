@@ -3,14 +3,16 @@
    질문 → 세계 → 원리 세 축을 오가는 작은 아카이브.
    화면 하나를 갈아 끼우는 방식이고, 뒤로 가기는 스택으로 되돌린다. */
 
-import { openSheet, closeSheet, br } from '../core/sheet.js';
+import { openSheet, closeSheet, br, focusStart } from '../core/sheet.js';
 import { NODES, CONCEPTS } from '../data/nodes.js';
 import {
-  WORLDS, WORLD_ORDER, WORLD_TOTAL, CONCEPT_TOTAL,
-  CONCEPT_META, CONCEPT_ORDER, worldFound, conceptFound,
-  foundWorlds, foundConcepts, worldCount, conceptQuestions, conceptName,
+  WORLDS, WORLD_ORDER, CONCEPT_META, CONCEPT_ORDER,
+  worldFound, conceptFound, worldOpen, conceptOpen,
+  foundWorlds, foundConcepts, worldTotal, conceptTotal,
+  comingWorlds, comingConcepts,
+  worldCount, conceptQuestions, conceptName,
 } from '../data/library.js';
-import { isSolved, clearProgress } from '../core/state.js';
+import { isSolved, clearProgress, allOpenSolved } from '../core/state.js';
 import { CYCLES, closedCycles, JEM_BOX, JEM_SLOTS, cycleInSlot } from '../data/cycles.js';
 import { thumb } from '../art/plates.js';
 import { mark, ring } from '../art/marks.js';
@@ -28,6 +30,11 @@ const LOCK = `<svg class="ex-lock" viewBox="0 0 16 18" aria-hidden="true">
     <rect x="2.2" y="7.5" width="11.6" height="9" rx="1.4" fill="none"
           stroke="currentColor" stroke-width="1.3"/>
     <path d="M5 7.5V5a3 3 0 0 1 6 0v2.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
+
+/* 아직 발견하지 않은 것과, 갈 길이 아직 없는 것은 다르다. */
+const SOON = `<svg class="ex-lock ex-lock--soon" viewBox="0 0 16 18" aria-hidden="true">
+    <circle cx="8" cy="9" r="6.2" fill="none" stroke="currentColor" stroke-width="1.3"
+            stroke-dasharray="2.6 3"/></svg>`;
 
 const ORBIT = `<svg class="ex-orbit" viewBox="0 0 120 100" fill="none" aria-hidden="true">
     <ellipse cx="60" cy="50" rx="46" ry="20" stroke="#b4b8a8" stroke-width="1"/>
@@ -115,17 +122,17 @@ function questionRow(id, { locked = false } = {}) {
   const n = NODES[id];
   if (!n) return '';
   if (locked) {
-    return `<li class="ex-row is-locked">
+    return `<li><div class="ex-row is-locked" aria-disabled="true">
         <span class="ex-row-lock">${LOCK}</span>
         <p class="ex-row-title">${br(n.label)}</p>
         ${ARROW}
-      </li>`;
+      </div></li>`;
   }
-  return `<li class="ex-row" data-go="article" data-arg="${id}" role="button" tabindex="0">
+  return `<li><button class="ex-row" type="button" data-go="article" data-arg="${id}">
       <span class="ex-thumb">${thumb(n.article.plate)}</span>
       <p class="ex-row-title">${br(n.label)}</p>
       ${ARROW}
-    </li>`;
+    </button></li>`;
 }
 
 /** 보석함. 한 바퀴를 닫을 때마다 제 자리에 보석이 놓인다. */
@@ -154,26 +161,34 @@ function jemBox() {
 function renderHome() {
   const cycles = closedCycles();
 
-  const block = (n, kicker, name, found, total, art, target) => `
-    <button class="ex-block" type="button" data-go="${target}">
+  const block = (n, kicker, name, found, total, soon, art, target) => `
+    <button class="ex-block" type="button" data-go="${target}"
+            aria-label="${name} ${found}/${total}${soon ? `, 준비 중 ${soon}` : ''}">
       <span class="ex-block-no">${two(n)}</span>
       <span class="ex-block-art">${art}</span>
       <span class="ex-block-text">
         <span class="ex-block-kicker">${kicker}</span>
         <span class="ex-block-name">${name}</span>
-        <span class="ex-block-count">${found} / ${total}</span>
+        <span class="ex-block-count">${found} / ${total}${
+          soon ? `<span class="ex-block-soon">준비 중 ${soon}</span>` : ''}</span>
       </span>
       ${ARROW}
     </button>`;
 
+  const done = allOpenSolved();
+  const empty = JEM_SLOTS.length - cycles.length;
+
   return page('백과사전', `
     ${title('', '알아낸 세계와 원리의 기록', '호기심이 만들어내는, 더 넓은 세상의 지도.')}
 
+    ${done ? `<p class="ex-alldone">지금 공개된 세계를 모두 발견했어요</p>` : ''}
+
     <div class="ex-blocks">
-      ${block(1, '발견한 세계', '세계', foundWorlds().length, WORLD_TOTAL,
+      ${block(1, '발견한 세계', '세계', foundWorlds().length, worldTotal(),
+              comingWorlds().length,
               `<span class="ex-block-img">${thumb('cloud')}</span>`, 'worlds')}
-      ${block(2, '발견한 원리', '원리', foundConcepts().length, CONCEPT_TOTAL,
-              ORBIT, 'concepts')}
+      ${block(2, '발견한 원리', '원리', foundConcepts().length, conceptTotal(),
+              comingConcepts().length, ORBIT, 'concepts')}
     </div>
 
     <section class="ex-section">
@@ -183,14 +198,15 @@ function renderHome() {
       </div>
       ${jemBox()}
       ${cycles.length
-        ? `<p class="ex-jembox-names">${cycles.map((id) => CYCLES[id].title).join(' · ')}</p>`
+        ? `<p class="ex-jembox-names">${cycles.map((id) => CYCLES[id].title).join(' · ')}${
+            empty > 0 ? `<span class="ex-jembox-soon">· 남은 자리는 준비 중</span>` : ''}</p>`
         : '<p class="ex-jembox-names is-empty">아직 닫힌 고리가 없습니다</p>'}
     </section>
 
     ${settings()}
 
     ${MADE}
-  `, 'ex-page--home');
+  `, `ex-page--home${done ? ' ex-page--note' : ''}`);
 }
 
 /* ------------------------------------------------------------------
@@ -202,16 +218,17 @@ function worldRow(id) {
   const found = worldFound(id);
   const c = worldCount(id);
   if (!found) {
-    return `<li class="ex-entry is-locked">
+    const soon = !worldOpen(id);
+    return `<li><div class="ex-entry ${soon ? 'is-soon' : 'is-locked'}" aria-disabled="true">
         <span class="ex-entry-art">${w.plate ? thumb(w.plate) : ''}</span>
         <span class="ex-entry-text">
-          <span class="ex-entry-name">${LOCK}${w.title}</span>
+          <span class="ex-entry-name">${soon ? SOON : LOCK}${w.title}</span>
           <span class="ex-entry-lead">${br(w.lead)}</span>
+          <span class="ex-entry-meta">${soon ? '준비 중' : '아직 발견하지 않음'}</span>
         </span>
-        ${ARROW}
-      </li>`;
+      </div></li>`;
   }
-  return `<li class="ex-entry" data-go="world" data-arg="${id}" role="button" tabindex="0">
+  return `<li><button class="ex-entry" type="button" data-go="world" data-arg="${id}">
       <span class="ex-entry-art">${thumb(w.plate)}</span>
       <span class="ex-entry-text">
         <span class="ex-entry-name">${w.title}</span>
@@ -219,18 +236,24 @@ function worldRow(id) {
         <span class="ex-entry-meta">질문 ${c.questions} · 원리 ${c.concepts}</span>
       </span>
       ${ARROW}
-    </li>`;
+    </button></li>`;
 }
 
 function renderWorlds() {
   const found = WORLD_ORDER.filter(worldFound);
-  const rest  = WORLD_ORDER.filter((id) => !worldFound(id));
+  const near  = WORLD_ORDER.filter((id) => !worldFound(id) && worldOpen(id));
+  const soon  = WORLD_ORDER.filter((id) => !worldOpen(id));
   return page('세계', `
     ${title('', '발견한 현상과 존재', '')}
     <ul class="ex-entries">${found.map(worldRow).join('')}</ul>
-    ${rest.length ? `
-      <h3 class="ex-section-title ex-section-title--gap">아직 더 열릴 세계</h3>
-      <ul class="ex-entries">${rest.map(worldRow).join('')}</ul>` : ''}
+    ${near.length ? `
+      <h3 class="ex-section-title ex-section-title--gap">아직 발견하지 않은 세계</h3>
+      <ul class="ex-entries">${near.map(worldRow).join('')}</ul>` : ''}
+    ${soon.length ? `
+      <h3 class="ex-section-title ex-section-title--gap">준비 중인 세계</h3>
+      <p class="ex-soon-note">아직 이곳으로 가는 질문이 없습니다.
+        지금 세어지는 진행에는 들어가지 않습니다.</p>
+      <ul class="ex-entries">${soon.map(worldRow).join('')}</ul>` : ''}
   `);
 }
 
@@ -257,8 +280,8 @@ function renderWorld(id) {
       <section class="ex-section">
         <h3 class="ex-section-title">연결된 원리</h3>
         <ul class="ex-links">
-          ${cs.map((c) => `<li data-go="concept" data-arg="${c}" role="button" tabindex="0">
-              ${conceptName(c)}${ARROW}</li>`).join('')}
+          ${cs.map((c) => `<li><button class="ex-link" type="button"
+              data-go="concept" data-arg="${c}">${conceptName(c)}${ARROW}</button></li>`).join('')}
         </ul>
       </section>` : ''}
   `);
@@ -272,16 +295,17 @@ function conceptRow(id) {
   const c = CONCEPTS[id];
   const m = CONCEPT_META[id];
   if (!conceptFound(id)) {
-    return `<li class="ex-entry is-locked">
+    const soon = !conceptOpen(id);
+    return `<li><div class="ex-entry ${soon ? 'is-soon' : 'is-locked'}" aria-disabled="true">
         <span class="ex-entry-art">${mark(id)}</span>
         <span class="ex-entry-text">
-          <span class="ex-entry-name">${LOCK}${c.name}</span>
+          <span class="ex-entry-name">${soon ? SOON : LOCK}${c.name}</span>
           <span class="ex-entry-lead">${br(m.lead)}</span>
+          <span class="ex-entry-meta">${soon ? '준비 중' : '아직 발견하지 않음'}</span>
         </span>
-        ${ARROW}
-      </li>`;
+      </div></li>`;
   }
-  return `<li class="ex-entry" data-go="concept" data-arg="${id}" role="button" tabindex="0">
+  return `<li><button class="ex-entry" type="button" data-go="concept" data-arg="${id}">
       <span class="ex-entry-art">${mark(id)}</span>
       <span class="ex-entry-text">
         <span class="ex-entry-name">${c.name}</span>
@@ -289,18 +313,24 @@ function conceptRow(id) {
         <span class="ex-entry-meta">${c.en}</span>
       </span>
       ${ARROW}
-    </li>`;
+    </button></li>`;
 }
 
 function renderConcepts() {
   const found = CONCEPT_ORDER.filter(conceptFound);
-  const rest  = CONCEPT_ORDER.filter((id) => !conceptFound(id));
+  const near  = CONCEPT_ORDER.filter((id) => !conceptFound(id) && conceptOpen(id));
+  const soon  = CONCEPT_ORDER.filter((id) => !conceptOpen(id));
   return page('원리', `
     ${title('', '알아낸 원리', '')}
     <ul class="ex-entries">${found.map(conceptRow).join('')}</ul>
-    ${rest.length ? `
-      <h3 class="ex-section-title ex-section-title--gap">아직 더 열릴 원리</h3>
-      <ul class="ex-entries">${rest.map(conceptRow).join('')}</ul>` : ''}
+    ${near.length ? `
+      <h3 class="ex-section-title ex-section-title--gap">아직 발견하지 않은 원리</h3>
+      <ul class="ex-entries">${near.map(conceptRow).join('')}</ul>` : ''}
+    ${soon.length ? `
+      <h3 class="ex-section-title ex-section-title--gap">준비 중인 원리</h3>
+      <p class="ex-soon-note">아직 이곳으로 가는 질문이 없습니다.
+        지금 세어지는 진행에는 들어가지 않습니다.</p>
+      <ul class="ex-entries">${soon.map(conceptRow).join('')}</ul>` : ''}
   `);
 }
 
@@ -316,13 +346,18 @@ function renderConcept(id) {
   const world = WORLDS[m.worlds[0]];
   const qs = conceptQuestions(id);
 
-  const rel = (cls, kicker, body, go, arg) => `
-    <div class="ex-rel ${cls}"${go ? ` data-go="${go}" data-arg="${arg}" role="button" tabindex="0"` : ''}>
-      <span class="ex-rel-dot"></span>
-      <p class="ex-rel-kicker">${kicker}</p>
-      <p class="ex-rel-body">${br(body)}</p>
-      ${go ? ARROW : ''}
-    </div>`;
+  const rel = (cls, kicker, body, go, arg) => (go
+    ? `<button class="ex-rel ${cls}" type="button" data-go="${go}" data-arg="${arg}">
+         <span class="ex-rel-dot"></span>
+         <p class="ex-rel-kicker">${kicker}</p>
+         <p class="ex-rel-body">${br(body)}</p>
+         ${ARROW}
+       </button>`
+    : `<div class="ex-rel ${cls}">
+         <span class="ex-rel-dot"></span>
+         <p class="ex-rel-kicker">${kicker}</p>
+         <p class="ex-rel-body">${br(body)}</p>
+       </div>`);
 
   return page('원리', `
     ${title(`CONCEPT ${two(n)}`, c.name, m.lead)}
@@ -441,17 +476,15 @@ function paint() {
     img.addEventListener('error', () => { img.style.visibility = 'hidden'; });
   });
 
-  const act = (e) => {
+  pageEl.addEventListener('click', (e) => {
     const t = e.target.closest('[data-go]');
-    if (!t) return;
-    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-    if (e.type === 'keydown') e.preventDefault();
-    go(t.dataset.go, t.dataset.arg);
-  };
-  pageEl.addEventListener('click', act);
-  pageEl.addEventListener('keydown', act);
+    if (t) go(t.dataset.go, t.dataset.arg);
+  });
 
-  requestAnimationFrame(() => pageEl.classList.add('is-in'));
+  requestAnimationFrame(() => {
+    pageEl.classList.add('is-in');
+    focusStart(el);
+  });
 }
 
 /** @param {object} o
@@ -460,7 +493,8 @@ export async function openCodex({ onExit: exit } = {}) {
   onExit = exit;
   stack = [{ screen: 'home' }];
   paint();
-  await openSheet(sheet());
+  await openSheet(sheet(), { focus: false });
+  focusStart(sheet());
 }
 
 export async function closeCodex() {

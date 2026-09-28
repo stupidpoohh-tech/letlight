@@ -5,11 +5,17 @@
    `#reset` 을 붙여 열면 지운다. */
 
 import { NODES, NODE_ORDER } from '../data/nodes.js';
+import { clearResume } from './resume.js';
+import { clearNotes } from './notes.js';
 
 const KEY = 'boida.progress.v1';
 
+/** 알아낸 것, 읽다 만 자리, 한 번만 하던 안내를 함께 지운다.
+    소리 설정은 진행이 아니므로 그대로 둔다. */
 export function clearProgress() {
   try { localStorage.removeItem(KEY); } catch (e) { /* 저장을 막아 둔 브라우저 */ }
+  clearResume();
+  clearNotes();
 }
 
 function loadSolved() {
@@ -74,6 +80,13 @@ export function markSolved(id) {
   unlock(id);
   saveSolved();
 }
+
+/** 지금 공개된 질문. 데이터에 실제로 들어 있는 것이 전부다. */
+export const openIds = () => NODE_ORDER.filter((id) => NODES[id]);
+
+/** 지금 공개된 질문을 모두 알아냈는가.
+    한 고리를 닫은 것과는 다른 이야기다. 공개된 질문 전체를 본다. */
+export const allOpenSolved = () => openIds().every(isSolved);
 
 /** 강은 물이 어디로 가는지 알아낸 뒤에야 생긴다 */
 export const riverUnlocked = () => isSolved('waterInfiltration');

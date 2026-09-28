@@ -8,15 +8,17 @@ import { buildGrowth, setStage, growPulse, matchBox, growTo, settleStage } from 
 import { buildLayer, fadeIn } from '../art/layer.js';
 import { GROWTH_STAGES, WATER_LAYERS, FLYERS, WALKERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
-import { state, markSolved, opensOf, isSolved } from '../core/state.js';
+import { state, markSolved, opensOf, isSolved, allOpenSolved } from '../core/state.js';
+import { STEP, resumeOf, saveResume, saveScroll, clearResume } from '../core/resume.js';
+import { seen, markSeen } from '../core/notes.js';
 import { stageRect } from '../core/stage.js';
 import { ambience, cue } from '../core/sound.js';
-import { openQuiz } from './quiz.js';
+import { openQuiz, hasExitQuiz } from './quiz.js';
 import { openArticle } from './article.js';
 import { openCycle } from './cycle.js';
 import { cycleClosedBy, livingElements, badgeSrcs } from '../data/cycles.js';
 
-const NODE_REST = 0.40;          // 평소의 희미함
+const NODE_REST = 0.62;          // 물러난 뒤에도 들판 위에서 읽히는 만큼
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
 const GROWTH_AT = { left: 72, top: 82, width: 23 };
 
@@ -55,7 +57,8 @@ export function mountWorld({ onStateChange } = {}) {
 
 function addNode(node) {
   const at = anchorOf(node);
-  const n = document.createElement('div');
+  const n = document.createElement('button');
+  n.type = 'button';
   n.className = 'qnode' + (node.disabled ? ' is-disabled' : '');
   n.dataset.node = node.id;
   n.style.left = `${(at.x * 100).toFixed(2)}%`;
@@ -74,9 +77,9 @@ function addNode(node) {
     n.style.maxWidth = '84%';
   }
 
-  if (!node.disabled) {
-    n.setAttribute('role', 'button');
-    n.setAttribute('tabindex', '0');
+  if (node.disabled) {
+    n.disabled = true;
+    n.setAttribute('aria-disabled', 'true');
   }
 
   const span = document.createElement('span');
@@ -85,7 +88,44 @@ function addNode(node) {
   span.style.setProperty('--drift-delay', `${(-Math.random() * 9).toFixed(1)}s`);
   n.appendChild(span);
   el.nodes.appendChild(n);
+  paintResumeMark(n);
   return n;
+}
+
+/** 읽다 만 질문에는 짧은 표시가 붙는다 */
+function paintResumeMark(n) {
+  const on = Boolean(resumeOf(n.dataset.node, isSolved));
+  n.classList.toggle('is-resuming', on);
+  let tag = n.querySelector('.qnode-tag');
+  if (on && !tag) {
+    tag = document.createElement('span');
+    tag.className = 'qnode-tag';
+    tag.textContent = '이어서 알아보기';
+    n.appendChild(tag);
+  } else if (!on && tag) {
+    tag.remove();
+  }
+  n.setAttribute('aria-label', `${n.textContent.replace(/\s+/g, ' ').trim()}`);
+}
+
+export function refreshResumeMarks() {
+  el.nodes.querySelectorAll('.qnode').forEach(paintResumeMark);
+}
+
+/* 조작에 대한 짧은 안내. 한 번 보면 다시 꺼내지 않는다. */
+function hintOnce(id, text) {
+  if (seen(id) || el.nodes.querySelector('.world-hint')) return;
+  markSeen(id);
+  const p = document.createElement('p');
+  p.className = 'world-hint';
+  p.setAttribute('role', 'status');
+  p.textContent = text;
+  el.nodes.appendChild(p);
+  requestAnimationFrame(() => p.classList.add('is-on'));
+  setTimeout(() => {
+    p.classList.remove('is-on');
+    setTimeout(() => p.remove(), 1200);
+  }, 7000);
 }
 
 /** 아주 천천히 선명해진다 */
@@ -95,8 +135,15 @@ export async function showNode(id, { delay = 0 } = {}) {
   await wait(delay);
   const n = addNode(node);
   await nextFrame();
-  n.style.opacity = String(node.disabled ? 0.2 : NODE_REST);
+  /* 처음 떠오를 때는 읽을 수 있을 만큼 또렷하게, 그 뒤에 배경으로 물러난다.
+     물러난 자리도 들판 위에서 알아볼 수 있어야 한다. */
+  n.style.opacity = String(node.disabled ? 0.26 : 1);
   await wait(1400);
+  if (!node.disabled) {
+    await wait(1600);
+    n.style.opacity = String(NODE_REST);
+  }
+  if (!node.disabled) hintOnce('tapNode', '문장을 눌러 알아보세요');
 }
 
 /* 방금 생긴 것의 곁. 화면 비율이 달라져도 따라간다. */
@@ -871,14 +918,55 @@ async function choose(nodeEl, node) {
   if (busy || node.disabled) return;
   busy = true;
 
+  /* 중간에 나가도 이 자리로 초점이 돌아온다 */
+  const backTo = nodeEl;
+  const mine = resumeOf(node.id, isSolved);
+  /* 들어가는 문제를 이미 지나온 자리에서만 건너뛴다.
+     문제를 풀다 나갔으면 그 문제부터 다시 만난다. */
+  const passedEntry = Boolean(mine) && (mine.step === STEP.article || mine.step === STEP.door);
+
+  const leave = async () => {
+    restoreNodes();
+    refreshResumeMarks();
+    busy = false;
+    await nextFrame();
+    const again = el.nodes.querySelector(`[data-node="${node.id}"]`);
+    (again || backTo).focus && (again || backTo).focus({ preventScroll: true });
+  };
+
   dimOthers(nodeEl);
   await wait(880);
 
-  await openQuiz(node);        // 맞힐 때까지 돌아오지 않는다
+  /* 1. 들어가는 문제. 이미 지나왔으면 다시 풀게 하지 않는다. */
+  if (!passedEntry) {
+    saveResume({ node: node.id, step: STEP.quiz });
+    const got = await openQuiz(node, {
+      hint: seen('pickChoice') ? '' : '맞힐 때까지 몇 번이든 다시 고를 수 있습니다',
+    });
+    markSeen('pickChoice');
+    if (!got.done) { await leave(); return; }
+  }
 
-  /* 글을 읽고, 나오는 문제가 있으면 그 아래에서 이어 푼다.
-     한 질문은 여기까지 지나야 끝난다. */
-  await openArticle(node);
+  /* 2. 글. 나오는 문제가 있으면 그 아래에서 이어 푼다. */
+  const atDoor = Boolean(mine) && mine.step === STEP.door;
+  const back = passedEntry ? mine.scroll : 0;
+  saveResume({ node: node.id, step: atDoor ? STEP.door : STEP.article, scroll: back });
+
+  const read = await openArticle(node, {
+    passedExit: atDoor || !hasExitQuiz(node),
+    scroll: back,
+    onStep: (step) => saveResume({
+      node: node.id,
+      step: step === 'door' ? STEP.door : STEP.article,
+      scroll: 0,
+    }),
+    onScroll: (y) => saveScroll(node.id, y),
+  });
+  if (!read.done) { await leave(); return; }
+
+  /* 3. 여기서부터가 '끝냈다'. 세계가 바뀌는 일은 이 아래에서 한 번만 일어난다. */
+  clearResume(node.id);
+  if (isSolved(node.id)) { await leave(); return; }
 
   markSolved(node.id);
   onChange && onChange();
@@ -904,21 +992,63 @@ async function choose(nodeEl, node) {
   await wait(700);
   /* 새 질문이 떠오르는 동안에도 누를 수 있어야 한다 */
   busy = false;
-  for (const next of opensOf(node.id)) await showNode(next);
+
+  const opens = opensOf(node.id);
+  for (const next of opens) await showNode(next);
+
+  /* 한 번에 둘이 열렸으면 그 사실만 짧게 알린다 */
+  if (opens.length > 1) hintOnce('forkOpen', '질문이 둘 열렸습니다. 어느 쪽이든 먼저 볼 수 있습니다');
+
+  /* 지금 공개된 질문을 모두 알아냈다면 한 번만 알린다 */
+  if (allOpenSolved()) sayAllFound();
+
+  /* 남은 질문 가운데 다음으로 갈 자리로 초점을 옮긴다 */
+  const next = el.nodes.querySelector('.qnode:not(.is-disabled)');
+  if (next) next.focus({ preventScroll: true });
+}
+
+/* ------------------------------------------------------------------
+   지금 공개된 것을 다 알아냈을 때 — 한 번만, 조용히
+   ------------------------------------------------------------------ */
+
+function sayAllFound() {
+  if (seen('allFound') || document.querySelector('.world-note')) return;
+  markSeen('allFound');
+
+  const box = document.createElement('div');
+  box.className = 'world-note';
+  box.setAttribute('role', 'status');
+  box.innerHTML = `
+    <p class="world-note-line">지금 공개된 세계를 모두 발견했어요</p>
+    <div class="world-note-pick">
+      <button class="world-note-go" type="button">백과사전 열기</button>
+      <button class="world-note-stay" type="button">세계에 머물기</button>
+    </div>`;
+  el.layer.appendChild(box);
+  requestAnimationFrame(() => box.classList.add('is-on'));
+
+  const close = () => {
+    box.classList.remove('is-on');
+    setTimeout(() => box.remove(), 1200);
+  };
+  box.querySelector('.world-note-stay').addEventListener('click', close);
+  box.querySelector('.world-note-go').addEventListener('click', () => {
+    close();
+    dispatchEvent(new CustomEvent('boida:goCodex'));
+  });
+  box.querySelector('.world-note-go').focus({ preventScroll: true });
 }
 
 export function wireNodes() {
-  const act = (e) => {
+  el.nodes.addEventListener('click', (e) => {
     const n = e.target.closest('.qnode');
     if (!n || n.classList.contains('is-disabled')) return;
-    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-    if (e.type === 'keydown') e.preventDefault();
     const node = NODES[n.dataset.node];
     if (node) choose(n, node);
-  };
-  el.nodes.addEventListener('click', act);
-  el.nodes.addEventListener('keydown', act);
+  });
 }
+
+
 
 /** 도감을 볼 때는 세계 위의 질문을 잠시 물린다 */
 export function hideNodes(on) {

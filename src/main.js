@@ -5,10 +5,12 @@
 
 import { wait } from './core/anim.js';
 import { syncStageUnits } from './core/stage.js';
-import { state, solvedIds, availableIds, markSolved } from './core/state.js';
+import { state, solvedIds, availableIds, markSolved, isSolved } from './core/state.js';
+import { anyResume } from './core/resume.js';
 import { NODES, NODE_ORDER } from './data/nodes.js';
 import { runOpening } from './scenes/opening.js';
-import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld } from './scenes/world.js';
+import { mountWorld, showNode, wireNodes, hideNodes, restoreWorld,
+         refreshResumeMarks } from './scenes/world.js';
 import { openCodex, closeCodex } from './scenes/codex.js';
 import { unlock, isMuted, setMuted } from './core/sound.js';
 
@@ -23,7 +25,11 @@ let switching = false;
 async function goto(next) {
   if (switching || next === view) return;
   switching = true;
-  navItems.forEach((b) => b.classList.toggle('is-active', b.dataset.view === next));
+  navItems.forEach((b) => {
+    const on = b.dataset.view === next;
+    b.classList.toggle('is-active', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
 
   if (next === 'codex') {
     view = 'codex';
@@ -45,6 +51,9 @@ nav.addEventListener('click', (e) => {
   const b = e.target.closest('.nav-item');
   if (b) goto(b.dataset.view);
 });
+
+/* 세계 쪽에서 '백과사전 열기' 를 골랐을 때 */
+addEventListener('boida:goCodex', () => goto('codex'));
 
 /* 오프닝을 건너뛰었으면 오프닝의 터치도 없다. 그때는 첫 손길이 소리를 연다. */
 addEventListener('pointerdown', unlock, { once: true });
@@ -71,7 +80,10 @@ async function start() {
     if (solvedIds().length) codexBtn.classList.add('is-fresh');
   }});
 
-  const skip = location.hash.includes('skip');
+  /* 지난번 자리가 있으면 오프닝을 다시 강요하지 않는다.
+     초기화한 사람에게는 처음부터 보여 준다. */
+  const been = solvedIds().length > 0 || anyResume(isSolved);
+  const skip = location.hash.includes('skip') || been;
 
   if (skip) {
     document.getElementById('veil').style.opacity = '0';
@@ -101,8 +113,16 @@ async function start() {
      연출은 다시 틀지 않는다. */
   if (solvedIds().length) {
     await restoreWorld();
-    if (solvedIds().length) codexBtn.classList.add('is-fresh');
+    codexBtn.classList.add('is-fresh');
     for (const id of availableIds()) await showNode(id, { delay: 400 });
+    refreshResumeMarks();
+    return;
+  }
+
+  /* 알아낸 것은 없지만 읽다 만 질문이 있는 경우 */
+  if (anyResume(isSolved)) {
+    for (const id of availableIds()) await showNode(id, { delay: 300 });
+    refreshResumeMarks();
     return;
   }
 
