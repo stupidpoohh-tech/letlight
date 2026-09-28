@@ -38,6 +38,7 @@ python3 -m http.server 8080
 | `/#skip&from=waterInfiltration` | 물이 어디로 가는지 묻는 노드부터 |
 | `/#skip&from=plantGrowth` | 식물 노드부터 |
 | `/#skip&from=treeForm` | 어린나무에서 큰 나무로 가는 노드부터 |
+| `/#skip&from=treeBloom` | 큰 나무에 꽃이 피는 노드부터 |
 | `/#reset` | 지금까지 알아낸 것을 지우고 처음부터 |
 
 `from=` 은 확인용 지름길이다. 앞선 세계 변화(구름 · 비)는 재생하지 않는다.
@@ -269,6 +270,7 @@ waterCycle: {
 | `tree1.png` | `assets/sprout.webp` | 비가 그친 뒤 올라오는 새싹 |
 | `tree2.png` | `assets/young-tree.webp` | 빛을 쓰기 시작한 어린나무 |
 | `tree3.png` | `assets/mature-tree.webp` | 같은 일이 반복된 끝의 큰 나무 |
+| `tree4.png` | `assets/bloom-tree.webp` | 한 계절이 지나고 꽃이 핀 나무 (아직 없음) |
 
 파일 이름이 다를 때는 `tools/build-assets.py` 의 `GROWTH` 에서
 `{ 만들어질 이름: 올린 원본 }` 으로 이어 주면 된다.
@@ -498,7 +500,10 @@ AI 생성 · CMS · 추가 지식 노드는 만들지 않았다.
 
 placeholder 로 남은 것:
 
-- **다음 노드** — `waterInfiltration` 과 `treeForm` 다음은 아직 정하지 않았다
+- **다음 노드** — `waterLatentHeat` 와 `treeBloom` 다음은 아직 정하지 않았다
+- **꽃이 핀 나무 그림** — `tree4.png` 를 루트에 올리고
+  `tools/build-assets.py` 를 돌리면 `assets/bloom-tree.webp` 가 되어 바로 붙는다.
+  그때까지는 큰 나무 위로 꽃빛의 결만 지나간다. 임시 그림은 만들지 않았다
 - **땅속의 물 그림** — `assets/soil-water.webp` 가 올라오면 그대로 붙는다.
   임시 그림은 만들지 않았다
 - **강 후보** — `river1 · 3 · 4 · 5.png` 는 쓰지 않고 남겨 두었다

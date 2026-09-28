@@ -44,6 +44,7 @@ export const state = {
   matureTreeVisible: false,
   riverVisible: false,
   energyVisible: false,
+  bloomVisible: false,
 };
 
 export const statusOf  = (id) => state.nodes[id];

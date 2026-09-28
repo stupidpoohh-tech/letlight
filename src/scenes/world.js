@@ -4,7 +4,7 @@
 import { tween, ease, wait, nextFrame } from '../core/anim.js';
 import { buildCloud, formCloud, driftCloud, thickenCloud, stirCloud } from '../art/cloud.js';
 import { buildRainLayer, addDrops } from '../art/rain.js';
-import { buildGrowth, setStage, growPulse, settleStage } from '../art/growth.js';
+import { buildGrowth, setStage, growPulse, carryScale, settleStage } from '../art/growth.js';
 import { buildLayer, fadeIn } from '../art/layer.js';
 import { GROWTH_STAGES, WATER_LAYERS, preload, isReady } from '../art/assets.js';
 import { NODES } from '../data/nodes.js';
@@ -566,6 +566,78 @@ function settleEnergyFlow() {
   state.energyVisible = true;
 }
 
+
+/* ------------------------------------------------------------------
+   세계의 변화 8 — 한 계절이 지나고, 나무 전체에 꽃이 핀다
+
+   꽃 하나하나를 그리지 않는다. 수관 안에서만 보이는 빛의 결이
+   몇 번 지나가고, 그 뒤에 꽃이 핀 그림이 자리를 잇는다.
+   꽃 그림이 아직 없으면 큰 나무 위로 그 결만 지나간다.
+   ------------------------------------------------------------------ */
+
+/** 지금 보이는 나무 그림 그대로를 틀로 쓰는 한 겹.
+    수관 바깥으로는 번지지 않는다. */
+function bloomLayer() {
+  if (!growth) return null;
+  const img = growth.current;
+  if (!img || img.dataset.missing || !img.naturalWidth) return null;
+
+  let layer = growth.anchor.querySelector('.bloom-flush');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.className = 'bloom-flush';
+    /* 세 번의 물결. 정확히 같은 때가 아니라 며칠에 걸쳐 차례로 넘는다. */
+    layer.innerHTML = [0, 1, 2].map((i) =>
+      `<div class="bloom-wave" style="animation-delay:${(-i * 5.7).toFixed(1)}s"></div>`).join('');
+    growth.anchor.appendChild(layer);
+  }
+  /* 틀은 늘 지금 보이는 그림을 따라간다 */
+  layer.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+  layer.style.transform = img.style.transform;
+  layer.style.setProperty('--crown', `url("${new URL(img.currentSrc || img.src, document.baseURI).href}")`);
+  return layer;
+}
+
+async function revealBloom() {
+  await plantGround();
+
+  /* 1. 겨울을 지난 꽃눈들이 차례로 문턱을 넘기 시작한다 */
+  const first = bloomLayer();
+  if (first) {
+    await nextFrame();
+    await tween({
+      duration: 2600, easing: ease.inOut,
+      onUpdate: (t) => { first.style.opacity = (t * 0.55).toFixed(3); },
+    });
+  }
+
+  /* 2. 며칠 사이에 나무 전체가 꽃으로 덮인다 */
+  carryScale(growth, 'bloomTree');
+  await setStage(growth, 'bloomTree', { duration: 3200 });
+
+  /* 3. 틀을 지금 그림에 다시 맞추고, 남은 물결이 마저 지나간다 */
+  const flush = bloomLayer();
+  if (flush) {
+    await tween({
+      from: parseFloat(flush.style.opacity || 0), to: 1,
+      duration: 2400, easing: ease.inOut,
+      onUpdate: (v) => { flush.style.opacity = v.toFixed(3); },
+    });
+  }
+
+  /* 4. 그 뒤로는 아주 느린 숨만 남는다 */
+  growth.anchor.classList.add('is-blooming');
+  state.bloomVisible = true;
+}
+
+/** 이미 알아낸 개화. 연출 없이 그냥 거기 있다. */
+function settleBloom() {
+  const flush = bloomLayer();
+  if (flush) flush.style.opacity = '1';
+  if (growth) growth.anchor.classList.add('is-blooming');
+  state.bloomVisible = true;
+}
+
 const EFFECTS = {
   cloud: revealCloud,
   rain:  revealRain,
@@ -574,6 +646,7 @@ const EFFECTS = {
   water: revealSoilWater,
   tree:  revealMatureTree,
   heat:  revealEnergyFlow,
+  bloom: revealBloom,
 };
 
 /* ------------------------------------------------------------------
@@ -690,10 +763,21 @@ export async function restoreWorld() {
               : isSolved('seedWater')    ? 'sprout' : null;
   if (stage) {
     await plantGround();
-    settleStage(growth, stage, stage === 'matureTree' ? TREE_GROWN : {});
+    const grown = stage === 'matureTree' ? TREE_GROWN : {};
+    settleStage(growth, stage, grown);
+    /* 꽃이 핀 나무는 큰 나무 위에 이어 둔다.
+       꽃 그림이 아직 없으면 큰 나무가 그대로 남는다. */
+    if (isSolved('treeBloom')) settleStage(growth, 'bloomTree', grown);
     state.sproutVisible = true;
     state.plantVisible = stage !== 'sprout';
     state.matureTreeVisible = stage === 'matureTree';
+  }
+
+  /* 그림이 다 올라온 뒤에 틀을 맞춘다. 늦게 와도 조용히 붙는다. */
+  if (isSolved('treeBloom')) {
+    const tree = growth && growth.current;
+    if (tree && !tree.complete) tree.addEventListener('load', settleBloom, { once: true });
+    else settleBloom();
   }
 
   /* 이미 닫아 둔 고리는 알림 없이 다시 움직인다 */

@@ -7,7 +7,7 @@ import { tween, ease } from '../core/anim.js';
 import { GROWTH_STAGES } from './assets.js';
 
 /* 같은 자리에서 자란다 */
-const SCALE = { sprout: 0.58, youngTree: 1, matureTree: 0.949 };
+const SCALE = { sprout: 0.58, youngTree: 1, matureTree: 0.949, bloomTree: 0.949 };
 
 function setScale(img, sx, sy) {
   img.dataset.sx = sx.toFixed(4);
@@ -28,6 +28,8 @@ export function buildGrowth({ left = 40, top = 82, width = 17 } = {}) {
   anchor.style.width = `${width}%`;
 
   const stages = new Map();
+  const growth = { anchor, stages, current: null, back: null };
+
   for (const [key, src] of Object.entries(GROWTH_STAGES)) {
     const img = document.createElement('img');
     img.className = 'growth-stage';
@@ -41,13 +43,19 @@ export function buildGrowth({ left = 40, top = 82, width = 17 } = {}) {
       img.dataset.missing = '1';
       img.hidden = true;
       img.style.display = 'none';
+      /* 없는 그림이 앞 단계를 지우고 그 자리에 앉지 않도록,
+         보이던 단계를 도로 켠다. */
+      if (growth.current === img) {
+        growth.current = growth.back;
+        if (growth.back) growth.back.style.opacity = '1';
+      }
     });
     img.src = src;
     anchor.appendChild(img);
     stages.set(key, img);
   }
 
-  return { anchor, stages, current: null };
+  return growth;
 }
 
 /** 앞 단계는 사라지고 다음 단계가 떠오른다 */
@@ -57,6 +65,7 @@ export function setStage(growth, key, { duration = 1400 } = {}) {
   if (!next || next === prev) return Promise.resolve();
   /* 다음 그림이 아직 올라오지 않았으면 앞 단계를 지우지 않는다 */
   if (next.dataset.missing) return Promise.resolve();
+  growth.back = prev;
   growth.current = next;
 
   return tween({
@@ -67,6 +76,15 @@ export function setStage(growth, key, { duration = 1400 } = {}) {
     },
     onDone: () => { if (prev) prev.style.opacity = '0'; },
   });
+}
+
+/** 앞 단계가 자라 있던 만큼을 다음 단계가 그대로 물려받는다.
+    같은 크기의 같은 나무인데 몸만 달라지는 단계에 쓴다. */
+export function carryScale(growth, key) {
+  const next = growth.stages.get(key);
+  const prev = growth.current;
+  if (!next || !prev) return;
+  setScale(next, parseFloat(prev.dataset.sx || 1), parseFloat(prev.dataset.sy || 1));
 }
 
 /** 생장점이 한 번 더 일한다.
@@ -91,5 +109,6 @@ export function settleStage(growth, key, { x = 1, y = 1 } = {}) {
   const base = SCALE[key] ?? 1;
   setScale(img, base * x, base * y);
   growth.stages.forEach((i) => { i.style.opacity = i === img ? '1' : '0'; });
+  growth.back = growth.current;
   growth.current = img;
 }

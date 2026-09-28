@@ -101,6 +101,11 @@ export function plate(kind) {
   if (kind === 'tree') {
     return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
   }
+  /* 꽃 그림이 아직이면 큰 나무로 대신한다 */
+  if (kind === 'bloom') {
+    if (isReady(GROWTH_STAGES.bloomTree)) return growthPlate(GROWTH_STAGES.bloomTree);
+    return isReady(GROWTH_STAGES.matureTree) ? growthPlate(GROWTH_STAGES.matureTree) : '';
+  }
   return '';
 }
 
@@ -112,10 +117,14 @@ const THUMB_SRC = {
   sprout: GROWTH_STAGES.sprout,
   plant:  GROWTH_STAGES.youngTree,
   tree:   GROWTH_STAGES.matureTree,
+  bloom:  GROWTH_STAGES.bloomTree,
   river:  RIVER.src,
 };
 
 export function thumb(kind) {
   const src = THUMB_SRC[kind];
-  return src ? `<img class="ex-thumb-img" src="${src}" alt="" decoding="async">` : '';
+  if (!src) return '';
+  /* 아직 올라오지 않은 그림은 조용히 빠진다 */
+  return `<img class="ex-thumb-img" src="${src}" alt="" decoding="async"
+    onerror="this.style.display='none'">`;
 }

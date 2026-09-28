@@ -5,6 +5,7 @@ export const GROWTH_STAGES = {
   sprout:     'assets/sprout.webp',      // 새싹
   youngTree:  'assets/young-tree.webp',  // 어린나무
   matureTree: 'assets/mature-tree.webp', // 큰 나무
+  bloomTree:  'assets/bloom-tree.webp',  // 꽃이 핀 나무
 };
 
 /* 비가 땅에 닿은 뒤. 그림이 아직 없으면 그 층은 조용히 빠진다. */

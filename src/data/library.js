@@ -30,9 +30,9 @@ export const WORLDS = {
   plant: {
     title: '식물', en: 'Plant', plate: 'plant',
     lead: '햇빛과 물로 살아가는 생명의 세계',
-    questions: ['seedWater', 'plantGrowth', 'treeForm'],
+    questions: ['seedWater', 'plantGrowth', 'treeForm', 'treeBloom'],
     concepts: ['imbibition', 'photosynthesis', 'carbonFixation',
-               'selfOrganization', 'plasticity'],
+               'selfOrganization', 'plasticity', 'dormancy', 'photoperiod'],
   },
   fog: {
     title: '안개', en: 'Fog',
@@ -100,12 +100,22 @@ export const CONCEPT_META = {
     lead: '온도를 바꾸지 않으면서 상변화에 드나드는 에너지.\n온도계에는 보이지 않는다.',
     siblings: ['증발', '응결', '엔탈피', '상변화', '단열 냉각', '단열감률', '대기 순환'],
   },
+  dormancy: {
+    first: 'treeBloom', worlds: ['plant'], ahead: '계절',
+    lead: '기온이 잠깐 오른다고 깨어나지 않도록\n눈이 스스로 걸어 두는 잠금.',
+    siblings: ['꽃눈', '저온요구도', '눈트임', '생식생장', '내생휴면'],
+  },
+  photoperiod: {
+    first: 'treeBloom', worlds: ['plant'], ahead: '개화',
+    lead: '하루 가운데 밝은 시간의 길이.\n식물은 이것으로 계절의 자리를 읽는다.',
+    siblings: ['광수용체', '일주기 시계', 'FT 단백질', '플로리겐', '체관'],
+  },
 };
 
 export const CONCEPT_ORDER = [
   'scattering', 'growth', 'infiltration', 'runoff', 'latentHeat',
   'imbibition', 'photosynthesis', 'carbonFixation',
-  'selfOrganization', 'plasticity',
+  'selfOrganization', 'plasticity', 'dormancy', 'photoperiod',
 ];
 
 /* ------------------------------------------------------------------
