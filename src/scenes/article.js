@@ -189,7 +189,33 @@ export function openArticle(node, {
     let opened = passedExit || !q;     // 세계로 돌아가는 문이 열렸는가
 
     chrome(false);
-    await openSheet(el);
+    /* 여는 전환이 끝나기를 기다리지 않고 먼저 손이 닿을 자리를 붙인다.
+       화면에 보이는데 눌리지 않는 구간을 만들지 않기 위해서다.
+       닫는 일만 여는 전환이 끝난 뒤로 미룬다. */
+    const opening = openSheet(el);
+
+    let last = 0;
+    const track = () => {
+      if (closing || Math.abs(el.scrollTop - last) < 24) return;
+      last = el.scrollTop;
+      onScroll && onScroll(last);
+    };
+
+    const finish = async (result) => {
+      if (closing) return;
+      closing = true;
+      await opening;
+      el.removeEventListener('scroll', track);
+      onScroll && onScroll(el.scrollTop);
+      chrome(true);
+      await closeSheet(el, { back: null });
+      resolve(result);
+    };
+
+    el.querySelector('.sheet-leave').addEventListener('click', () => finish(LEFT));
+
+    await opening;
+    if (closing) return;
 
     /* 펼쳐 두었던 대목을 먼저 되살린다. 접힘이 달라지면 글의 높이가 달라지므로
        이것이 먼저다. 그다음에 읽던 높이를 맞춘다. */
@@ -206,27 +232,10 @@ export function openArticle(node, {
       el.scrollTop = Math.min(scroll, Math.max(0, el.scrollHeight - el.clientHeight));
     }
 
-    let last = el.scrollTop;
-    const track = () => {
-      if (closing || Math.abs(el.scrollTop - last) < 24) return;
-      last = el.scrollTop;
-      onScroll && onScroll(last);
-    };
+    last = el.scrollTop;
     el.addEventListener('scroll', track, { passive: true });
 
     const foot = el.querySelector('.article-foot');
-
-    const finish = async (result) => {
-      if (closing) return;
-      closing = true;
-      el.removeEventListener('scroll', track);
-      onScroll && onScroll(el.scrollTop);
-      chrome(true);
-      await closeSheet(el, { back: null });
-      resolve(result);
-    };
-
-    el.querySelector('.sheet-leave').addEventListener('click', () => finish(LEFT));
 
     /** 맞힌 뒤에야 생기는 문. 그전에는 아예 없다. */
     const openDoor = async ({ scrollTo = false } = {}) => {
@@ -250,6 +259,8 @@ export function openArticle(node, {
     onStep && onStep('article');
     mountChoices(el.querySelector('.exit-body'), q, {
       onRight: async () => {
+        if (closing) return;
+        onStep && onStep('door');
         await wait(900);
         if (closing) return;
         openDoor({ scrollTo: true });

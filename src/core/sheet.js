@@ -8,7 +8,7 @@ import { nextFrame, wait } from './anim.js';
 /* 초점이 돌 수 있는 것들 */
 const TABBABLE = [
   'a[href]', 'button:not([disabled])', 'input:not([disabled])',
-  'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])',
+  'select:not([disabled])', 'textarea:not([disabled])', 'summary', '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
 const seen = (el) => el.offsetWidth || el.offsetHeight || el.getClientRects().length;
@@ -24,7 +24,7 @@ function block(ids, off) {
     const el = document.getElementById(id);
     if (!el) return;
     if (off) el.setAttribute('inert', ''); else el.removeAttribute('inert');
-    el.querySelectorAll('button, [tabindex]').forEach((n) => {
+    [el, ...el.querySelectorAll('button, [tabindex]')].filter((n) => n.matches('button, [tabindex]')).forEach((n) => {
       if (off) {
         if (!n.hasAttribute('data-tab')) n.setAttribute('data-tab', n.getAttribute('tabindex') ?? '');
         n.setAttribute('tabindex', '-1');
@@ -37,9 +37,14 @@ function block(ids, off) {
   });
 }
 
+/* 시트가 덮고 있는 동안 뒤로 물러나는 것들. 소리 버튼은 보이지 않게만
+   물러날 뿐(opacity 0) 그대로 눌리고 읽히므로 여기 함께 넣는다. */
+const BEHIND = ['nodes', 'nav', 'sound-toggle'];
+
 /** 도감은 모달이 아니라 화면 하나다. 아래 메뉴는 그대로 쓸 수 있어야 한다.
-    뒤에 남은 세계의 질문만 초점에서 뺀다. */
-export const blockWorld = (on) => block(['nodes'], on);
+    뒤에 남은 세계의 질문과, 세계 위의 소리 버튼만 초점에서 뺀다.
+    도감에는 제 소리 손잡이가 따로 있다. */
+export const blockWorld = (on) => block(['nodes', 'sound-toggle'], on);
 
 function onKey(e) {
   if (!open || e.key !== 'Tab') return;
@@ -69,8 +74,13 @@ export async function openSheet(el, { modal = true, focus = true } = {}) {
     returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-modal', 'true');
+    const heading = el.querySelector('[data-focus], h1, h2');
+    if (heading) {
+      if (!heading.id) heading.id = `${el.id}-heading`;
+      el.setAttribute('aria-labelledby', heading.id);
+    }
     open = el;
-    block(['nodes', 'nav'], true);
+    block(BEHIND, true);
     addEventListener('keydown', onKey, true);
   }
   el.classList.add('is-open');
@@ -92,15 +102,37 @@ export async function closeSheet(el, { back } = {}) {
   el.setAttribute('aria-hidden', 'true');
   el.removeAttribute('role');
   el.removeAttribute('aria-modal');
+  el.removeAttribute('aria-labelledby');
   el.innerHTML = '';
   if (open === el) {
     open = null;
     removeEventListener('keydown', onKey, true);
-    block(['nodes', 'nav'], false);
+    block(BEHIND, false);
     const to = back === undefined ? returnTo : back;
     returnTo = null;
     if (to && to.isConnected) to.focus({ preventScroll: true });
   }
+}
+
+/** 시트가 아닌 모달(순환 알림)도 초점과 배경은 같은 규칙을 쓴다.
+    여닫는 연출은 부르는 쪽이 그대로 들고 있고, 여기서는 그동안
+    초점이 뒤로 새지 않게만 잡아 둔다.
+
+    @returns {Function} 풀어 주는 함수 */
+export function holdModal(el) {
+  returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  open = el;
+  block(BEHIND, true);
+  addEventListener('keydown', onKey, true);
+  return () => {
+    if (open !== el) return;
+    open = null;
+    removeEventListener('keydown', onKey, true);
+    block(BEHIND, false);
+    const to = returnTo;
+    returnTo = null;
+    if (to && to.isConnected) to.focus({ preventScroll: true });
+  };
 }
 
 export const br = (s) => String(s).split('\n').join('<br>');

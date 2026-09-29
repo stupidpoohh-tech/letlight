@@ -686,12 +686,19 @@ button.ex-rel { cursor: pointer; }
   color: var(--ex-ink);
 }
 
+/* 두 칸을 나란히 세울지 위아래로 세울지는 창이 아니라 **이 도식이 실제로
+   쓸 수 있는 폭**이 정한다. 무대는 420px 로 묶여 있으므로, 창이 아무리
+   넓어도 안쪽 폭은 그대로다. 창을 기준으로 잡으면 넓은 화면에서 좁은 칸
+   둘이 되어 글자가 읽기 어려워진다.
+   컨테이너 질의를 모르는 기기에서는 이 규칙이 그냥 빠지고 위아래로 선다. */
+.article-fig { container-type: inline-size; }
+
 .fig-pair {
   display: grid;
   grid-template-columns: 1fr;
   gap: 22px;
 }
-@media (min-width: 560px) {
+@container (min-width: 480px) {
   .fig-pair { grid-template-columns: 1fr 1fr; gap: 18px; }
 }
 
@@ -717,7 +724,7 @@ button.ex-rel { cursor: pointer; }
   color: var(--ex-ink);
   word-break: keep-all;
 }
-.fig-panel-n {
+.article-fig .fig-panel-n {
   margin: 0;
   font-family: var(--font-ui);
   font-size: .87rem; line-height: 1.7;
@@ -729,14 +736,14 @@ button.ex-rel { cursor: pointer; }
   font-family: var(--font-ui);
   word-break: keep-all;
 }
-.fig-key {
+.article-fig .fig-key {
   margin: 20px 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--ex-line);
   font-size: .84rem; line-height: 1.66;
   color: var(--ex-ink-2);
 }
-.fig-fine {
+.article-fig .fig-fine {
   margin: .5rem 0 0;
   font-size: .78rem; line-height: 1.62;
   color: var(--ex-ink-3);

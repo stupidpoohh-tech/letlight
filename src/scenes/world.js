@@ -950,7 +950,8 @@ async function choose(nodeEl, node) {
   /* 2. 글. 나오는 문제가 있으면 그 아래에서 이어 푼다. */
   const atDoor = Boolean(mine) && mine.step === STEP.door;
   const back = passedEntry ? mine.scroll : 0;
-  saveResume({ node: node.id, step: atDoor ? STEP.door : STEP.article, scroll: back });
+  saveResume({ node: node.id, step: atDoor ? STEP.door : STEP.article, scroll: back,
+    folds: (mine && mine.folds) || [] });
 
   const read = await openArticle(node, {
     passedExit: atDoor || !hasExitQuiz(node),
@@ -959,7 +960,7 @@ async function choose(nodeEl, node) {
     onStep: (step) => saveResume({
       node: node.id,
       step: step === 'door' ? STEP.door : STEP.article,
-      scroll: 0,
+      scroll: (resumeOf(node.id, isSolved) || {}).scroll || 0,
       folds: (resumeOf(node.id, isSolved) || {}).folds || [],
     }),
     onScroll: (y) => saveScroll(node.id, y),

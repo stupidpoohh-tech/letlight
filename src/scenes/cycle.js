@@ -4,7 +4,7 @@
    무엇이 닫혔는지 한 줄로 말한 뒤 물러난다. */
 
 import { nextFrame, wait } from '../core/anim.js';
-import { br } from '../core/sheet.js';
+import { br, holdModal } from '../core/sheet.js';
 import { CYCLES } from '../data/cycles.js';
 import { isReady } from '../art/assets.js';
 import { ring } from '../art/marks.js';
@@ -42,26 +42,40 @@ export function openCycle(id) {
   return new Promise(async (resolve) => {
     el.classList.add('is-open');
     el.setAttribute('aria-hidden', 'false');
-    await nextFrame();
-    el.classList.add('is-visible');
-    cue('cycle');
-    await wait(900);
 
-    const btn = el.querySelector('.cyc-ok');
-    btn.focus({ preventScroll: true });
+    /* 시트는 아니지만 덮고 있는 동안은 모달이다. 초점이 뒤의 세계나
+       아래 메뉴로 새지 않게, 시트와 같은 규칙을 빌려 쓴다.
+       여닫는 연출은 그대로 여기서 한다. */
+    const release = holdModal(el);
 
+    let closing = false;
     const close = async () => {
+      if (closing) return;
+      closing = true;
       el.removeEventListener('keydown', onKey);
+      await shown;
       el.classList.remove('is-visible');
       await wait(800);
       el.classList.remove('is-open');
       el.setAttribute('aria-hidden', 'true');
       el.innerHTML = '';
+      release();
       resolve();
     };
     function onKey(e) { if (e.key === 'Escape') close(); }
 
+    /* 손이 닿을 자리를 전환보다 먼저 붙인다 */
+    const btn = el.querySelector('.cyc-ok');
     btn.addEventListener('click', close, { once: true });
     el.addEventListener('keydown', onKey);
+
+    const shown = (async () => {
+      await nextFrame();
+      el.classList.add('is-visible');
+      cue('cycle');
+      await wait(900);
+    })();
+    await shown;
+    if (!closing) btn.focus({ preventScroll: true });
   });
 }

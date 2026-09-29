@@ -4,7 +4,7 @@
    화면 하나를 갈아 끼우는 방식이고, 뒤로 가기는 스택으로 되돌린다. */
 
 import { openSheet, closeSheet, br, focusStart, blockWorld } from '../core/sheet.js';
-import { pushRoute, backRoute } from '../core/route.js';
+import { pushRoute } from '../core/route.js';
 import { NODES, CONCEPTS } from '../data/nodes.js';
 import {
   WORLDS, WORLD_ORDER, CONCEPT_META, CONCEPT_ORDER,
@@ -99,6 +99,13 @@ let painting = 0;
 
 const topOf = () => stack[stack.length - 1];
 
+/* 길에서 덜어 낸 칸의 자리도 잠깐 들고 있는다. 기기의 앞으로 가기나
+   세계에 다녀오는 길에서 그 칸이 다시 만들어질 때, 보던 높이를 잃지
+   않게 하기 위해서다. 이번 판에서만 쓰고 저장하지 않는다.
+   도감의 화면 수만큼만 쌓이므로 따로 비우지 않는다. */
+const seenAt = new Map();
+const spot = (t) => `${t.screen}|${t.arg || ''}`;
+
 /** 지금 화면에서 보던 자리를 적어 둔다 */
 function remember() {
   const t = topOf();
@@ -110,6 +117,15 @@ function remember() {
   t.focus = g
     ? `[data-go="${g.dataset.go}"]${g.dataset.arg ? `[data-arg="${g.dataset.arg}"]` : ''}`
     : null;
+  seenAt.set(spot(t), { scroll: t.scroll, focus: t.focus });
+}
+
+/** 길에 새로 놓는 칸. 전에 본 적이 있으면 그때 자리를 들고 온다. */
+function madeOf(t) {
+  const had = seenAt.get(spot(t));
+  return had
+    ? { screen: t.screen, arg: t.arg, scroll: had.scroll, focus: had.focus }
+    : { screen: t.screen, arg: t.arg };
 }
 
 /** 기록에 넘길 만큼만 남긴 길 */
@@ -131,8 +147,7 @@ export function setCodexTrail(trail, { restore = false } = {}) {
   /* 같은 칸이면 보던 자리를 잃지 않게 이어 붙인다 */
   const next = want.map((t, i) => {
     const had = stack[i];
-    return (had && had.screen === t.screen && had.arg === t.arg)
-      ? had : { screen: t.screen, arg: t.arg };
+    return (had && had.screen === t.screen && had.arg === t.arg) ? had : madeOf(t);
   });
   stack = next;
   paint({ restore });
@@ -151,13 +166,23 @@ const go = (screen, arg) => {
   pushRoute({ view: 'codex', trail: codexTrail() });
 };
 
-/** 도감 안의 뒤로. 기록을 거슬러 가므로 기기의 뒤로 가기와 한 몸이다. */
+/** 도감 안의 뒤로. 적힌 이름 그대로 한 칸 위로 간다.
+
+    기기의 뒤로 가기와는 다른 일이다. 그쪽은 실제로 지나온 기록을 따르므로,
+    도감 글에서 세계에 들렀다 돌아왔다면 세계로 간다. 그런데 화면 위의
+    버튼에는 `백과사전` 이라고 적혀 있다. 적힌 곳과 가는 곳이 달라지는
+    자리가 여기였다. 그래서 이 버튼은 기록을 거스르지 않고, 길에서 한 칸을
+    덜어 낸 다음 그 자리를 새 기록으로 남긴다. */
 const back = () => {
   remember();
-  backRoute(() => {
-    if (stack.length > 1) { stack.pop(); paint({ restore: true }); }
-    else onExit && onExit();
-  });
+  if (stack.length > 1) {
+    stack.pop();
+    paint({ restore: true });
+    pushRoute({ view: 'codex', trail: codexTrail() });
+    return;
+  }
+  /* 길의 처음이다. 버튼에도 `세계로` 라고 적혀 있다. */
+  onExit && onExit();
 };
 
 /* ------------------------------------------------------------------
@@ -612,8 +637,7 @@ export async function openCodex({ onExit: exit, trail } = {}) {
     stack = want.length
       ? want.map((t, i) => {
           const had = stack[i];
-          return (had && had.screen === t.screen && had.arg === t.arg)
-            ? had : { screen: t.screen, arg: t.arg };
+          return (had && had.screen === t.screen && had.arg === t.arg) ? had : madeOf(t);
         })
       : [{ screen: 'home' }];
   }

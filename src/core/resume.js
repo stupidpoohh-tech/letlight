@@ -46,8 +46,7 @@ function sift(raw, isSolved) {
     if (!STEPS.has(d.step)) continue;
     /* 이미 알아낸 질문의 기록은 남아 있을 이유가 없다 */
     if (isSolved && isSolved(id)) continue;
-    /* 나오는 문제가 없는 질문은 그 단계로 갈 수 없다 */
-    if (d.step === STEP.door && !node.exitQuiz) continue;
+    /* 출구 문제가 없어도 본문을 읽는 동안 완료 버튼 단계가 저장된다. */
 
     /* 글이 그 사이에 고쳐졌으면 읽던 높이는 다른 자리를 가리킨다.
        그럴 때는 단계만 살리고 높이는 버린다. 알아낸 기록은 건드리지 않는다.

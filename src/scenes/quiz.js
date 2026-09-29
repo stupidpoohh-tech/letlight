@@ -111,12 +111,16 @@ export function openQuiz(node, { hint = '' } = {}) {
   return new Promise(async (resolve) => {
     let closing = false;
     chrome(false);
-    await openSheet(el);
+    /* 여는 전환이 끝나기를 기다리지 않고 먼저 손이 닿을 자리를 붙인다.
+       화면에 보이는데 눌리지 않는 구간을 만들지 않기 위해서다.
+       닫는 일만 여는 전환이 끝난 뒤로 미룬다. */
+    const opening = openSheet(el);
 
     /* 어느 쪽으로 끝나든 한 번만 닫는다 */
     const finish = async (result) => {
       if (closing) return;
       closing = true;
+      await opening;
       if (result.done) {
         el.querySelector('.quiz-inner').classList.add('is-leaving');
         await wait(850);
