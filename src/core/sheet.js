@@ -162,8 +162,9 @@ export function chrome(on) {
   nodes.style.opacity = on ? '1' : '0';
 }
 
-/** 시트 맨 위의 작은 '세계로'. 언제든 나갈 수 있다. */
-export const leaveBar = (label = '세계로') => `
+/** 시트 맨 위의 작은 '세계로'. 언제든 나갈 수 있다.
+    @param {string} [extra]  손잡이 오른쪽에 덧붙일 것 (글에서는 지금 읽는 대목) */
+export const leaveBar = (label = '세계로', extra = '') => `
   <div class="sheet-top">
     <button class="sheet-leave" type="button">
       <svg viewBox="0 0 20 14" aria-hidden="true"><path d="M19 7H1M7 1 1 7l6 6"
@@ -171,4 +172,5 @@ export const leaveBar = (label = '세계로') => `
         stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>${label}</span>
     </button>
+    ${extra}
   </div>`;

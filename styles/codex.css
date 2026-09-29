@@ -626,8 +626,10 @@ button.ex-rel { cursor: pointer; }
 .article-body { max-width: 31em; }
 
 .article-body p {
-  /* 글자 크기가 화면 폭을 따라가므로, 사이도 em 으로 따라가게 둔다 */
-  margin: 0 0 1.85em;
+  /* 글자 크기가 화면 폭을 따라가므로, 사이도 em 으로 따라가게 둔다.
+     한 문장짜리 문단이 많은 글이다. 사이가 너무 벌어지면 같은 주장에
+     속한 문장들이 서로 떨어진 덩어리처럼 읽힌다. */
+  margin: 0 0 1.32em;
   font-family: var(--font-ui);
   font-size: clamp(1.02rem, 4.3vw, 1.1rem);
   line-height: 1.84;
@@ -727,7 +729,7 @@ button.ex-rel { cursor: pointer; }
 .article-fig .fig-panel-n {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: .87rem; line-height: 1.7;
+  font-size: .9rem; line-height: 1.72;
   color: var(--ex-ink-2);
   word-break: keep-all;
 }
@@ -740,12 +742,12 @@ button.ex-rel { cursor: pointer; }
   margin: 20px 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--ex-line);
-  font-size: .84rem; line-height: 1.66;
+  font-size: .88rem; line-height: 1.68;
   color: var(--ex-ink-2);
 }
 .article-fig .fig-fine {
   margin: .5rem 0 0;
-  font-size: .78rem; line-height: 1.62;
+  font-size: .84rem; line-height: 1.66;
   color: var(--ex-ink-3);
 }
 
@@ -774,6 +776,98 @@ button.ex-rel { cursor: pointer; }
 .fig-art .pore     { stroke: #7d7566; stroke-width: 1; fill: #ffffff; }
 .fig-art .squashed { fill: #ece9e2; }
 .fig-art .pipe     { stroke: #8f8674; stroke-width: 3.4; fill: none; stroke-linecap: round; }
+
+/* ---- 고리가 닫히기 전과 뒤 ----
+
+   숫자를 쓰지 않는다. 몇 개를 풀었는지가 아니라 어느 관계를 아직 모르는지를
+   보여 준다. 닫힌 뒤에는 같은 목록이 인과의 차례가 된다. */
+
+.ex-ring.is-open { opacity: .5; }
+
+.ex-steps { list-style: none; margin: 0; padding: 0; }
+
+.ex-step {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ex-line-2);
+}
+.ex-step:last-child { border-bottom: 0; }
+
+.ex-step-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: .88rem; font-weight: 700;
+  letter-spacing: .01em;
+  color: var(--ex-ink-3);
+  word-break: keep-all;
+}
+.ex-step.is-known .ex-step-label { color: var(--ex-accent); }
+
+.ex-step-ask {
+  display: block;
+  width: 100%;
+  margin-top: .4rem;
+  padding: 0;
+  border: 0; background: none;
+  font-family: var(--font-book);
+  font-size: 1rem; line-height: 1.6;
+  letter-spacing: -.01em;
+  text-align: left;
+  color: var(--ex-ink);
+  word-break: keep-all;
+  cursor: pointer;
+}
+.ex-step-wait {
+  display: block;
+  margin-top: .4rem;
+  font-family: var(--font-ui);
+  font-size: .9rem; line-height: 1.6;
+  color: var(--ex-ink-mute);
+}
+
+.ex-list--opening { margin-top: 18px; }
+.ex-row--cycle { display: flex; align-items: center; gap: 10px; }
+.ex-row--cycle .ex-row-title { flex: 0 1 auto; }
+.ex-row-note {
+  flex: 1 1 auto;
+  font-family: var(--font-ui);
+  font-size: .78rem; letter-spacing: .04em;
+  color: var(--ex-ink-mute);
+}
+
+/* ---- 돌아가기 직전의 한 줄 ----
+
+   세계가 어떻게 달라지는지와, 그래서 다음에 무엇을 물을 수 있는지를 잇는다.
+   팝업도 축하도 아니다. 문 바로 위에 조용히 놓인 두 줄이다. */
+
+.door-note {
+  margin: 0 0 1.8rem;
+  font-family: var(--font-ui);
+  word-break: keep-all;
+}
+.door-change {
+  display: block;
+  font-size: 1rem; font-weight: 700; line-height: 1.6;
+  letter-spacing: -.01em;
+  color: var(--ex-ink);
+}
+.door-next {
+  display: block;
+  margin-top: .9rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--ex-line);
+}
+.door-next-tag {
+  display: block;
+  margin-bottom: .45rem;
+  font-size: .74rem; font-weight: 700; letter-spacing: .1em;
+  color: var(--ex-accent);
+}
+.door-ask {
+  display: block;
+  font-size: .94rem; line-height: 1.66;
+  color: var(--ex-ink-2);
+}
+.door-ask + .door-ask { margin-top: .5rem; }
 
 /* ---- 문제 다시 보기 ----
 

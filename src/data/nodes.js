@@ -32,6 +32,7 @@ export const NODES = {
     at: { x: 0.50, y: 0.235 },
     concept: 'scattering',
     effect: 'cloud',
+    change: '하늘에 구름이 모입니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'rainStart',
 
     quiz: {
@@ -77,6 +78,8 @@ export const NODES = {
         '### 빛이 방향을 바꾸어 퍼지는 것을 산란이라고 한다',
         '햇빛은 하나의 색처럼 보이지만, 실제로는 서로 다른 파장을 가진 여러 가시광선이 함께 섞여 있습니다.',
         '이 빛이 물질을 만나면 일부는 그대로 지나가고, 일부는 방향을 바꾸어 퍼집니다. 이렇게 빛이 원래 진행하던 방향에서 벗어나 여러 방향으로 흩어지는 현상을 산란이라고 합니다.',
+        { figure: 'lightPath',
+          caption: '같은 빛이 들어와도, 물이 한 덩어리로 있을 때와 작은 물방울로 흩어져 있을 때 빛이 나가는 길이 달라집니다.' },
         '### 중요한 것은 물질이 아니라 파장에 견준 입자의 크기다',
         '여기서 중요한 것은 단순히 “무슨 물질인가”가 아닙니다.',
         '빛의 파장에 비해 그 물질의 구조가 얼마나 큰가가 중요합니다.',
@@ -92,8 +95,6 @@ export const NODES = {
         '여기서 조금 이상하고 재미있는 결론이 나옵니다.',
         '구름은 흰색 물질이 아닙니다.',
         '물방울 하나를 떼어놓으면 거의 투명합니다. 그런 물방울이 수없이 모여 햇빛과 상호작용할 때 비로소 흰 구름이라는 모습이 나타납니다.',
-        { figure: 'lightPath',
-          caption: '같은 빛이 들어와도, 물이 한 덩어리로 있을 때와 작은 물방울로 흩어져 있을 때 빛이 나가는 길이 달라집니다.' },
         '같은 태양에서 출발한 빛도\n아주 작은 공기 분자를 만나면 파란 하늘을 만들고,\n훨씬 큰 물방울을 만나면 흰 구름을 만듭니다.',
         '우리가 보는 색은 물체에 붙어 있는 이름표가 아닙니다.',
         '빛의 파장과, 그 빛이 만나는 구조의 크기 사이의 관계가 우리가 보는 모습을 바꿉니다.',
@@ -109,6 +110,7 @@ export const NODES = {
     near: 'cloud',
     concept: 'growth',
     effect: 'rain',
+    change: '구름에서 비가 내립니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: ['seedWater', 'waterInfiltration'],
 
     quiz: {
@@ -209,6 +211,7 @@ export const NODES = {
     near: 'growth',
     concept: 'imbibition',
     effect: 'seed',
+    change: '젖은 땅에서 새싹이 올라옵니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'plantGrowth',
 
     quiz: {
@@ -322,6 +325,7 @@ export const NODES = {
     near: 'growth',
     concept: ['photosynthesis', 'carbonFixation'],
     effect: 'plant',
+    change: '새싹이 어린나무로 자랍니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'treeForm',
 
     quiz: {
@@ -431,6 +435,7 @@ export const NODES = {
     at: { x: 0.80, y: 0.46 },
     concept: ['infiltration', 'runoff'],
     effect: 'water',
+    change: '땅에 닿은 물이 낮은 곳으로 모여 강이 됩니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     /* 원래는 증발 질문이 이 자리를 잇는다. 그 질문이 아직 없어
        강에서 바로 다음 질문으로 넘어간다. 증발 노드가 생기면 그쪽으로 옮긴다. */
     next: 'waterLatentHeat',
@@ -522,6 +527,7 @@ export const NODES = {
     near: 'growth',
     concept: ['selfOrganization', 'plasticity'],
     effect: 'tree',
+    change: '어린나무가 큰 나무가 됩니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'treeBloom',
 
     quiz: {
@@ -595,6 +601,7 @@ export const NODES = {
     at: { x: 0.30, y: 0.50 },
     concept: 'latentHeat',
     effect: 'heat',
+    change: '강 위로 열기가 오릅니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: null,
 
     quiz: {
@@ -670,6 +677,7 @@ export const NODES = {
     near: 'growth',
     concept: ['dormancy', 'photoperiod'],
     effect: 'bloom',
+    change: '큰 나무에 꽃이 핍니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'flowerGuide',
 
     quiz: {
@@ -779,6 +787,7 @@ export const NODES = {
     near: 'growth',
     concept: ['floralGuide', 'pollination'],
     effect: 'pollinator',
+    change: '꽃에 벌과 나비가 찾아옵니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'treeFruit',
 
     quiz: {
@@ -886,6 +895,7 @@ export const NODES = {
     near: 'growth',
     concept: ['doubleFertilization', 'fruitSet'],
     effect: 'fruit',
+    change: '꽃이 지고 열매가 달립니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: 'fruitEater',
 
     quiz: {
@@ -999,6 +1009,7 @@ export const NODES = {
     near: 'growth',
     concept: ['ripening', 'seedDispersal'],
     effect: 'eater',
+    change: '열매를 먹으러 사슴이 옵니다',   // 이 질문을 끝내면 세계가 달라지는 모습
     next: null,
 
     quiz: {

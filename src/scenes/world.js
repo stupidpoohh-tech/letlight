@@ -18,7 +18,9 @@ import { openArticle } from './article.js';
 import { openCycle } from './cycle.js';
 import { cycleClosedBy, livingElements, badgeSrcs } from '../data/cycles.js';
 
-const NODE_REST = 0.62;          // 물러난 뒤에도 들판 위에서 읽히는 만큼
+const NODE_REST = 0.76;          // 물러난 뒤에도 들판 위에서 읽히는 만큼
+                                 // 0.62 에서는 해가 뜬 하늘 위의 질문이
+                                 // 실제 화소로 재었을 때 2.1:1 까지 내려갔다
 const CLOUD_AT  = { left: 37, top: 20, width: 52, src: 'assets/cloud-3.webp' };
 const GROWTH_AT = { left: 72, top: 82, width: 23 };
 

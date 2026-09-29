@@ -14,7 +14,8 @@ import {
   worldCount, conceptQuestions, conceptName,
 } from '../data/library.js';
 import { isSolved, clearProgress, allOpenSolved, recentSolved } from '../core/state.js';
-import { CYCLES, closedCycles, JEM_BOX, JEM_SLOTS, cycleInSlot } from '../data/cycles.js';
+import { CYCLES, closedCycles, openCycles, cycleClosed,
+  JEM_BOX, JEM_SLOTS, cycleInSlot } from '../data/cycles.js';
 import { thumb } from '../art/plates.js';
 import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
@@ -284,6 +285,7 @@ function renderHome() {
     </button>`;
 
   const done = allOpenSolved();
+  const opening = openCycles();
   const empty = JEM_SLOTS.length - cycles.length;
   const recent = recentSolved(3);
 
@@ -320,6 +322,16 @@ function renderHome() {
         ? `<p class="ex-jembox-names">${cycles.map((id) => CYCLES[id].title).join(' · ')}${
             empty > 0 ? `<span class="ex-jembox-soon">· 남은 자리는 준비 중</span>` : ''}</p>`
         : '<p class="ex-jembox-names is-empty">아직 닫힌 고리가 없습니다</p>'}
+
+      ${/* 그리다 만 고리도 들여다볼 수 있다. 무엇이 남았는지 보라는 자리다. */ ''}
+      ${opening.length ? `<ul class="ex-list ex-list--opening">
+        ${opening.map((id) => `<li><button class="ex-row ex-row--cycle" type="button"
+            data-go="cycle" data-arg="${id}">
+            <span class="ex-row-title">${CYCLES[id].title}</span>
+            <span class="ex-row-note">그리다 만 고리</span>
+            ${ARROW}
+          </button></li>`).join('')}
+      </ul>` : ''}
     </section>
 
     ${settings()}
@@ -510,24 +522,51 @@ function renderConcept(id) {
    5-1. 순환 상세
    ------------------------------------------------------------------ */
 
+/* 고리가 닫히기 전과 뒤는 다른 화면이다.
+
+   닫히기 전에는 **아직 모르는 관계**를, 닫힌 뒤에는 **한 바퀴를 이루는
+   인과**를 보여 준다. 푼 문제의 수를 순환을 이해한 정도로 바꿔 세지 않는다.
+   그래서 이 화면 어디에도 숫자가 없다. */
+function stepRow(st) {
+  const known = isSolved(st.node);
+  const n = NODES[st.node];
+  return `<li class="ex-step${known ? ' is-known' : ''}">
+      <span class="ex-step-label">${st.label}</span>
+      ${known
+        ? `<button class="ex-step-ask" type="button" data-go="article" data-arg="${st.node}">
+             ${br(n.label)}</button>`
+        : '<span class="ex-step-wait">아직 모르는 관계</span>'}
+    </li>`;
+}
+
 function renderCycle(id) {
   const c = CYCLES[id];
-  const qs = c.requiredNodes.filter(isSolved);
+  const closed = cycleClosed(id);
+  const steps = c.steps || [];
+  const left = steps.filter((st) => !isSolved(st.node));
+
   return page(`
     <p class="ex-crumb">순환 <span>/</span> ${c.title}</p>
-    ${hasBadge(c) ? `<div class="ex-hero ex-hero--badge">${badgeArt(c)}</div>` : ''}
+    ${closed && hasBadge(c) ? `<div class="ex-hero ex-hero--badge">${badgeArt(c)}</div>` : ''}
     <h2 class="ex-title ex-title--detail">${c.title}</h2>
-    <p class="ex-lead">${br(c.lead)}</p>
+    <p class="ex-lead">${closed ? br(c.lead) : '아직 한 바퀴가 닫히지 않았습니다.'}</p>
 
     <section class="ex-section">
-      <h3 class="ex-section-title">한 바퀴</h3>
-      <div class="ex-ring">${ring(c.ring)}</div>
-      <p class="ex-ring-line">${[...c.ring, c.ring[0]].join(' → ')}</p>
+      <h3 class="ex-section-title">${closed ? '한 바퀴' : '그리다 만 고리'}</h3>
+      <div class="ex-ring${closed ? '' : ' is-open'}">${ring(c.ring)}</div>
+      ${closed ? `<p class="ex-ring-line">${[...c.ring, c.ring[0]].join(' → ')}</p>` : ''}
     </section>
 
-    <section class="ex-section">
-      <h3 class="ex-section-title">이 고리를 이룬 질문</h3>
-      <ul class="ex-list">${qs.map((q) => questionRow(q)).join('')}</ul>
+    <section class="ex-section ex-section--ruled">
+      <div class="ex-section-head">
+        <h3 class="ex-section-title">${closed ? '무엇이 무엇을 부르는가' : '남은 관계'}</h3>
+        <span class="ex-section-note">${closed
+          ? '자리마다 그것을 설명한 질문'
+          : (left.length === steps.length
+              ? '아직 아무 자리도 이어지지 않았습니다'
+              : '아직 이어지지 않은 자리가 있습니다')}</span>
+      </div>
+      <ul class="ex-steps">${steps.map(stepRow).join('')}</ul>
     </section>
   `);
 }

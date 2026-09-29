@@ -6,7 +6,7 @@
 
 import { nextFrame, wait } from '../core/anim.js';
 import { openSheet, closeSheet, chrome, br, revealIn, leaveBar } from '../core/sheet.js';
-import { CONCEPTS } from '../data/nodes.js';
+import { CONCEPTS, NODES } from '../data/nodes.js';
 import { CONCEPT_META } from '../data/library.js';
 import { plate } from '../art/plates.js';
 import { diagram } from '../art/diagrams.js';
@@ -171,8 +171,13 @@ export function openArticle(node, {
   const q = node.exitQuiz;
   const needQuiz = Boolean(q) && !passedExit;
 
+  /* 구간이 셋 이상인 긴 글에서만, 지금 읽는 대목의 이름을 손잡이 줄에 둔다.
+     막대도 숫자도 아니다. 어디쯤인지 묻는 순간에만 눈에 들어오면 된다. */
+  const longRead = node.article.body
+    .filter((t) => typeof t === 'string' && t.startsWith('### ')).length >= 3;
+
   el.innerHTML = `
-    ${leaveBar()}
+    ${leaveBar('세계로', longRead ? '<span class="sheet-now" aria-hidden="true"></span>' : '')}
     <div class="article-inner">
       ${renderArticle(node)}
       ${needQuiz ? `
@@ -196,6 +201,7 @@ export function openArticle(node, {
 
     let last = 0;
     const track = () => {
+      marker();
       if (closing || Math.abs(el.scrollTop - last) < 24) return;
       last = el.scrollTop;
       onScroll && onScroll(last);
@@ -232,16 +238,54 @@ export function openArticle(node, {
       el.scrollTop = Math.min(scroll, Math.max(0, el.scrollHeight - el.clientHeight));
     }
 
+    /* 지금 읽는 대목. 손잡이 줄 바로 아래를 지난 마지막 소제목을 적는다. */
+    const heads = [...el.querySelectorAll('.article-h')];
+    const nowEl = el.querySelector('.sheet-now');
+    let queued = false;
+    const marker = () => {
+      if (!nowEl || queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        if (closing || !nowEl.isConnected) return;
+        const line = el.getBoundingClientRect().top + 64;
+        let at = null;
+        for (const h of heads) {
+          if (h.getBoundingClientRect().top <= line) at = h; else break;
+        }
+        const text = at ? at.textContent.trim() : '';
+        if (nowEl.textContent !== text) nowEl.textContent = text;
+        nowEl.classList.toggle('is-on', Boolean(text));
+      });
+    };
+
     last = el.scrollTop;
     el.addEventListener('scroll', track, { passive: true });
+    marker();
 
     const foot = el.querySelector('.article-foot');
+
+    /* 돌아가기 직전 한 줄. 세계가 어떻게 달라지는지와, 그래서 다음에
+       무엇을 물을 수 있는지를 잇는다. 새 팝업을 만들지 않고 문 옆에 둔다.
+       갈래가 둘이면 둘 다 적는다. 고르는 것은 세계에서 한다. */
+    const doorNote = () => {
+      const nexts = [].concat(node.next || []).filter((id) => NODES[id]);
+      if (!node.change && !nexts.length) return '';
+      const asks = nexts.map((id) => `<span class="door-ask">${br(NODES[id].label)}</span>`).join('');
+      return `<p class="door-note">
+        ${node.change ? `<span class="door-change">${node.change}</span>` : ''}
+        ${nexts.length ? `<span class="door-next">
+          <span class="door-next-tag">${nexts.length > 1 ? '여기서 두 갈래가 열립니다' : '다음 질문'}</span>
+          ${asks}</span>` : ''}
+      </p>`;
+    };
 
     /** 맞힌 뒤에야 생기는 문. 그전에는 아예 없다. */
     const openDoor = async ({ scrollTo = false } = {}) => {
       if (foot.querySelector('.quiet-action')) return;
       opened = true;
       onStep && onStep('door');
+      foot.insertAdjacentHTML('afterbegin', doorNote());
       /* 손잡이는 붙기 전에 먼저 눌릴 일을 받아 둔다 */
       const btn = document.createElement('button');
       btn.className = 'quiet-action';

@@ -23,6 +23,17 @@ export const CYCLES = {
        증발 질문이 따로 생기면 여기에 한 줄 더하면 된다. */
     requiredNodes: ['cloudWhite', 'rainStart', 'waterInfiltration', 'waterLatentHeat'],
 
+    /* 한 바퀴를 이루는 자리와, 그 자리를 설명하는 질문.
+       고리가 닫히기 전에는 여기에서 '아직 모르는 관계' 를 읽어 낸다.
+       닫힌 뒤에는 같은 목록이 '무엇이 무엇을 부르는가' 가 된다.
+       푼 문제의 수가 아니라, 어느 관계를 아직 모르는지를 보여 준다. */
+    steps: [
+      { label: '구름은 무엇으로 되어 있나', node: 'cloudWhite' },
+      { label: '구름 → 비',                node: 'rainStart' },
+      { label: '비 → 땅 위를 흐르는 물',    node: 'waterInfiltration' },
+      { label: '강 → 증발 → 구름',          node: 'waterLatentHeat' },
+    ],
+
     badge: 'assets/jem-drop.webp',
     slot: 'drop',
 
@@ -58,6 +69,11 @@ export const cycleClosed = (id) =>
   ((CYCLES[id] && CYCLES[id].requiredNodes) || []).every(isSolved);
 
 export const closedCycles = () => CYCLE_ORDER.filter(cycleClosed);
+
+/** 시작은 했지만 아직 닫히지 않은 고리. 한 자리라도 알아냈으면 보인다. */
+export const openCycles = () => CYCLE_ORDER.filter(
+  (id) => !cycleClosed(id) && CYCLES[id].requiredNodes.some(isSolved)
+);
 
 /** 이 질문을 알아내면서 방금 닫힌 고리. 없으면 undefined. */
 export const cycleClosedBy = (nodeId) => CYCLE_ORDER.find(
