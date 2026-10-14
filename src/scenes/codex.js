@@ -21,6 +21,7 @@ import { mark, ring } from '../art/marks.js';
 import { renderArticle } from './article.js';
 import { badgeArt, hasBadge } from './cycle.js';
 import { isMuted, setMuted, unlock } from '../core/sound.js';
+import { motionOn, setMotion, followsDevice, deviceAsksQuiet } from '../core/motion.js';
 
 const sheet = () => document.getElementById('codex');
 
@@ -63,6 +64,14 @@ const settings = () => `
   <div class="ex-settings">
     ${setRow('ex-sound', '소리', isMuted() ? '끔' : '켬',
              `aria-pressed="${!isMuted()}"`)}
+    ${setRow('ex-motion', '움직임', motionOn() ? '켬' : '끔',
+             `aria-pressed="${motionOn()}"`)}
+    ${/* 기기가 줄이라고 해서 멈춘 것이라면, 그 까닭을 적어 둔다.
+          저전력 모드만 켜도 이렇게 되는데 화면에는 아무 말이 없었다. */ ''}
+    ${followsDevice() && deviceAsksQuiet()
+      ? `<p class="ex-set-why">기기의 <b>동작 줄이기</b>가 켜져 있어 세계가 멈춰 있습니다.
+           저전력 모드에서도 이렇게 됩니다. 여기서 다시 켤 수 있습니다.</p>`
+      : ''}
     ${setRow('ex-reset', '진행', '초기화')}
     <div class="ex-reset-sure" hidden>
       <p class="ex-reset-warn">알아낸 질문과 지금까지 변한 세계가 모두 지워집니다.<br>
@@ -605,6 +614,15 @@ function paint({ restore = false } = {}) {
   const pageEl = el.querySelector('.ex-page');
 
   pageEl.querySelector('.ex-back').addEventListener('click', back);
+
+  const mot = pageEl.querySelector('.ex-motion');
+  if (mot) mot.addEventListener('click', () => {
+    setMotion(!motionOn());
+    mot.setAttribute('aria-pressed', String(motionOn()));
+    mot.querySelector('.ex-set-state').textContent = motionOn() ? '켬' : '끔';
+    const why = pageEl.querySelector('.ex-set-why');
+    if (why) why.remove();
+  });
 
   const snd = pageEl.querySelector('.ex-sound');
   if (snd) snd.addEventListener('click', () => {

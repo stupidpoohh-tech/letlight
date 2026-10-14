@@ -5,27 +5,16 @@
    1 이 원래 속도, 작을수록 빠르다.
    CSS 쪽은 tokens.css 의 --rate 가 같은 값을 들고 있으니 함께 고쳐야 한다. */
 
+import { motionOn } from './motion.js';
+
 export const RATE = 0.74;
 
-/* 움직임을 줄여 달라고 한 기기.
-   CSS 는 tokens/app.css 가 따로 받는다. 여기는 자바스크립트로 도는 연출 쪽이다.
+/* 움직임을 줄일 것인가. 기기의 설정과 사람이 고른 값을 motion.js 가 한 군데에서
+   정한다. CSS 는 같은 판정을 `data-quiet` 표식으로 받는다.
+   여기는 자바스크립트로 도는 연출 쪽이다.
    연출을 건너뛰어도 끝나는 값과 순서는 같아야 한다. 그래서 멈추는 것이 아니라
    마지막 값으로 곧장 간다. 기다림도 거의 남기지 않는다. */
-const QUIET_MOTION = (() => {
-  try {
-    const q = matchMedia('(prefers-reduced-motion: reduce)');
-    let on = q.matches;
-    const listen = q.addEventListener
-      ? (fn) => q.addEventListener('change', fn)
-      : (fn) => q.addListener(fn);
-    listen((e) => { on = e.matches; });
-    return () => on;
-  } catch (e) {
-    return () => false;
-  }
-})();
-
-export const reducedMotion = () => QUIET_MOTION();
+export const reducedMotion = () => !motionOn();
 
 export const ease = {
   linear:  (t) => t,

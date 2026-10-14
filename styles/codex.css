@@ -456,7 +456,8 @@ button.ex-rel { cursor: pointer; }
   margin-top: 24px;
   padding-top: 14px;
 }
-.ex-page--home .ex-reset-sure { grid-column: 1 / -1; }
+.ex-page--home .ex-reset-sure,
+.ex-page--home .ex-set-why { grid-column: 1 / -1; }
 .ex-page--home .ex-made { margin-top: 26px; padding-top: 16px; }
 
 /* 낮은 화면에서는 여백만 조금 줄인다.
@@ -833,6 +834,17 @@ button.ex-rel { cursor: pointer; }
   font-size: .78rem; letter-spacing: .04em;
   color: var(--ex-ink-mute);
 }
+
+/* 기기가 움직임을 줄이라고 해서 멈춘 것이라면 그 까닭을 적어 둔다 */
+.ex-set-why {
+  margin: .2rem 0 .4rem;
+  padding: 0 0 14px;
+  font-family: var(--font-ui);
+  font-size: .82rem; line-height: 1.7;
+  color: var(--ex-ink-3);
+  word-break: keep-all;
+}
+.ex-set-why b { font-weight: 700; color: var(--ex-ink-2); }
 
 /* ---- 돌아가기 직전의 한 줄 ----
 
